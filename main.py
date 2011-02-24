@@ -21,7 +21,10 @@ import models
 class Application(web.Application):
 	def __init__(self, config):
 		handlers = [
-			(r'/', RootHandler)
+			(r'/', RootHandler),
+			(r'/signup', SignupHandler),
+			(r'/login', LoginHandler),
+			(r'/profile', ProfileHandler),
 		]
 		
 		settings = {
@@ -49,14 +52,69 @@ class Authenticated(object):
 		userID = self.get_secure_cookie("user_id")
 		return userID and models.User.retrieveByID(userID)
 	
+	def _is_superuser(self):
+		pass
+	
+
+class BaseHandler(web.RequestHandler):
+	def authenticated(self, method):
+		pass
+	
+	def superuser(self, method):
+		pass
+	
 
 
 # -------------------------------------------------------------------
 # Handler classes
 # -------------------------------------------------------------------
 
-class RootHandler(web.RequestHandler):
+class RootHandler(BaseHandler):
 	def get(self):
-		self.write("Good morning, gentlemen!")
+		self.write("How are you gentlemen!")
 	
 
+class SignupHandler(BaseHandler):
+	def get(self):
+		"""Method not allowed"""
+		pass
+	
+	def post(self):
+		
+		user = models.User()
+		user.email = email
+		
+		verifier = Verification()
+		user.verificationCode = verifier.code
+		user.verificationHash = verifier.hashDigest
+		
+		user.save()
+		
+		self.set_secure_cookie("user_id", user.id)
+		self.redirect('/profile?user_id=%s' % user.id)
+	
+
+class ProfileHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self):
+		
+		userID = self.get_argument('user_id', None)
+		
+		if not userID:
+			self.set_error(404)
+			self.write("Not found")
+			return
+		
+		user = models.User.retrieveByID(userID)
+		
+		if not user:
+			self.set_error(404)
+			self.write("Not found")
+			return
+		
+		profile = models.Profile.retrieveByUserID(userID)
+		
+		self.write("%s %s\n" % (user.firstName, user.lastName))
+		self.write("%s\n" % user.email)
+		self.write("%s\n" % profile.bio)
+			

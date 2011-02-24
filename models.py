@@ -15,6 +15,9 @@ class User(MappedObj):
 	def __init__(self):
 		self.id = None
 		self.email = None
+		self.confirmationCode = None
+		self.confirmationHash = None
+		self.confirmed = None
 		self.firstName = None
 		self.lastName = None
 		self.password = None
