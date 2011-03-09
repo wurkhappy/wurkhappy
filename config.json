@@ -1,0 +1,11 @@
+{
+	"database": {
+		"host": "localhost",
+		"user": "www",
+		"passwd": "_/$!\'e4#^,bL0x",
+		"db": "wurkhappy"
+	},
+	"tornado": {
+		"cookie_secret": "aff335874ce2ea1ccec69846a3339bdecb8649a6"
+	}
+}	

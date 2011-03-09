@@ -16,16 +16,31 @@ import random
 
 class Verification (object):
 	@staticmethod
-	def _generateCode():
+	def __generateCode():
 		alphabet = string.ascii_uppercase
-		return ''.join(random.choice(alphabet) for x in range(6))
+		code = ''
+		checksum = 0
+		for i in range(5):
+			digit = random.randrange(0, 25)
+			checksum += digit * i
+			code += alphabet[digit]
+		code += alphabet[checksum % 26]
+		return code
 	
 	@staticmethod
-	def _generateHashDigest():
+	def __generateHashDigest():
 		rawDigest = hashlib.sha1(uuid.uuid4().get_bytes()).digest()
 		return base64.urlsafe_b64encode(rawDigest)
 	
 	def __init__(self):
-		self.hashDigest = self._generateHashDigest()
-		self.code = self._generateCode()
+		self.hashDigest = self.__generateHashDigest()
+		self.code = self.__generateCode()
 	
+	@staticmethod
+	def checkCode(code):
+		alphabet = string.ascii_uppercase
+		checksum = 0
+		body = code[:-1]
+		for index, digit in zip(range(len(body)), body):
+			checksum += string.index(alphabet, digit) * index
+		return string.index(alphabet, code[-1]) == checksum % 26

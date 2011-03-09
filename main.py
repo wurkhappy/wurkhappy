@@ -117,4 +117,12 @@ class ProfileHandler(Authenticated, BaseHandler):
 		self.write("%s %s\n" % (user.firstName, user.lastName))
 		self.write("%s\n" % user.email)
 		self.write("%s\n" % profile.bio)
-			
+		
+
+
+# -------------------------------------------------------------------
+# Command-line Startup
+# -------------------------------------------------------------------
+
+if __name__ == "__main__":
+	pass
