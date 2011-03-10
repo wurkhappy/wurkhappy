@@ -125,4 +125,12 @@ class ProfileHandler(Authenticated, BaseHandler):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	pass
+	define("port", default=8888, help="run on the given port", type=int)
+	define("config", default="config.json", help="load configuration from file", type=str)
+	tornado.options.parse_command_line()
+	
+	config = json.load(options.config)
+	server = HTTPServer(Application(conf))
+	server.listen(options.port)
+	IOLoop.instance().start()
+	
