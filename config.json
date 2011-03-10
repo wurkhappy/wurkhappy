@@ -2,7 +2,7 @@
 	"database": {
 		"host": "localhost",
 		"user": "www",
-		"passwd": "_/$!\'e4#^,bL0x",
+		"passwd": "_/$!\\'e4#^,bL0x",
 		"db": "wurkhappy"
 	},
 	"tornado": {

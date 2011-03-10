@@ -29,7 +29,8 @@ class Application(web.Application):
 		
 		settings = {
 			"xsrf_cookies": True,
-			"cookie_secret": config['tornado']['cookie_secret']
+			"cookie_secret": config['tornado']['cookie_secret'],
+			"login_url": "/login"
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -94,6 +95,14 @@ class SignupHandler(BaseHandler):
 		self.redirect('/profile?user_id=%s' % user.id)
 	
 
+class LoginHandler(BaseHandler):
+	def get(self):
+		self.write('Go away')
+	
+	def post(self):
+		self.write('Beat it, jerk!')
+
+
 class ProfileHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self):
@@ -125,12 +134,12 @@ class ProfileHandler(Authenticated, BaseHandler):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	define("port", default=8888, help="run on the given port", type=int)
-	define("config", default="config.json", help="load configuration from file", type=str)
-	tornado.options.parse_command_line()
+	options.define("port", default=8888, help="run on the given port", type=int)
+	options.define("config", default="config.json", help="load configuration from file", type=str)
+	options.parse_command_line()
 	
-	config = json.load(options.config)
+	conf = json.load(open(options.options.config, 'r+'))
 	server = HTTPServer(Application(conf))
-	server.listen(options.port)
+	server.listen(options.options.port)
 	IOLoop.instance().start()
 	
