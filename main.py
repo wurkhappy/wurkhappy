@@ -99,7 +99,7 @@ class SignupHandler(BaseHandler):
 class LoginHandler(BaseHandler):
 	def get(self):
 		items = {}
-		self.render("login.html", title="Go Away", items=items)
+		self.render("login.html", title="Login or Sign Up", items=items)
 	
 	def post(self):
 		self.write('Beat it, jerk!')

@@ -3,6 +3,16 @@
 		<title>{{ title }}</title>
 	</head>
 	<body>
-		<h1>Go Away!</h1>
+		<h1>{{ title }}</h1>
+		<form action="/login" method="post">
+			{{ xsrf_form_html() }}
+			<p>
+				<label for="email">Enter your email address</label>
+			<p>
+			<p>
+				<input type="text" name="email">
+	        	<input type="submit" value="Go">
+			</p>
+		</form>
 	</body>
 </html>
