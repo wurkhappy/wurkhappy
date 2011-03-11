@@ -30,7 +30,8 @@ class Application(web.Application):
 		settings = {
 			"xsrf_cookies": True,
 			"cookie_secret": config['tornado']['cookie_secret'],
-			"login_url": "/login"
+			"login_url": "/login",
+			"template_path": "templates"
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -97,7 +98,8 @@ class SignupHandler(BaseHandler):
 
 class LoginHandler(BaseHandler):
 	def get(self):
-		self.write('Go away')
+		items = {}
+		self.render("login.html", title="Go Away", items=items)
 	
 	def post(self):
 		self.write('Beat it, jerk!')
