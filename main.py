@@ -8,6 +8,7 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
+from datetime import datetime
 
 from tools.orm import *
 import models
@@ -29,7 +30,8 @@ class Application(web.Application):
 		
 		settings = {
 			"xsrf_cookies": True,
-			"cookie_secret": config['tornado']['cookie_secret'],
+			#convert cookie_secret from unicode string to ascii string, so as not to break hashlib
+			"cookie_secret": str(config['tornado']['cookie_secret']), 
 			"login_url": "/login",
 			"template_path": "templates"
 		}
@@ -50,7 +52,7 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 class Authenticated(object):
-	def _get_current_user(self):
+	def get_current_user(self):
 		userID = self.get_secure_cookie("user_id")
 		return userID and models.User.retrieveByID(userID)
 	
@@ -64,7 +66,6 @@ class BaseHandler(web.RequestHandler):
 	
 	def superuser(self, method):
 		pass
-	
 
 
 # -------------------------------------------------------------------
@@ -82,18 +83,7 @@ class SignupHandler(BaseHandler):
 		pass
 	
 	def post(self):
-		
-		user = models.User()
-		user.email = email
-		
-		verifier = Verification()
-		user.verificationCode = verifier.code
-		user.verificationHash = verifier.hashDigest
-		
-		user.save()
-		
-		self.set_secure_cookie("user_id", user.id)
-		self.redirect('/profile?user_id=%s' % user.id)
+		pass
 	
 
 class LoginHandler(BaseHandler):
@@ -102,32 +92,50 @@ class LoginHandler(BaseHandler):
 		self.render("login.html", title="Login or Sign Up", items=items)
 	
 	def post(self):
-		self.write('Beat it, jerk!')
-
+		email = self.get_argument("email")
+		user = models.User.retrieveByEmail(email)
+		if not user:
+			# User wasn't found, so begin sign up process
+			user = models.User()
+			user.email = email
+			user.confirmed = 0
+			user.dateCreated = datetime.now()
+			
+			#verifier = Verification()
+			#user.verificationCode = verifier.code
+			#user.verificationHash = verifier.hashDigest
+			user.save()
+		if user:
+			self.set_secure_cookie("user_id", str(user.id))
+			self.redirect('/profile?user_id=%s' % user.id)
+		else:
+			#handle error = user not created properly
+			
 
 class ProfileHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self):
 		
-		userID = self.get_argument('user_id', None)
+		#user = self.current_user
+		self.write("userID is %s" % userID)
 		
-		if not userID:
-			self.set_error(404)
-			self.write("Not found")
-			return
-		
-		user = models.User.retrieveByID(userID)
-		
-		if not user:
-			self.set_error(404)
-			self.write("Not found")
-			return
-		
-		profile = models.Profile.retrieveByUserID(userID)
-		
-		self.write("%s %s\n" % (user.firstName, user.lastName))
-		self.write("%s\n" % user.email)
-		self.write("%s\n" % profile.bio)
+		# if not userID:
+		# 			self.set_error(404)
+		# 			self.write("Not found")
+		# 			return
+		# 		
+		# 		user = models.User.retrieveByID(userID)
+		# 		
+		# 		if not user:
+		# 			self.set_error(404)
+		# 			self.write("Not found")
+		# 			return
+		# 		
+		# 		profile = models.Profile.retrieveByUserID(userID)
+		# 		
+		# 		self.write("%s %s\n" % (user.firstName, user.lastName))
+		# 		self.write("%s\n" % user.email)
+		# 		self.write("%s\n" % profile.bio)
 		
 
 
