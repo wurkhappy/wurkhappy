@@ -105,21 +105,18 @@ class LoginHandler(BaseHandler):
 			#user.verificationCode = verifier.code
 			#user.verificationHash = verifier.hashDigest
 			user.save()
-		if user:
-			self.set_secure_cookie("user_id", str(user.id))
-			self.redirect('/profile?user_id=%s' % user.id)
-		else:
-			#handle error = user not created properly
+		self.set_secure_cookie("user_id", str(user.id))
+		self.redirect('/profile')
 			
 
 class ProfileHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self):
 		
-		#user = self.current_user
-		self.write("userID is %s" % userID)
+		user = self.current_user
+		self.write("userID is %s" % user.id)
 		
-		# if not userID:
+		# if not user or user.id != self.get_argument("user_id"):
 		# 			self.set_error(404)
 		# 			self.write("Not found")
 		# 			return
