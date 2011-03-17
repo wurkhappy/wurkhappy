@@ -79,7 +79,7 @@ class RootHandler(BaseHandler):
 
 class SignupHandler(BaseHandler):
 	def get(self):
-		self.render("signup.html", title="Sign Up")
+		self.render("user/signup.html", title="Sign Up")
 	
 	def post(self):
 		email = self.get_argument("email")
@@ -104,8 +104,7 @@ class SignupHandler(BaseHandler):
 
 class LoginHandler(BaseHandler):
 	def get(self):
-		items = {}
-		self.render("login.html", title="Login or Sign Up", items=items)
+		self.render("user/login.html", title="Login")
 	
 	def post(self):
 		email = self.get_argument("email")
