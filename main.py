@@ -79,17 +79,7 @@ class RootHandler(BaseHandler):
 
 class SignupHandler(BaseHandler):
 	def get(self):
-		"""Method not allowed"""
-		pass
-	
-	def post(self):
-		pass
-	
-
-class LoginHandler(BaseHandler):
-	def get(self):
-		items = {}
-		self.render("login.html", title="Login or Sign Up", items=items)
+		self.render("signup.html", title="Sign Up")
 	
 	def post(self):
 		email = self.get_argument("email")
@@ -105,6 +95,25 @@ class LoginHandler(BaseHandler):
 			#user.verificationCode = verifier.code
 			#user.verificationHash = verifier.hashDigest
 			user.save()
+			self.set_secure_cookie("user_id", str(user.id))
+			self.redirect('/profile')
+		#else:
+			# user exists, redirect with error
+			# pass
+	
+
+class LoginHandler(BaseHandler):
+	def get(self):
+		items = {}
+		self.render("login.html", title="Login or Sign Up", items=items)
+	
+	def post(self):
+		email = self.get_argument("email")
+		user = models.User.retrieveByEmail(email)
+		if not user:
+			# User wasn't found, redirect to login with error
+			pass
+		#else: 
 		self.set_secure_cookie("user_id", str(user.id))
 		self.redirect('/profile')
 			
