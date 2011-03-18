@@ -92,8 +92,7 @@ class SignupHandler(BaseHandler):
 			}
 			
 	def get(self):
-		flash = {}
-		flash["error"] = self.parseErrors()
+		flash = {"error": self.parseErrors()}
 		self.render("user/signup.html", title="Sign Up", flash=flash)
 	
 	def post(self):
@@ -124,12 +123,12 @@ class SignupHandler(BaseHandler):
 	
 
 class LoginHandler(BaseHandler):
+	ERR = 	{	
+			"auth_invalid":"That email / password combination is incorrect. Please try again or click \"Forgot Password\"."
+			}
 	def get(self):
-		user = self.get_current_user
-		if user:
-			self.redirect("/profile")
-		else:
-			self.render("user/login.html", title="Login")
+		flash = {"error": self.parseErrors()}
+		self.render("user/login.html", title="Login", flash=flash)
 	
 	def post(self):
 		email = self.get_argument("email")
