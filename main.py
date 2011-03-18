@@ -70,8 +70,11 @@ class BaseHandler(web.RequestHandler):
 		
 	def parseErrors(self):
 		err = self.get_argument("err", None)
-		err = err.split('-')
-		return [self.ERR.get(e) for e in err]
+		if err:
+			err = err.split('-')
+			return [self.ERR.get(e) for e in err]
+		else:
+			return None
 
 # -------------------------------------------------------------------
 # Handler classes
