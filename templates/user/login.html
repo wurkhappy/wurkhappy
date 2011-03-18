@@ -1,19 +1,25 @@
 {% extends "../base.html" %}
 {% block body %}
 	<h1>{{ title }}</h1>
-	<h4><a href="/signup">Or Sign Up</a></h4>
 	<form action="/login" method="post">
 		{{ xsrf_form_html() }}
-		<p>
-			<label for="email">Enter your email address</label><br />
-			<input type="text" name="email" />
-		</p>
-		<p>
-			<label for="password">Enter your password</label><br />
-			<input type="password" name="password" />
-		</p>
-		<p>
-	       	<input type="submit" value="Log In" />
-		</p>
+		<table id="login-form">
+			<tr>
+				<td class="login-form"><label for "email">Email: </label></td>
+				<td class="login-form"><input type="text" name="email" /></td>
+			</tr>
+			<tr>
+				<td class="login-form"><label for "password">Password: </label></td>
+				<td class="login-form"><input type="password" name="password" value="Password"/></td>
+			</tr>
+			<tr>
+				<td class="login-form"></td>
+				<td class="login-form"><input type="submit" value="Go" /></td>
+			</tr>
+		</table>
 	</form>
+
+	<p>
+       	<a href="#">Forgot Password?</a> | <a href="/signup">Not yet Registered?</a>
+	</p>
 {% end %}

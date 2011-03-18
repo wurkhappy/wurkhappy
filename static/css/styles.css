@@ -1,0 +1,9 @@
+body {
+	font-family: Helvetica, Arial, Sans-Serif;
+	font-size: 12px;
+	margin: 200px 400px;
+}
+
+#login-form td {
+	text-align: right;
+}

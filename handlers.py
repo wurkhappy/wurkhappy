@@ -92,7 +92,7 @@ class LoginHandler(BaseHandler):
 			}
 	def get(self):
 		flash = {"error": self.parseErrors()}
-		self.render("user/login.html", title="Login", flash=flash)
+		self.render("user/login.html", title="Sign In", flash=flash)
 
 	def post(self):
 		email = self.get_argument("email")

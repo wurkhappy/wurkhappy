@@ -31,7 +31,8 @@ class Application(web.Application):
 			#convert cookie_secret from unicode string to ascii string, so as not to break hashlib
 			"cookie_secret": str(config['tornado']['cookie_secret']), 
 			"login_url": "/login",
-			"template_path": "templates"
+			"template_path": "templates",
+			"static_path": "static"
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
