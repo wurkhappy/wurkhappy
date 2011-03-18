@@ -125,7 +125,11 @@ class SignupHandler(BaseHandler):
 
 class LoginHandler(BaseHandler):
 	def get(self):
-		self.render("user/login.html", title="Login")
+		user = self.get_current_user
+		if user:
+			self.redirect("/profile")
+		else:
+			self.render("user/login.html", title="Login")
 	
 	def post(self):
 		email = self.get_argument("email")

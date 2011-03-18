@@ -1,6 +1,7 @@
 {% extends "../base.html" %}
 {% block body %}
 	<h1>{{ title }}</h1>
+	<h4><a href="/signup">Or Sign Up</a></h4>
 	<form action="/login" method="post">
 		{{ xsrf_form_html() }}
 		<p>

@@ -1,6 +1,7 @@
 {% extends "../base.html" %}
 {% block body %}
 	<h1>{{ title }}</h1>
+	<h4><a href="/login">Or Log In</a></h4>
 	<form action="/signup" method="post">
 		{{ xsrf_form_html() }}
 		{% if flash.get("error") != None %}
