@@ -4,9 +4,11 @@
 	<form action="/signup" method="post">
 		{{ xsrf_form_html() }}
 		{% if flash.get("error") != None %}
-			<p class="error">
-				{{ flash["error"] }}
-			</p>
+			{% for e in flash["error"] %}
+				<p class="error">
+					{{ e }}
+				</p>
+			{% end %}
 		{% end %}
 		<p>
 			<label for="email">Enter your email address</label><br />

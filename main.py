@@ -81,14 +81,14 @@ class RootHandler(BaseHandler):
 class SignupHandler(BaseHandler):
 	ERR = 	{	
 			"email_exists":"That email already exists. Please use a different email.",
-			"email_invalid":"That email address is invalid. Please use a valid email address." 
+			"email_invalid":"That email address is invalid. Please use a valid email address."
 			}
 			
 	def get(self):
 		flash = {}
 		err = self.get_argument("err", None)
-		if err:
-			flash["error"] = self.ERR[err]
+		err = err.split('-')
+		flash["error"] = [self.ERR.get(e) for e in err]
 		self.render("user/signup.html", title="Sign Up", flash=flash)
 	
 	def post(self):
