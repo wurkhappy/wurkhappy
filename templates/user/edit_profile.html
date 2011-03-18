@@ -3,19 +3,12 @@
 	<h1>{{ title }} for {{ user.email }}</h1>
 	<form action="/profile" method="post">
 		{{ xsrf_form_html() }}
-		<p>
-			<label for="userID">Enter your name</label><br />
-			<input type="text" name="userID" />
-		</p>
+
 		<p>
 			<label for="bio">Tell us a little bit about yourself</label><br />
 			<textarea name="bio" rows="10" cols="50"></textarea>
 		</p>
-		<p>
-			<label for="password">Create a password</label><br />
-			<input type="password" name="password" />
-		</p>
-		<p>
+ 		<p>
 	       	<input type="submit" value="Done" />
 		</p>
 	</form>

@@ -121,6 +121,26 @@ class ProfileHandler(Authenticated, BaseHandler):
 			self.render("user/edit_profile.html", title="Edit Profile", user=user)
 		else:
 			# show profile
-			self.write("%s %s\n" % (user.firstName, user.lastName))
+			#self.write("%s %s\n" % (user.firstName, user.lastName))
 			self.write("%s\n" % user.email)
 			self.write("%s\n" % profile.bio)
+			
+	@web.authenticated
+	def post(self):
+		user = self.current_user
+		
+		# Validations
+		# TODO
+		
+		# Retrieve profile for logged in user
+		profile = models.Profile.retrieveByUserID(user.id)
+		
+		if not profile:
+			# No profile exists yet, so create one and set its userID to the current user
+			profile = models.Profile()
+			profile.userID = user.id
+
+		# Update profile
+		profile.bio = self.get_argument("bio")
+		profile.save()
+		self.redirect('/profile')
