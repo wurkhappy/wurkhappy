@@ -67,7 +67,11 @@ class BaseHandler(web.RequestHandler):
 	
 	def superuser(self, method):
 		pass
-
+		
+	def parseErrors(self):
+		err = self.get_argument("err", None)
+		err = err.split('-')
+		return [self.ERR.get(e) for e in err]
 
 # -------------------------------------------------------------------
 # Handler classes
@@ -86,9 +90,7 @@ class SignupHandler(BaseHandler):
 			
 	def get(self):
 		flash = {}
-		err = self.get_argument("err", None)
-		err = err.split('-')
-		flash["error"] = [self.ERR.get(e) for e in err]
+		flash["error"] = self.parseErrors()
 		self.render("user/signup.html", title="Sign Up", flash=flash)
 	
 	def post(self):
