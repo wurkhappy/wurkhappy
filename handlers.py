@@ -5,6 +5,12 @@
 # Copyright Plus or Minus Five, 2011
 
 import tornado.web as web
+from tools.orm import *
+from helpers import *
+import models
+import handlers 
+
+from datetime import datetime
 
 # -------------------------------------------------------------------
 # Handler Base Class and Mixins
@@ -118,7 +124,8 @@ class ProfileHandler(Authenticated, BaseHandler):
 		# 			self.write("Not found")
 		# 			return
 		# 		
-		# 		profile = models.Profile.retrieveByUserID(userID)
+		profile = models.Profile.retrieveByUserID(user.id)
+		self.write("profile is %s" % str(profile))
 		# 		
 		# 		self.write("%s %s\n" % (user.firstName, user.lastName))
 		# 		self.write("%s\n" % user.email)
