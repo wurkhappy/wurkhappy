@@ -116,7 +116,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 			return
 		
 		profile = models.Profile.retrieveByUserID(user.id)
-		if not profile:
+		if not profile or self.get_argument("edit", None) == "y":
 			# render edit template
 			self.render("user/edit_profile.html", title="Edit Profile", user=user)
 		else:
