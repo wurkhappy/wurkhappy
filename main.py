@@ -12,6 +12,7 @@ from datetime import datetime
 
 from tools.orm import *
 import models
+from controllers import Verification
 
 # -------------------------------------------------------------------
 # Application main
@@ -78,28 +79,35 @@ class RootHandler(BaseHandler):
 	
 
 class SignupHandler(BaseHandler):
+	ERR_EMAIL_EXISTS = ("email_exists","That email already exists. Please use a different email.")
 	def get(self):
-		self.render("user/signup.html", title="Sign Up")
+		flash = {}
+		if self.get_argument("err", None) == self.ERR_EMAIL_EXISTS[0]:
+			flash["error"] = self.ERR_EMAIL_EXISTS[1]
+		self.render("user/signup.html", title="Sign Up", flash=flash)
 	
 	def post(self):
 		email = self.get_argument("email")
+		
+		# Check whether user exists already
 		user = models.User.retrieveByEmail(email)
+		
+		# User wasn't found, so begin sign up process
 		if not user:
-			# User wasn't found, so begin sign up process
 			user = models.User()
 			user.email = email
 			user.confirmed = 0
 			user.dateCreated = datetime.now()
 			
-			#verifier = Verification()
-			#user.verificationCode = verifier.code
-			#user.verificationHash = verifier.hashDigest
+			verifier = Verification()
+			user.confirmationCode = verifier.code
+			user.confirmationHash = verifier.hashDigest
 			user.save()
 			self.set_secure_cookie("user_id", str(user.id))
 			self.redirect('/profile')
-		#else:
+		else:
 			# user exists, redirect with error
-			# pass
+			self.redirect("/signup?err=email_exists")
 	
 
 class LoginHandler(BaseHandler):
