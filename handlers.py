@@ -108,25 +108,19 @@ class LoginHandler(BaseHandler):
 class ProfileHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self):
-
 		user = self.current_user
-		self.write("userID is %s" % user.id)
 
-		# if not user or user.id != self.get_argument("user_id"):
-		# 			self.set_error(404)
-		# 			self.write("Not found")
-		# 			return
-		# 		
-		# 		user = models.User.retrieveByID(userID)
-		# 		
-		# 		if not user:
-		# 			self.set_error(404)
-		# 			self.write("Not found")
-		# 			return
-		# 		
+		if not user:
+			self.set_error(404)
+			self.write("Not found")
+			return
+		
 		profile = models.Profile.retrieveByUserID(user.id)
-		self.write("profile is %s" % str(profile))
-		# 		
-		# 		self.write("%s %s\n" % (user.firstName, user.lastName))
-		# 		self.write("%s\n" % user.email)
-		# 		self.write("%s\n" % profile.bio)
+		if not profile:
+			# render edit template
+			self.render("user/edit_profile.html", title="Edit Profile", user=user)
+		else:
+			# show profile
+			self.write("%s %s\n" % (user.firstName, user.lastName))
+			self.write("%s\n" % user.email)
+			self.write("%s\n" % profile.bio)
