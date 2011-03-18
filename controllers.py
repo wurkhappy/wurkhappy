@@ -9,6 +9,7 @@ import base64
 import uuid
 import string
 import random
+import re
 
 # -------------------------------------------------------------------
 # Verification
@@ -44,3 +45,17 @@ class Verification (object):
 		for index, digit in zip(range(len(body)), body):
 			checksum += string.index(alphabet, digit) * index
 		return string.index(alphabet, code[-1]) == checksum % 26
+		
+# -------------------------------------------------------------------
+# Validation
+# -------------------------------------------------------------------
+
+import re
+class Validation (object):
+	@staticmethod
+	def validateEmail(email):
+
+		if len(email) > 7:
+			if re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", email) != None:
+				return True
+		return False

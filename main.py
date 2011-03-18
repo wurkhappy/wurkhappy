@@ -12,7 +12,7 @@ from datetime import datetime
 
 from tools.orm import *
 import models
-from controllers import Verification
+from controllers import Verification, Validation
 
 # -------------------------------------------------------------------
 # Application main
@@ -79,16 +79,25 @@ class RootHandler(BaseHandler):
 	
 
 class SignupHandler(BaseHandler):
-	ERR_EMAIL_EXISTS = ("email_exists","That email already exists. Please use a different email.")
+	ERR = 	{	
+			"email_exists":"That email already exists. Please use a different email.",
+			"email_invalid":"That email address is invalid. Please use a valid email address." 
+			}
+			
 	def get(self):
 		flash = {}
-		if self.get_argument("err", None) == self.ERR_EMAIL_EXISTS[0]:
-			flash["error"] = self.ERR_EMAIL_EXISTS[1]
+		err = self.get_argument("err", None)
+		if err:
+			flash["error"] = self.ERR[err]
 		self.render("user/signup.html", title="Sign Up", flash=flash)
 	
 	def post(self):
 		email = self.get_argument("email")
 		
+		# Validate format of email address
+		if not Validation.validateEmail(email):
+			self.redirect("/signup?err=email_invalid")
+			
 		# Check whether user exists already
 		user = models.User.retrieveByEmail(email)
 		
@@ -98,7 +107,6 @@ class SignupHandler(BaseHandler):
 			user.email = email
 			user.confirmed = 0
 			user.dateCreated = datetime.now()
-			
 			verifier = Verification()
 			user.confirmationCode = verifier.code
 			user.confirmationHash = verifier.hashDigest
@@ -106,7 +114,7 @@ class SignupHandler(BaseHandler):
 			self.set_secure_cookie("user_id", str(user.id))
 			self.redirect('/profile')
 		else:
-			# user exists, redirect with error
+			# User exists, redirect with error
 			self.redirect("/signup?err=email_exists")
 	
 
