@@ -121,9 +121,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 			self.render("user/edit_profile.html", title="Edit Profile", user=user)
 		else:
 			# show profile
-			#self.write("%s %s\n" % (user.firstName, user.lastName))
-			self.write("%s\n" % user.email)
-			self.write("%s\n" % profile.bio)
+			self.render("user/show_profile.html", title="Profile", user=user, profile=profile)
 			
 	@web.authenticated
 	def post(self):
