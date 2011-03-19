@@ -9,6 +9,7 @@ from tools.orm import *
 from helpers import *
 import models
 import handlers 
+from controllers import Verification
 
 from datetime import datetime
 
@@ -127,8 +128,19 @@ class ProfileHandler(Authenticated, BaseHandler):
 	def post(self):
 		user = self.current_user
 		
+		if not user:
+			self.set_error(404)
+			self.write("Not found")
+			return
+			
 		# Validations
 		# TODO
+		
+		# Set user fields
+		user.firstName = self.get_argument("firstName")
+		user.lastName = self.get_argument("lastName")
+		user.password = Verification.hash_password(str(self.get_argument("password")))
+		user.save()
 		
 		# Retrieve profile for logged in user
 		profile = models.Profile.retrieveByUserID(user.id)

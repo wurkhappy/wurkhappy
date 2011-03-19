@@ -96,9 +96,9 @@ class MappedObj(object):
 				setClause = setClause % tuple(keys)
 			
 				updateStatement = "UPDATE %s SET %s WHERE id = %%s LIMIT 1" % (self.tableName(), setClause)
-			
-				print setClause + "\n"
-				print updateStatement + "\n"
+							
+				# print setClause + "\n"
+				# print updateStatement + "\n"
 			
 				cursor.execute(updateStatement, tuple(values))
 				conn.commit()
@@ -108,8 +108,8 @@ class MappedObj(object):
 				keyClause = ", ".join(keys)
 				valueClause = ", ".join([atom] * len(keys))
 			
-				print keyClause + "\n"
-				print valueClause + "\n"
+				# print keyClause + "\n"
+				# print valueClause + "\n"
 			
 				insertStatement = "INSERT INTO %s (%s) VALUES (%s)" % (self.tableName(), keyClause, valueClause)
 				cursor.execute(insertStatement, tuple(values))

@@ -11,6 +11,8 @@ import string
 import random
 import re
 import hmac
+import os
+
 # -------------------------------------------------------------------
 # Verification
 # -------------------------------------------------------------------
@@ -35,7 +37,7 @@ class Verification (object):
 	
 	@staticmethod	
 	def __random_bytes(num_bytes):
-	  	return "".join(chr(random.randrange(256)) for i in xrange(num_bytes))
+	  	return os.urandom(num_bytes)
 	
 	@staticmethod
 	def __pbkdf_sha256(password, salt, iterations):
