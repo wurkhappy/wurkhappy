@@ -1,6 +1,6 @@
 {% extends "../base.html" %}
 {% block body %}
-	<h1>{{ title }} for {{ user.email }}</h1>
+	<h1>{{ title }} for {{ user.firstName+" "+user.lastName }}</h1>
 	<p>
 		Bio: {{ profile.bio }}
 	</p>
