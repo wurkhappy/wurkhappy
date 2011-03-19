@@ -10,6 +10,7 @@ import tornado.options as options
 import tornado.web as web
 
 from handlers import *
+from controllers import *
 
 # -------------------------------------------------------------------
 # Application main
