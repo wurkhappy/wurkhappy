@@ -97,12 +97,13 @@ class LoginHandler(BaseHandler):
 
 	def post(self):
 		email = self.get_argument("email")
+		password = self.get_argument("password")
 		user = models.User.retrieveByEmail(email)
-		if not user:
-			# User wasn't found, redirect to login with error
-			pass
-		#else: 
-		self.set_secure_cookie("user_id", str(user.id))
+		if not user or not Verification.check_password(user.password, str(password)):
+			# User wasn't found, or password is wrong, redirect to login with error
+			self.redirect("/login?err=auth_invalid")
+		# else:
+ 		self.set_secure_cookie("user_id", str(user.id))
 		self.redirect('/profile')
 
 

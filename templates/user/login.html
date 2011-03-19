@@ -1,6 +1,13 @@
 {% extends "../base.html" %}
 {% block body %}
 	<h1>{{ title }}</h1>
+	{% if flash.get("error") != None %}
+		{% for e in flash["error"] %}
+			<p class="error">
+				{{ e }}
+			</p>
+		{% end %}
+	{% end %}
 	<form action="/login" method="post">
 		{{ xsrf_form_html() }}
 		<table id="login-form">
@@ -10,7 +17,7 @@
 			</tr>
 			<tr>
 				<td class="login-form"><label for "password">Password: </label></td>
-				<td class="login-form"><input type="password" name="password" value="Password"/></td>
+				<td class="login-form"><input type="password" name="password"/></td>
 			</tr>
 			<tr>
 				<td class="login-form"></td>
