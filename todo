@@ -2,5 +2,8 @@ LOGIN
 	-add password field and validate
 
 PROFILE
-	-fill out profile
+	-password
+	-other fields
+
+FORGOT PASSWORD
 	
