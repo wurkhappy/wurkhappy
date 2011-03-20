@@ -11,6 +11,7 @@ import tornado.web as web
 
 from handlers import *
 from controllers import *
+from tools.email import *
 
 # -------------------------------------------------------------------
 # Application main
@@ -44,6 +45,8 @@ class Application(web.Application):
 			"passwd": config['database']['passwd'],
 			"db": config['database']['db']
 		}, None)
+		
+		Email.configure(config['smtp'])
 
 
 # -------------------------------------------------------------------
