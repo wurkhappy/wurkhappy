@@ -1,9 +1,5 @@
-LOGIN
-	-add password field and validate
-
 PROFILE
-	-password
-	-other fields
+	-logout link on profile
 
 FORGOT PASSWORD
-	
+	-send email instead of just the page with the link

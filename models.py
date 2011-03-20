@@ -45,6 +45,14 @@ class User(MappedObj):
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
+		
+	@classmethod
+	def retrieveByUserID(clz, userID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName(), userID)
+			result = cursor.fetchone()
+
+		return clz.initWithDict(result)
 	
 
 
@@ -97,7 +105,7 @@ class ForgotPassword(MappedObj):
 		return clz.initWithDict(result)
 	
 	@classmethod
-	def retrieveByCode(clz, userID):
+	def retrieveByCode(clz, code):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT * FROM %s WHERE code = %%s LIMIT 1" % clz.tableName(), code)
 			result = cursor.fetchone()

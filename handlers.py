@@ -11,7 +11,7 @@ import models
 import handlers 
 from controllers import Verification
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # -------------------------------------------------------------------
 # Handler Base Class and Mixins
@@ -93,6 +93,9 @@ class LoginHandler(BaseHandler):
 			}
 	def get(self):
 		flash = {"error": self.parseErrors()}
+		from_reset_password = self.get_argument("rp", None)
+		if from_reset_password:
+			flash["error"] = ["Your password was reset successfully."]
 		self.render("user/login.html", title="Sign In", flash=flash)
 
 	def post(self):
@@ -113,12 +116,12 @@ class ProfileHandler(Authenticated, BaseHandler):
 		user = self.current_user
 
 		if not user:
-			self.set_error(404)
+			self.set_status(404)
 			self.write("Not found")
 			return
 		
 		profile = models.Profile.retrieveByUserID(user.id)
-		if not profile or self.get_argument("edit", None) == "y":
+		if not profile or self.get_argument("edit", None) == "true":
 			# render edit template
 			self.render("user/edit_profile.html", title="Edit Profile", user=user)
 		else:
@@ -130,7 +133,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 		user = self.current_user
 		
 		if not user:
-			self.set_error(404)
+			self.set_status(404)
 			self.write("Not found")
 			return
 			
@@ -166,10 +169,66 @@ class ForgotPasswordHandler(BaseHandler):
 		self.render("user/forgot_password.html", title="Forgot Password", flash=flash)
 		
 	def post(self):
-		# determine whether user exists
-		# if not, redirect w/ error
-		# if so
+		# Check whether user exists 
+		user = models.User.retrieveByEmail(self.get_argument("email"))
+
+		# User wasn't found, so redirect with error
+		if not user:
+			flash = {"error": [self.ERR["email_does_not_exist"]]}
+			self.render("user/forgot_password.html", title="Forgot Password", flash=flash )
+		else: # user exists
 			# generate a code
+			verifier = Verification()
+			code = verifier.hashDigest
+			# build rest of forgot password model
+			forgotPassword = models.ForgotPassword()
+			forgotPassword.userID = user.id
+			forgotPassword.code = code
+			forgotPassword.validUntil = datetime.now() + timedelta(hours=24)
+			forgotPassword.active = 1
+			forgotPassword.save()
 			# send an email to the user containing a link to reset password with the code
+			link = "http://"+self.request.host+"/reset_password?code="+code
+			self.write('<a href=\"'+link+'\">Click me</a>')
 			# render template to confirm
-		pass
+
+class ResetPasswordHandler(BaseHandler):
+	ERR = 	{	
+			"passwords_do_not_match":"The passwords you entered do not match, please try again."
+			}
+
+	def get(self):
+		flash = {"error": self.parseErrors()}
+		code = self.get_argument("code", '')
+		flash["code"] = code
+		forgotPassword = models.ForgotPassword.retrieveByCode(code)
+		if not forgotPassword:
+			self.set_status(403)
+			self.write("Forbidden")
+			return
+		elif (forgotPassword.validUntil < datetime.now() or forgotPassword.active == False):
+			self.set_status(403)
+			self.write("Forbidden")
+			return
+		else:
+			self.render("user/reset_password.html", title="Reset Password", flash=flash)
+		
+	def post(self):
+		password = self.get_argument("password")
+		cpassword = self.get_argument("confirm_password")
+		code = self.get_argument("code", '')
+		forgotPassword = models.ForgotPassword.retrieveByCode(code)
+		if not forgotPassword:
+			self.set_status(403)
+			self.write("Forbidden")
+			return
+		elif password != cpassword:
+			flash = {"error":[self.ERR["passwords_do_not_match"]], "code":code}
+			self.render("user/reset_password.html", title="Reset Password", flash=flash)
+		else:
+			user = models.User.retrieveByUserID(forgotPassword.userID)
+			user.password = Verification.hash_password(str(password))
+			user.save()
+			forgotPassword.active = 0
+			forgotPassword.save()
+			self.redirect("/login?rp=true")
