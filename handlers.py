@@ -10,7 +10,7 @@ from helpers import *
 import models
 import handlers 
 from controllers import Verification
-
+from tools.email import *
 from datetime import datetime, timedelta
 
 # -------------------------------------------------------------------
@@ -189,8 +189,12 @@ class ForgotPasswordHandler(BaseHandler):
 			forgotPassword.save()
 			# send an email to the user containing a link to reset password with the code
 			link = "http://"+self.request.host+"/reset_password?code="+code
-			self.write('<a href=\"'+link+'\">Click me</a>')
+			msg = """\
+			To reset your password, click on this link. (The link is only valid once and only for the next 24 hours.)
+			"""+link
+			Email.sendFromApp(user.email, 'Reset Password', msg)
 			# render template to confirm
+			self.write("Email Sent")
 
 class ResetPasswordHandler(BaseHandler):
 	ERR = 	{	
