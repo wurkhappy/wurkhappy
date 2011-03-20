@@ -26,6 +26,7 @@ class Application(web.Application):
 			(r'/signup', SignupHandler),
 			(r'/login', LoginHandler),
 			(r'/profile', ProfileHandler),
+			(r'/forgot_password', ForgotPasswordHandler),
 		]
 		
 		settings = {

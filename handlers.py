@@ -155,3 +155,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 		profile.bio = self.get_argument("bio")
 		profile.save()
 		self.redirect('/profile')
+
+class ForgotPasswordHandler(BaseHandler):
+	def get(self):
+		self.write("Forgot Password")
+		
+	def post(self):
+		pass
