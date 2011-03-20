@@ -9,33 +9,35 @@ class EmailConnectionError(Exception):
 class Email (object):
 	settings = {}
 		
-	def __init__(self, settings):
-		self.settings = settings
+	@classmethod
+	def configure(clz, settings):
+		clz.settings = settings
 		
 # -------------------------------------------------------------------
 # Send an email
 # -------------------------------------------------------------------
-	
-	def sendmail(self, from_e, from_u, to_e, subject, body):
-		if not self.settings:
+	@classmethod
+	def sendmail(clz, from_e, from_u, to_e, subject, body):
+		if not clz.settings:
 			raise EmailConnectionError
 		else:
 			server = None
-			if self.settings.has_key('port'):
-				server = smtplib.SMTP(self.settings['host'], self.settings['port'])
+			if clz.settings.has_key('port'):
+				server = smtplib.SMTP(clz.settings['host'], clz.settings['port'])
 			else:
-				server = smtplib.SMTP(self.settings['host'])
+				server = smtplib.SMTP(clz.settings['host'])
 			server.ehlo()
 			server.starttls()
 			server.ehlo()
-			server.login(self.settings['user'], self.settings['password'])
+			server.login(clz.settings['user'], clz.settings['password'])
 			
 			header = 'To:' + to_e + '\n' + 'From:' + from_u + '\n' + 'Subject:' + subject + '\n'
 			message = header + '\n\n' + body
 
 			server.sendmail(from_e, to_e, message)
 			server.quit()
-			
-	def sendFromApp(self, to_e, subject, body):
-		self.sendmail('wurk@happy.com', self.settings['from'], to_e, subject, body)
+	
+	@classmethod		
+	def sendFromApp(clz, to_e, subject, body):
+		clz.sendmail('wurk@happy.com', clz.settings['from'], to_e, subject, body)
 
