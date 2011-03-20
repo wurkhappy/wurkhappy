@@ -190,12 +190,12 @@ class ForgotPasswordHandler(BaseHandler):
 			# send an email to the user containing a link to reset password with the code
 			link = "http://"+self.request.host+"/reset_password?code="+code
 			msg = """\
-			To reset your password, click on this link. (The link is only valid once and only for the next 24 hours.)
+			To reset your password, click on this link and enter a new password. (The link is only valid for the next 24 hours.)
 			"""+link
 			Email.sendFromApp(user.email, 'Reset Password', msg)
 			# render template to confirm
-			self.write("Email Sent")
-
+			self.render("user/forgot_password_confirm.html", title="Forgot Password")
+			
 class ResetPasswordHandler(BaseHandler):
 	ERR = 	{	
 			"passwords_do_not_match":"The passwords you entered do not match, please try again."
