@@ -157,8 +157,19 @@ class ProfileHandler(Authenticated, BaseHandler):
 		self.redirect('/profile')
 
 class ForgotPasswordHandler(BaseHandler):
+	ERR = 	{	
+			"email_does_not_exist":"That email does not exist in our system. Please use a different email."
+			}
+
 	def get(self):
-		self.write("Forgot Password")
+		flash = {"error": self.parseErrors()}
+		self.render("user/forgot_password.html", title="Forgot Password", flash=flash)
 		
 	def post(self):
+		# determine whether user exists
+		# if not, redirect w/ error
+		# if so
+			# generate a code
+			# send an email to the user containing a link to reset password with the code
+			# render template to confirm
 		pass
