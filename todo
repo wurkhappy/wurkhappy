@@ -1,5 +1,2 @@
 PROFILE
 	-logout link on profile
-
-FORGOT PASSWORD
-	-send email instead of just the page with the link
