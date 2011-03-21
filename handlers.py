@@ -6,7 +6,6 @@
 
 import tornado.web as web
 from tools.orm import *
-from helpers import *
 import models
 import handlers 
 from controllers import Verification
