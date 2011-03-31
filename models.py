@@ -66,6 +66,8 @@ class Profile(MappedObj):
 		self.id = None
 		self.userID = None
 		self.bio = None
+		self.blogURL = None
+		self.portfolioURL = None
 	
 	@classmethod
 	def tableName(clz):
@@ -78,6 +80,87 @@ class Profile(MappedObj):
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
+
+# -------------------------------------------------------------------
+# Projects
+# -------------------------------------------------------------------
+
+class Project(MappedObj):
+	
+	def __init__(self):
+		self.id = None
+		self.userID = None
+		self.clientID = None
+		self.name = None
+	
+	@classmethod
+	def tableName(clz):
+		return "project"
+	
+	@classmethod
+	def iteratorWithUserID(clz, userID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName(), userID)
+			result = cursor.fetchone()
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+
+# -------------------------------------------------------------------
+# Invoices
+# -------------------------------------------------------------------
+
+class Invoice(MappedObj):
+
+	def __init__(self):
+		self.id = None
+		self.userID = None
+		self.clientID = None
+		self.projectID = None
+		self.dateCreated = None
+		self.datePaid = None
+
+	@classmethod
+	def tableName(clz):
+		return "invoice"
+
+	@classmethod
+	def iteratorWithProjectID(clz, projectID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE projectID = %%s" % clz.tableName(), projectID)
+			result = cursor.fetchone()
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+
+
+# -------------------------------------------------------------------
+# Line Items
+# -------------------------------------------------------------------
+
+class LineItem(MappedObj):
+
+	def __init__(self):
+		self.id = None
+		self.invoiceID = None
+		self.name = None
+		self.description = None
+		self.price = None
+		self.quantity = None
+
+	@classmethod
+	def tableName(clz):
+		return "lineItem"
+
+	@classmethod
+	def iteratorWithInvoiceID(clz, projectID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE invoiceID = %%s LIMIT 1" % clz.tableName(), projectID)
+			result = cursor.fetchone()
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+
 
 # -------------------------------------------------------------------
 # Forgot Password
