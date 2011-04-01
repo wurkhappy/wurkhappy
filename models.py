@@ -68,6 +68,7 @@ class Profile(MappedObj):
 		self.bio = None
 		self.blogURL = None
 		self.portfolioURL = None
+		self.name = None
 	
 	@classmethod
 	def tableName(clz):

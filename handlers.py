@@ -107,7 +107,7 @@ class LoginHandler(BaseHandler):
 		# else:
  		self.set_secure_cookie("user_id", str(user.id))
 		self.redirect('/profile')
-
+		
 
 class ProfileHandler(Authenticated, BaseHandler):
 	@web.authenticated
