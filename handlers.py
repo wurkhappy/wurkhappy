@@ -142,7 +142,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 		# Set user fields
 		user.firstName = self.get_argument("firstName")
 		user.lastName = self.get_argument("lastName")
-		user.password = Verification.hash_password(str(self.get_argument("password")))
+		
+		if self.get_argument('password', None):
+			user.password = Verification.hash_password(str(self.get_argument("password")))
+		
 		user.save()
 		
 		# Retrieve profile for logged in user

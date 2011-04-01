@@ -1,8 +1,8 @@
 {% extends "../base.html" %}
 {% block body %}
-	<h1>{{ title }} for {{ user.firstName+" "+user.lastName }}</h1>
+	<h1>{{ title }} for {{ escape(user.firstName) + " " + escape(user.lastName) }}</h1>
 	<p>
-		Bio: {{ profile.bio }}
+		Bio: {{ escape(profile.bio) }}
 	</p>
 	<a href="/profile?edit=true">Edit Profile</a>
 {% end %}
