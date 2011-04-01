@@ -56,12 +56,11 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	options.define("port", default=8888, help="run on the given port", type=int)
 	options.define("config", default="config.json", help="load configuration from file", type=str)
 	options.parse_command_line()
 	
 	conf = json.load(open(options.options.config, 'r+'))
 	server = HTTPServer(Application(conf))
-	server.listen(options.options.port)
+	server.listen(conf['tornado']['port'], conf['tornado']['address'])
 	IOLoop.instance().start()
 	

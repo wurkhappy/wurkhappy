@@ -8,7 +8,7 @@ import tornado.web as web
 from tools.orm import *
 import models
 import handlers 
-from controllers import Verification
+from controllers import Verification, Validation
 from tools.email import *
 from datetime import datetime, timedelta
 
@@ -122,7 +122,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 		profile = models.Profile.retrieveByUserID(user.id)
 		if not profile or self.get_argument("edit", None) == "true":
 			# render edit template
-			self.render("user/edit_profile.html", title="Edit Profile", user=user)
+			self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile)
 		else:
 			# show profile
 			self.render("user/show_profile.html", title="Profile", user=user, profile=profile)
