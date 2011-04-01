@@ -1,0 +1,1 @@
+INSERT INTO `user` VALUES (1,'brendan@plusminusfive.com',NULL,NULL,0,'Brendan','Berg',NULL,NULL,NULL,NULL,'2011-02-17 03:14:50'),(2,'marcus.ellison@gmail.com',NULL,NULL,0,'Marcus','Ellison',NULL,NULL,NULL,NULL,'2011-02-17 03:14:50');
