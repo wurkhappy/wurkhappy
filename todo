@@ -1,6 +1,7 @@
 PROFILE
 	-logout link on profile
 	-fix reset password
+	-when saving profile, update urlStub from profile name
 
 
 	- User profiles. We had talked about having a field for a link to the user's website, but we should also think about adding a field for a username so we can expose profiles to the web. I'm thinking we'd add a handler for URLs in the form http://wurkhappy.com/profile/<username>.
