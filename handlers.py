@@ -11,6 +11,7 @@ import handlers
 from controllers import Verification, Validation
 from tools.email import *
 from datetime import datetime, timedelta
+import re
 
 # -------------------------------------------------------------------
 # Handler Base Class and Mixins
@@ -57,7 +58,7 @@ class SignupHandler(BaseHandler):
 
 	def get(self):
 		flash = {"error": self.parseErrors()}
-		self.render("user/signup.html", title="Sign Up", flash=flash)
+		self.render("user/signup.html", title="Sign Up", flash=flash, logged_in_user=self.current_user)
 
 	def post(self):
 		email = self.get_argument("email")
@@ -80,7 +81,7 @@ class SignupHandler(BaseHandler):
 			user.confirmationHash = verifier.hashDigest
 			user.save()
 			self.set_secure_cookie("user_id", str(user.id))
-			self.redirect('/profile')
+			self.redirect('/profiles/new')
 		else:
 			# User exists, redirect with error
 			self.redirect("/signup?err=email_exists")
@@ -95,40 +96,84 @@ class LoginHandler(BaseHandler):
 		from_reset_password = self.get_argument("rp", None)
 		if from_reset_password:
 			flash["error"] = ["Your password was reset successfully."]
-		self.render("user/login.html", title="Sign In", flash=flash)
+		self.render("user/login.html", title="Sign In", flash=flash, logged_in_user=self.current_user)
 
 	def post(self):
 		email = self.get_argument("email")
 		password = self.get_argument("password")
 		user = models.User.retrieveByEmail(email)
+		profile = models.Profile.retrieveByUserID(user.id)
 		if not user or not Verification.check_password(user.password, str(password)):
 			# User wasn't found, or password is wrong, redirect to login with error
 			self.redirect("/login?err=auth_invalid")
-		# else:
- 		self.set_secure_cookie("user_id", str(user.id))
-		self.redirect('/profile')
-
-
-class ProfileHandler(Authenticated, BaseHandler):
+		else:
+ 			self.set_secure_cookie("user_id", str(user.id))
+			self.redirect('/profile/'+profile.urlStub)
+			
+class LogoutHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self):
-		user = self.current_user
+		self.clear_cookie("user_id")
+		self.redirect('/login')
+	
+	@web.authenticated
+	def post(self):
+		self.set_status(404)
+		self.write("Not found")
 
-		if not user:
+class ProfilesHandler(Authenticated, BaseHandler):
+	def get(self, action):
+		if action == "new":
+			user = self.current_user
+			
+			if not user:
+				self.set_status(403)
+				self.write("Forbidden")
+				return
+			else:
+				# check to see whether user already has a profile
+			 	profile = models.Profile.retrieveByUserID(user.id)
+				if profile:
+					# if so, redirect to the edit profile page
+					self.redirect("/profile/"+profile.urlStub+"/edit")
+				else:
+					# otherwise, create a new profile
+					self.render("user/edit_profile.html", title="Create a Profile", user=user, profile=profile, logged_in_user=user)
+		else:
+			self.write('index')
+			
+	def post(self):
+		pass
+
+class ProfileHandler(Authenticated, BaseHandler):
+	def get(self, stub, action):	
+		
+		# retrieve profile from db based on url stub
+		profile = models.Profile.retrieveByUrlStub(stub)
+		
+		# if stub doesn't exist, return 404 page
+		if not profile:
 			self.set_status(404)
 			self.write("Not found")
 			return
 		
-		profile = models.Profile.retrieveByUserID(user.id)
-		if not profile or self.get_argument("edit", None) == "true":
-			# render edit template
-			self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile)
 		else:
-			# show profile
-			self.render("user/show_profile.html", title="Profile", user=user, profile=profile)
+			user = models.User.retrieveByUserID(profile.userID)
+			# if no action was passed, show profile	
+			if not action:		
+				self.render("user/show_profile.html", title="Profile", user=user, profile=profile, logged_in_user = self.current_user)
+				
+			# else if action is edit, make sure user is logged in and the logged in user matches the profile, if so render edit page
+			elif action == "edit":
+				logged_in_user = self.current_user
+				if not logged_in_user or logged_in_user.id != profile.userID:
+					self.set_status(403)
+					self.write("Forbidden")
+					return
+				self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile, logged_in_user=self.current_user)
 			
 	@web.authenticated
-	def post(self):
+	def post(self, *args):
 		user = self.current_user
 		
 		if not user:
@@ -138,8 +183,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 			
 		# Validations
 		# TODO
+		# need to make sure user entered a required profile name and other req'd fields!!
 		
 		# Set user fields
+		
 		user.firstName = self.get_argument("firstName")
 		user.lastName = self.get_argument("lastName")
 		
@@ -158,8 +205,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 
 		# Update profile
 		profile.bio = self.get_argument("bio")
+		profile.name = self.get_argument("name")
+		profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
 		profile.save()
-		self.redirect('/profile')
+		self.redirect('/profile/'+profile.urlStub)
 
 
 
@@ -251,7 +300,7 @@ class ForgotPasswordHandler(BaseHandler):
 
 	def get(self):
 		flash = {"error": self.parseErrors()}
-		self.render("user/forgot_password.html", title="Forgot Password", flash=flash)
+		self.render("user/forgot_password.html", title="Forgot Password", flash=flash, logged_in_user=self.current_user)
 		
 	def post(self):
 		# Check whether user exists 
@@ -260,7 +309,7 @@ class ForgotPasswordHandler(BaseHandler):
 		# User wasn't found, so redirect with error
 		if not user:
 			flash = {"error": [self.ERR["email_does_not_exist"]]}
-			self.render("user/forgot_password.html", title="Forgot Password", flash=flash )
+			self.render("user/forgot_password.html", title="Forgot Password", flash=flash, logged_in_user=self.current_user)
 		else: # user exists
 			# generate a code
 			verifier = Verification()
@@ -279,7 +328,7 @@ class ForgotPasswordHandler(BaseHandler):
 			"""+link
 			Email.sendFromApp(user.email, 'Reset Password', msg)
 			# render template to confirm
-			self.render("user/forgot_password_confirm.html", title="Forgot Password")
+			self.render("user/forgot_password_confirm.html", title="Forgot Password", logged_in_user=self.current_user)
 			
 class ResetPasswordHandler(BaseHandler):
 	ERR = 	{	
@@ -300,7 +349,7 @@ class ResetPasswordHandler(BaseHandler):
 			self.write("Forbidden")
 			return
 		else:
-			self.render("user/reset_password.html", title="Reset Password", flash=flash)
+			self.render("user/reset_password.html", title="Reset Password", flash=flash, logged_in_user=self.current_user)
 		
 	def post(self):
 		password = self.get_argument("password")
@@ -313,7 +362,7 @@ class ResetPasswordHandler(BaseHandler):
 			return
 		elif password != cpassword:
 			flash = {"error":[self.ERR["passwords_do_not_match"]], "code":code}
-			self.render("user/reset_password.html", title="Reset Password", flash=flash)
+			self.render("user/reset_password.html", title="Reset Password", flash=flash, logged_in_user=self.current_user)
 		else:
 			user = models.User.retrieveByUserID(forgotPassword.userID)
 			user.password = Verification.hash_password(str(password))

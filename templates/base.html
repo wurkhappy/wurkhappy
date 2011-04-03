@@ -6,7 +6,12 @@
 		<link rel="stylesheet" type="text/css" href="{{ static_url("css/styles.css") }}" />
 	</head>
 	<body>
-		{% block body %}
-		{% end %}
+		<div id="header">
+			{% if not logged_in_user %}<a href="/login">Sign In</a>{% else %}<a href="/logout">Sign Out</a>{% end %}
+		</div>
+		<div id="main-content">
+			{% block main %}
+			{% end %}
+		</div>
 	</body>
 </html>

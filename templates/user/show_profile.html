@@ -1,8 +1,8 @@
 {% extends "../base.html" %}
-{% block body %}
+{% block main %}
 	<h1>{{ title }} for {{ escape(user.firstName) + " " + escape(user.lastName) }}</h1>
 	<p>
 		Bio: {{ escape(profile.bio) }}
 	</p>
-	<a href="/profile?edit=true">Edit Profile</a>
+	{% if logged_in_user and user.id == logged_in_user.id %}<a href={{"/profile/"+profile.urlStub+"/edit"}}>Edit Profile</a>{% end %}
 {% end %}
