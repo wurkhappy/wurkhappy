@@ -1,5 +1,5 @@
 {% extends "../base.html" %}
-{% block body %}
+{% block main %}
 	<h1>{{ title }} for {% if user.firstName %}{{ user.firstName }} {{ user.lastName }}{% else %}{{ user.email }}{% end %}</h1>
 	<form action="/profile" method="post">
 		{{ xsrf_form_html() }}
