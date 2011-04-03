@@ -11,6 +11,7 @@ import handlers
 from controllers import Verification, Validation
 from tools.email import *
 from datetime import datetime, timedelta
+import re
 
 # -------------------------------------------------------------------
 # Handler Base Class and Mixins
@@ -80,7 +81,7 @@ class SignupHandler(BaseHandler):
 			user.confirmationHash = verifier.hashDigest
 			user.save()
 			self.set_secure_cookie("user_id", str(user.id))
-			self.redirect('/profile')
+			self.redirect('/profiles/new')
 		else:
 			# User exists, redirect with error
 			self.redirect("/signup?err=email_exists")
@@ -105,14 +106,37 @@ class LoginHandler(BaseHandler):
 		if not user or not Verification.check_password(user.password, str(password)):
 			# User wasn't found, or password is wrong, redirect to login with error
 			self.redirect("/login?err=auth_invalid")
-		# else:
- 		self.set_secure_cookie("user_id", str(user.id))
-		self.redirect('/profile/'+profile.urlStub)
-		
+		else:
+ 			self.set_secure_cookie("user_id", str(user.id))
+			self.redirect('/profile/'+profile.urlStub)
+
+class ProfilesHandler(Authenticated, BaseHandler):
+	def get(self, action):
+		if action == "new":
+			user = self.current_user
+			
+			if not user:
+				self.set_status(403)
+				self.write("Forbidden")
+				return
+			else:
+				# check to see whether user already has a profile
+			 	profile = models.Profile.retrieveByUserID(user.id)
+				if profile:
+					# if so, redirect to the edit profile page
+					self.redirect("/profile/"+profile.urlStub+"/edit")
+				else:
+					# otherwise, create a new profile
+					self.render("user/edit_profile.html", title="Create a Profile", user=user, profile=profile)
+		else:
+			self.write('index')
+			
+	def post(self):
+		pass
 
 class ProfileHandler(Authenticated, BaseHandler):
 	def get(self, stub, action):	
-		"print GET ProfileHandler"
+		
 		# retrieve profile from db based on url stub
 		profile = models.Profile.retrieveByUrlStub(stub)
 		
@@ -138,18 +162,23 @@ class ProfileHandler(Authenticated, BaseHandler):
 				self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile)
 			
 	@web.authenticated
-	def post(self):
+	def post(self, *args):
+		print "POST Profile"
 		user = self.current_user
 		
 		if not user:
 			self.set_status(404)
 			self.write("Not found")
+			print "Didn't find user"
 			return
 			
 		# Validations
 		# TODO
+		# need to make sure user entered a required profile name!!
 		
 		# Set user fields
+		
+		print "Did find user"
 		user.firstName = self.get_argument("firstName")
 		user.lastName = self.get_argument("lastName")
 		
@@ -166,10 +195,13 @@ class ProfileHandler(Authenticated, BaseHandler):
 			profile = models.Profile()
 			profile.userID = user.id
 
+		print "Gotcha"
 		# Update profile
 		profile.bio = self.get_argument("bio")
+		profile.name = self.get_argument("name")
+		profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
 		profile.save()
-		self.redirect('/profile')
+		self.redirect('/profile/'+profile.urlStub)
 
 class ForgotPasswordHandler(BaseHandler):
 	ERR = 	{	
