@@ -27,7 +27,12 @@ class Application(web.Application):
 			(r'/login', LoginHandler),
 			(r'/profile', ProfileHandler),
 			(r'/forgot_password', ForgotPasswordHandler),
-			(r'/reset_password', ResetPasswordHandler)
+			(r'/reset_password', ResetPasswordHandler),
+			
+			(r'/project', ProjectHandler),
+			(r'/project/[0-9]+', ProjectHandler),
+			(r'/invoice', InvoiceHandler),
+			(r'/invoice/[0-9]+', InvoiceHandler)
 		]
 		
 		settings = {

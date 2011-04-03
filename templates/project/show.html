@@ -1,0 +1,11 @@
+{% extends "../base.html" %}
+{% block body %}
+	<h1>{{ escape(project.name) }}</h1>
+	<p>
+		Owner: {% if user.firstName %}{{ escape(user.firstName) }} {{ escape(user.lastName) }}{% else %}{{ escape(user.email) }}{% end %}
+	</p>
+	<p>
+		Client: {% if client %}{% if client.firstName %}{{ escape(client.firstName) }} {{ escape(client.lastName) }}{% else %}{{ escape(client.email) }}{% end %}{% else %}--{% end %}
+	</p>
+	<a href="/project/{{ escape(project.id) }}?edit=true">Edit Profile</a>
+{% end %}

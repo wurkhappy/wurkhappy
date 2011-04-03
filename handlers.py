@@ -161,6 +161,89 @@ class ProfileHandler(Authenticated, BaseHandler):
 		profile.save()
 		self.redirect('/profile')
 
+
+
+# ----------------------------------------------------------------------
+# Project Handler
+#
+# GET /project will display a form to create a new project
+# GET /project/<ID> will retrieve the project with the specified ID
+# 
+# POST /project will create a new project
+# POST /project/<ID> will update the existing project with that ID
+# ----------------------------------------------------------------------
+
+class ProjectHandler(BaseHandler):
+	
+	@web.authenticated
+	def get(self, projectID=None):
+		user = self.current_user
+		
+		if not user:
+			self.set_status(403)
+			self.write("Forbidden")
+			return
+		
+		if projectID:
+			project = models.Project.retrieveByID(projectID)
+			
+			if not project:
+				self.set_status(404)
+				self.write("Project not found")
+				return
+			
+			invoices = models.Invoice.iteratorWithProjectID(projectID)
+			client = models.User.retrieveByID(project.clientID)
+			
+			if self.get_argument('edit', False):
+				self.render('project/edit.html', user=user, project=project, client=client, invoices=invoices)
+			else:
+				self.render('project/show.html', user=user, project=project, client=client, invoices=invoices)
+		else:
+			self.render('project/edit.html', user=user, project=None, client=None, invoices=[])
+	
+	@web.authenticated
+	def post(self, projectID=None):
+		user = self.current_user
+		
+		if projectID:
+			project = models.Project.retrieveByID(projectID)
+			
+			if not project:
+				self.set_status(404)
+				self.write("Project not found")
+				return
+			
+			project.clientID = self.get_argument('client_id')
+			project.name = self.get_argument('name')
+			project.save()
+			
+			invoices = models.Invoice.iteratorWithProjectID(projectID)
+			client = models.User.retrieveByID(project.clientID)
+			
+			self.set_status(200)
+		else:
+			project = models.Project()
+			
+			if not project:
+				self.set_status(404)
+				self.write("Project not found")
+				return
+			
+			project.userID = user.id
+			project.clientID = self.get_argument('client_id')
+			project.name = self.get_argument('name')
+			project.save()
+			
+			invoices = []
+			
+			client = models.User.retrieveByID(project.clientID)
+			
+			self.set_status(201)
+			self.set_header('Location: http://' + self.server_name + '/project/' + project.id)
+			
+		self.render('project/show.html', user=user,project=project,  client=client, invoices=invoices)
+		
 class ForgotPasswordHandler(BaseHandler):
 	ERR = 	{	
 			"email_does_not_exist":"That email does not exist in our system. Please use a different email."
