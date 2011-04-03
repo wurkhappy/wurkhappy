@@ -118,7 +118,8 @@ class LogoutHandler(Authenticated, BaseHandler):
 	
 	@web.authenticated
 	def post(self):
-		pass
+		self.set_status(404)
+		self.write("Not found")
 
 class ProfilesHandler(Authenticated, BaseHandler):
 	def get(self, action):
