@@ -163,22 +163,19 @@ class ProfileHandler(Authenticated, BaseHandler):
 			
 	@web.authenticated
 	def post(self, *args):
-		print "POST Profile"
 		user = self.current_user
 		
 		if not user:
 			self.set_status(404)
 			self.write("Not found")
-			print "Didn't find user"
 			return
 			
 		# Validations
 		# TODO
-		# need to make sure user entered a required profile name!!
+		# need to make sure user entered a required profile name and other req'd fields!!
 		
 		# Set user fields
 		
-		print "Did find user"
 		user.firstName = self.get_argument("firstName")
 		user.lastName = self.get_argument("lastName")
 		
@@ -195,7 +192,6 @@ class ProfileHandler(Authenticated, BaseHandler):
 			profile = models.Profile()
 			profile.userID = user.id
 
-		print "Gotcha"
 		# Update profile
 		profile.bio = self.get_argument("bio")
 		profile.name = self.get_argument("name")
