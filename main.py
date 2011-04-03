@@ -25,6 +25,7 @@ class Application(web.Application):
 			(r'/', RootHandler),
 			(r'/signup', SignupHandler),
 			(r'/login', LoginHandler),
+			(r'/logout', LogoutHandler),
 			(r'/profiles/?(.*)', ProfilesHandler),
 			(r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', ProfileHandler),
 			(r'/forgot_password', ForgotPasswordHandler),

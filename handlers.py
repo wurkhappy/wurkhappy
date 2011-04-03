@@ -109,6 +109,16 @@ class LoginHandler(BaseHandler):
 		else:
  			self.set_secure_cookie("user_id", str(user.id))
 			self.redirect('/profile/'+profile.urlStub)
+			
+class LogoutHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self):
+		self.clear_cookie("user_id")
+		self.redirect('/login')
+	
+	@web.authenticated
+	def post(self):
+		pass
 
 class ProfilesHandler(Authenticated, BaseHandler):
 	def get(self, action):
