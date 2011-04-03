@@ -4,5 +4,5 @@
 	<p>
 		Bio: {{ escape(profile.bio) }}
 	</p>
-	{% if user.id == logged_in_user.id %}<a href={{"/profile/"+profile.urlStub+"/edit"}}>Edit Profile</a>{% end %}
+	{% if logged_in_user and user.id == logged_in_user.id %}<a href={{"/profile/"+profile.urlStub+"/edit"}}>Edit Profile</a>{% end %}
 {% end %}

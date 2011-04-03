@@ -130,10 +130,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 			# else if action is edit, make sure user is logged in and if so render edit page
 			elif action == "edit":
 				logged_in_user = self.current_user
-						if not logged_in_user or logged_in_user.id != profile.userID:
-							self.set_status(403)
-							self.write("Forbidden")
-							return
+				if not logged_in_user or logged_in_user.id != profile.userID:
+					self.set_status(403)
+					self.write("Forbidden")
+					return
 				self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile)
 			
 	@web.authenticated
