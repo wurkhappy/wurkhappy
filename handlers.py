@@ -110,22 +110,31 @@ class LoginHandler(BaseHandler):
 		
 
 class ProfileHandler(Authenticated, BaseHandler):
-	@web.authenticated
-	def get(self):
-		user = self.current_user
-
-		if not user:
+	def get(self, stub, action):	
+		"print GET ProfileHandler"
+		# retrieve profile from db based on url stub
+		profile = models.Profile.retrieveByUrlStub(stub)
+		
+		# if stub doesn't exist, return 404 page
+		if not profile:
 			self.set_status(404)
 			self.write("Not found")
 			return
 		
-		profile = models.Profile.retrieveByUserID(user.id)
-		if not profile or self.get_argument("edit", None) == "true":
-			# render edit template
-			self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile)
 		else:
-			# show profile
-			self.render("user/show_profile.html", title="Profile", user=user, profile=profile)
+			user = models.User.retrieveByUserID(profile.userID)
+			# if no action was passed, show profile	
+			if not action:		
+				self.render("user/show_profile.html", title="Profile", user=user, profile=profile, logged_in_user = self.current_user)
+				
+			# else if action is edit, make sure user is logged in and if so render edit page
+			elif action == "edit":
+				logged_in_user = self.current_user
+						if not logged_in_user or logged_in_user.id != profile.userID:
+							self.set_status(403)
+							self.write("Forbidden")
+							return
+				self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile)
 			
 	@web.authenticated
 	def post(self):

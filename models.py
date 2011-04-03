@@ -81,6 +81,14 @@ class Profile(MappedObj):
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
+		
+	@classmethod
+	def retrieveByUrlStub(clz, stub):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE urlStub = %%s LIMIT 1" % clz.tableName(), stub)
+			result = cursor.fetchone()
+		
+		return clz.initWithDict(result)
 
 # -------------------------------------------------------------------
 # Projects

@@ -5,7 +5,8 @@
 		{{ xsrf_form_html() }}
 		<p>
 			<label for "firstName">First Name</label> <input type="text" name="firstName" {% if user.firstName %}value="{{ escape(user.firstName) }}"{% end %}/><br />
-			<label for "lastName">Last Name</label> <input type="text" name="lastName" {% if user.lastName %}value="{{ escape(user.lastName) }}"{% end %}/>
+			<label for "lastName">Last Name</label> <input type="text" name="lastName" {% if user.lastName %}value="{{ escape(user.lastName) }}"{% end %}/><br />
+			<label for "name">Profile Name</label> <input type="text" name="name" {% if profile.name %}value="{{ escape(profile.name) }}"{% end %}/><br />
 		</p>
 		<p>
 			<label for="bio">Tell us a little bit about yourself</label><br />
@@ -19,7 +20,7 @@
 			{% end %}
 		</p>
  		<p>
-	       	<a href="/profile">Cancel</a> | <input type="submit" value="Submit" />
+	       	<a href={{ "/profile/"+profile.urlStub }}>Cancel</a> | <input type="submit" value="Submit" />
 		</p>
 	</form>
 {% end %}
