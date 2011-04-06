@@ -102,7 +102,7 @@ class LoginHandler(BaseHandler):
 		email = self.get_argument("email")
 		password = self.get_argument("password")
 		user = models.User.retrieveByEmail(email)
-		profile = models.Profile.retrieveByUserID(user.id)
+		profile = user.getProfile()
 		if not user or not Verification.check_password(user.password, str(password)):
 			# User wasn't found, or password is wrong, redirect to login with error
 			self.redirect("/login?err=auth_invalid")
@@ -132,7 +132,7 @@ class ProfilesHandler(Authenticated, BaseHandler):
 				return
 			else:
 				# check to see whether user already has a profile
-			 	profile = models.Profile.retrieveByUserID(user.id)
+			 	profile = user.getProfile()
 				if profile:
 					# if so, redirect to the edit profile page
 					self.redirect("/profile/"+profile.urlStub+"/edit")
