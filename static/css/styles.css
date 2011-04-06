@@ -13,3 +13,7 @@
 #login-form td {
 	text-align: right;
 }
+
+.error {
+	color: red;
+}

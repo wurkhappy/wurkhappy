@@ -146,6 +146,9 @@ class ProfilesHandler(Authenticated, BaseHandler):
 		pass
 
 class ProfileHandler(Authenticated, BaseHandler):
+	ERR = 	{	
+			"name_missing":"All name fields are required."
+			}
 	def get(self, stub, action):	
 		
 		# retrieve profile from db based on url stub
@@ -165,7 +168,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 				
 			# else if action is edit, make sure user is logged in and the logged in user matches the profile, if so render edit page
 			elif action == "edit":
-				flash = {}
+				flash = {"error": self.parseErrors()}
 				from_reset_password = self.get_argument("rp", None)
 				if from_reset_password:
 					flash["error"] = ["Your password was reset successfully."]
@@ -184,11 +187,15 @@ class ProfileHandler(Authenticated, BaseHandler):
 			self.set_status(404)
 			self.write("Not found")
 			return
-			
-		# Validations
-		# TODO
-		# need to make sure user entered a required profile name and other req'd fields!!
 		
+		# Validations
+		# need to make sure user entered a required profile name and other req'd fields!!
+		errs = ""
+		if not self.get_argument("name", None) or not self.get_argument("firstName", None) or not self.get_argument("lastName", None):
+			errs += "name_missing"
+		if errs != "":
+			self.redirect('/profile/'+user.getProfile().urlStub+"/edit?err="+errs)
+				
 		# Set user fields
 		
 		user.firstName = self.get_argument("firstName")
@@ -197,10 +204,8 @@ class ProfileHandler(Authenticated, BaseHandler):
 		if self.get_argument('password', None):
 			user.password = Verification.hash_password(str(self.get_argument("password")))
 		
-		user.save()
-		
 		# Retrieve profile for logged in user
-		profile = models.Profile.retrieveByUserID(user.id)
+		profile = user.getProfile()
 		
 		if not profile:
 			# No profile exists yet, so create one and set its userID to the current user
@@ -211,7 +216,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 		profile.bio = self.get_argument("bio")
 		profile.name = self.get_argument("name")
 		profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
-		profile.save()
+			
+		user.save()
+		sprofile.save()
+		
 		self.redirect('/profile/'+profile.urlStub)
 
 class ForgotPasswordHandler(BaseHandler):
