@@ -165,12 +165,16 @@ class ProfileHandler(Authenticated, BaseHandler):
 				
 			# else if action is edit, make sure user is logged in and the logged in user matches the profile, if so render edit page
 			elif action == "edit":
+				flash = {}
+				from_reset_password = self.get_argument("rp", None)
+				if from_reset_password:
+					flash["error"] = ["Your password was reset successfully."]
 				logged_in_user = self.current_user
 				if not logged_in_user or logged_in_user.id != profile.userID:
 					self.set_status(403)
 					self.write("Forbidden")
 					return
-				self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile, logged_in_user=self.current_user)
+				self.render("user/edit_profile.html", title="Edit Profile", user=user, profile=profile, logged_in_user=self.current_user, flash=flash)
 			
 	@web.authenticated
 	def post(self, *args):
@@ -247,7 +251,7 @@ class ForgotPasswordHandler(BaseHandler):
 			# render template to confirm
 			self.render("user/forgot_password_confirm.html", title="Forgot Password", logged_in_user=self.current_user)
 			
-class ResetPasswordHandler(BaseHandler):
+class ResetPasswordHandler(Authenticated, BaseHandler):
 	ERR = 	{	
 			"passwords_do_not_match":"The passwords you entered do not match, please try again."
 			}
@@ -257,11 +261,11 @@ class ResetPasswordHandler(BaseHandler):
 		code = self.get_argument("code", '')
 		flash["code"] = code
 		forgotPassword = models.ForgotPassword.retrieveByCode(code)
-		if not forgotPassword:
+		if not self.current_user and not forgotPassword:
 			self.set_status(403)
 			self.write("Forbidden")
 			return
-		elif (forgotPassword.validUntil < datetime.now() or forgotPassword.active == False):
+		elif not self.current_user and (forgotPassword.validUntil < datetime.now() or forgotPassword.active == False):
 			self.set_status(403)
 			self.write("Forbidden")
 			return
@@ -273,7 +277,7 @@ class ResetPasswordHandler(BaseHandler):
 		cpassword = self.get_argument("confirm_password")
 		code = self.get_argument("code", '')
 		forgotPassword = models.ForgotPassword.retrieveByCode(code)
-		if not forgotPassword:
+		if not self.current_user and not forgotPassword:
 			self.set_status(403)
 			self.write("Forbidden")
 			return
@@ -281,9 +285,19 @@ class ResetPasswordHandler(BaseHandler):
 			flash = {"error":[self.ERR["passwords_do_not_match"]], "code":code}
 			self.render("user/reset_password.html", title="Reset Password", flash=flash, logged_in_user=self.current_user)
 		else:
-			user = models.User.retrieveByUserID(forgotPassword.userID)
+			user = None
+			if not forgotPassword:
+				user = self.current_user
+			else:
+				user = models.User.retrieveByUserID(forgotPassword.userID)
 			user.password = Verification.hash_password(str(password))
 			user.save()
-			forgotPassword.active = 0
-			forgotPassword.save()
-			self.redirect("/login?rp=true")
+			flash = {"error": "Your password was reset successfully."}
+			if forgotPassword:
+				forgotPassword.active = 0
+				forgotPassword.save()
+			if self.current_user:
+				# if user is already logged in, redirect to edit profile page
+			 	self.redirect("/profile/"+self.current_user.getProfile().urlStub+"/edit?rp=true")
+			else:
+				self.redirect("/login?rp=true")

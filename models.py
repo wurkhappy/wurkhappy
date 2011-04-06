@@ -53,7 +53,9 @@ class User(MappedObj):
 			result = cursor.fetchone()
 
 		return clz.initWithDict(result)
-	
+		
+	def getProfile(self):
+		return Profile.retrieveByUserID(self.id)
 
 
 # -------------------------------------------------------------------
