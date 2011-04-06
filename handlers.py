@@ -218,7 +218,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 		profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
 			
 		user.save()
-		sprofile.save()
+		profile.save()
 		
 		self.redirect('/profile/'+profile.urlStub)
 
