@@ -187,6 +187,14 @@ class ProfileHandler(Authenticated, BaseHandler):
 			self.set_status(404)
 			self.write("Not found")
 			return
+			
+		# Retrieve profile for logged in user
+		profile = user.getProfile()
+
+		if not profile:
+			# No profile exists yet, so create one and set its userID to the current user
+			profile = models.Profile()
+			profile.userID = user.id
 		
 		# Validations
 		# need to make sure user entered a required profile name and other req'd fields!!
@@ -194,7 +202,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 		if not self.get_argument("name", None) or not self.get_argument("firstName", None) or not self.get_argument("lastName", None):
 			errs += "name_missing"
 		if errs != "":
-			self.redirect('/profile/'+user.getProfile().urlStub+"/edit?err="+errs)
+			self.redirect('/profile/'+profile.urlStub+"/edit?err="+errs)
 				
 		# Set user fields
 		
@@ -204,14 +212,6 @@ class ProfileHandler(Authenticated, BaseHandler):
 		if self.get_argument('password', None):
 			user.password = Verification.hash_password(str(self.get_argument("password")))
 		
-		# Retrieve profile for logged in user
-		profile = user.getProfile()
-		
-		if not profile:
-			# No profile exists yet, so create one and set its userID to the current user
-			profile = models.Profile()
-			profile.userID = user.id
-
 		# Update profile
 		profile.bio = self.get_argument("bio")
 		profile.name = self.get_argument("name")
