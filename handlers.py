@@ -147,7 +147,8 @@ class ProfilesHandler(Authenticated, BaseHandler):
 
 class ProfileHandler(Authenticated, BaseHandler):
 	ERR = 	{	
-			"name_missing":"All name fields are required."
+			"name_missing":"All name fields are required.",
+			"invalid_url":"URLs must be of the format http://website.com."
 			}
 	def get(self, stub, action):	
 		
@@ -201,28 +202,36 @@ class ProfileHandler(Authenticated, BaseHandler):
 		errs = ""
 		if not self.get_argument("name", None) or not self.get_argument("firstName", None) or not self.get_argument("lastName", None):
 			errs += "name_missing"
+		
+		blogURL = self.get_argument("blogURL", None)
+		portfolioURL = self.get_argument("portfolioURL", None)
+		if (blogURL and not Validation.validateURL(blogURL)) or (portfolioURL and not Validation.validateURL(portfolioURL)):
+			if errs != "":
+				errs += "-"
+			errs += "invalid_url"
+			
 		if errs != "":
 			self.redirect('/profile/'+profile.urlStub+"/edit?err="+errs)
-				
-		# Set user fields
+		else:		
+			# Set user fields
 		
-		user.firstName = self.get_argument("firstName")
-		user.lastName = self.get_argument("lastName")
+			user.firstName = self.get_argument("firstName")
+			user.lastName = self.get_argument("lastName")
 		
-		if self.get_argument('password', None):
-			user.password = Verification.hash_password(str(self.get_argument("password")))
+			if self.get_argument('password', None):
+				user.password = Verification.hash_password(str(self.get_argument("password")))
 		
-		# Update profile
-		profile.bio = self.get_argument("bio", None)
-		profile.name = self.get_argument("name")
-		profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
-		profile.blogURL = self.get_argument("blogURL", None)
-		profile.portfolioURL = self.get_argument("portfolioURL", None)
+			# Update profile
+			profile.bio = self.get_argument("bio", None)
+			profile.name = self.get_argument("name")
+			profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
+			profile.blogURL = blogURL
+			profile.portfolioURL = portfolioURL
 			
-		user.save()
-		profile.save()
+			user.save()
+			profile.save()
 		
-		self.redirect('/profile/'+profile.urlStub)
+			self.redirect('/profile/'+profile.urlStub)
 
 class ForgotPasswordHandler(BaseHandler):
 	ERR = 	{	
