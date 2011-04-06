@@ -10,15 +10,18 @@
 	{% end %}
 	<form action="/profile" method="post">
 		{{ xsrf_form_html() }}
-		<p>
+		<fieldset>
 			<label for "firstName">First Name*</label> <input type="text" name="firstName" {% if user.firstName %}value="{{ escape(user.firstName) }}"{% end %}/><br />
 			<label for "lastName">Last Name*</label> <input type="text" name="lastName" {% if user.lastName %}value="{{ escape(user.lastName) }}"{% end %}/><br />
 			<label for "name">Profile Name*</label> <input type="text" name="name" {% if profile and profile.name %}value="{{ escape(profile.name) }}"{% end %}/><br />
-		</p>
-		<p>
-			<label for="bio">Tell us a little bit about yourself</label><br />
-			<textarea name="bio" rows="10" cols="50">{% if profile and profile.bio %}{{ escape(profile.bio) }}{% end %}</textarea>
-		</p>
+		</fieldset>
+		<fieldset>
+			<label for "name">Blog URL</label> <input type="text" name="blogURL" {% if profile and profile.blogURL %}value="{{ escape(profile.blogURL) }}"{% end %}/><br />
+			<label for "name">Portfolio URL</label> <input type="text" name="portfolioURL" {% if profile and profile.portfolioURL %}value="{{ escape(profile.portfolioURL) }}"{% end %}/><br />
+		</fieldset>
+		<fieldset>
+			<label for="bio">Bio</label><textarea name="bio" rows="10" cols="50">{% if profile and profile.bio %}{{ escape(profile.bio) }}{% end %}</textarea>
+		</fieldset>
 		<p>
 			{% if user.password %}
 			<a href="/reset_password">Reset password</a>

@@ -68,8 +68,8 @@ class Profile(MappedObj):
 		self.id = None
 		self.userID = None
 		self.bio = None
-		#self.blogURL = None
-		#self.portfolioURL = None
+		self.blogURL = None
+		self.portfolioURL = None
 		self.name = None
 	
 	@classmethod

@@ -17,3 +17,16 @@
 .error {
 	color: red;
 }
+
+fieldset {
+  padding: 1em;
+	width: 50%;
+ }
+label {
+  float:left;
+  width:20%;
+  margin-right:0.5em;
+  padding-top:0.2em;
+  text-align:right;
+  font-weight:bold;
+ }

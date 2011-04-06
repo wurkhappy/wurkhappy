@@ -213,9 +213,11 @@ class ProfileHandler(Authenticated, BaseHandler):
 			user.password = Verification.hash_password(str(self.get_argument("password")))
 		
 		# Update profile
-		profile.bio = self.get_argument("bio")
+		profile.bio = self.get_argument("bio", None)
 		profile.name = self.get_argument("name")
 		profile.urlStub = re.sub(r'[^\w^d]', r'-', profile.name.lower())
+		profile.blogURL = self.get_argument("blogURL", None)
+		profile.portfolioURL = self.get_argument("portfolioURL", None)
 			
 		user.save()
 		profile.save()
