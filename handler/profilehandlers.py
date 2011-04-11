@@ -119,6 +119,6 @@ class ProfilesHandler(Authenticated, BaseHandler):
 					self.redirect("/profile/"+profile.urlStub+"/edit")
 				else:
 					# otherwise, create a new profile
-					self.render("user/edit_profile.html", title="Create a Profile", user=user, profile=profile, logged_in_user=user)
+					self.render("user/edit_profile.html", title="Create a Profile", user=user, profile=profile, logged_in_user=user, flash={})
 		else:
 			self.write('index')
