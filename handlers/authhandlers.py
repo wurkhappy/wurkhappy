@@ -1,8 +1,8 @@
 from base import *
 from helpers.verification import Verification
 from helpers.validation import Validation
-from model.user import User
-from model.forgotpassword import ForgotPassword
+from models.user import User
+from models.forgotpassword import ForgotPassword
 from tools.email import *
 from datetime import datetime, timedelta
 

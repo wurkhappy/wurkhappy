@@ -1,8 +1,8 @@
 import re
 
 from base import *
-from model.user import User
-from model.profile import Profile
+from models.user import User
+from models.profile import Profile
 from helpers.verification import Verification
 from helpers.validation import Validation
 

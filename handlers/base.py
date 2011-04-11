@@ -1,5 +1,5 @@
 import tornado.web as web
-from model.user import User
+from models.user import User
 
 class BaseHandler(web.RequestHandler):
 	def authenticated(self, method):

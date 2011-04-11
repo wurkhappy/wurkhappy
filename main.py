@@ -9,8 +9,7 @@ from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
 
-from handler import *
-from controllers import *
+from handlers import *
 from tools.email import *
 from tools.orm import *
 
