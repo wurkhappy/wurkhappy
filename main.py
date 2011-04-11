@@ -9,9 +9,10 @@ from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
 
-from handlers import *
+from handler import *
 from controllers import *
 from tools.email import *
+from tools.orm import *
 
 # -------------------------------------------------------------------
 # Application main
@@ -22,14 +23,14 @@ from tools.email import *
 class Application(web.Application):
 	def __init__(self, config):
 		handlers = [
-			(r'/', RootHandler),
-			(r'/signup', SignupHandler),
-			(r'/login', LoginHandler),
-			(r'/logout', LogoutHandler),
-			(r'/profiles/?(.*)', ProfilesHandler),
-			(r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', ProfileHandler),
-			(r'/forgot_password', ForgotPasswordHandler),
-			(r'/reset_password', ResetPasswordHandler)
+			(r'/', root.RootHandler),
+			(r'/signup', authhandlers.SignupHandler),
+			(r'/login', authhandlers.LoginHandler),
+			(r'/logout', authhandlers.LogoutHandler),
+			(r'/profiles/?(.*)', profilehandlers.ProfilesHandler),
+			(r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', profilehandlers.ProfileHandler),
+			(r'/forgot_password', authhandlers.ForgotPasswordHandler),
+			(r'/reset_password', authhandlers.ResetPasswordHandler)
 		]
 		
 		settings = {
