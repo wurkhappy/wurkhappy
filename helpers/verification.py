@@ -1,15 +1,8 @@
-# WurkHappy Helpers
-# Version 0.1
-# 
-# Written by Brendan Berg
-# Copyright Plus or Minus Five, 2011
-
 import hashlib
 import base64
 import uuid
 import string
 import random
-import re
 import hmac
 import os
 import smtplib
@@ -78,18 +71,4 @@ class Verification (object):
 	  	hashed_password = hashed_password.decode("base64")
 
 	  	return hashed_password == Verification.__pbkdf_sha256(plain_password, salt, Verification.NUM_ITERATIONS)
-
-		
-# -------------------------------------------------------------------
-# Validation
-# -------------------------------------------------------------------
-
-class Validation (object):
-	@staticmethod
-	def validateEmail(email):
-
-		if len(email) > 7:
-			if re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", email) != None:
-				return True
-		return False
 

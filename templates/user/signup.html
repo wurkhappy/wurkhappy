@@ -11,10 +11,11 @@
 	<div id="signup-form">
 		<form action="/signup" method="post">
 			{{ xsrf_form_html() }}
-			<p>
-				<label for="email">Enter your email address</label><br />
-				<input type="text" name="email" /><input type="submit" value="Go" />
-			</p>
+			<fieldset>
+				<label for="email">Enter your email address</label>
+				<input type="text" name="email" />
+				<input type="submit" value="Go" />
+			</fieldset>
 		</form>
 		<p>
 			Already have an account? <a href="/login">Sign In.</a>
