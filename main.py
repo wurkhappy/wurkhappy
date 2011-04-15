@@ -31,10 +31,10 @@ class Application(web.Application):
 			(r'/forgot_password', ForgotPasswordHandler),
 			(r'/reset_password', ResetPasswordHandler),
 			
+			(r'/project/([0-9]+)', ProjectHandler),
 			(r'/project', ProjectHandler),
-			(r'/project/[0-9]+', ProjectHandler),
+			(r'/invoice/([0-9]+)', InvoiceHandler),
 			(r'/invoice', InvoiceHandler),
-			(r'/invoice/[0-9]+', InvoiceHandler)
 		]
 		
 		settings = {

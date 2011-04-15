@@ -222,7 +222,7 @@ class ProfileHandler(Authenticated, BaseHandler):
 # POST /project/<ID> will update the existing project with that ID
 # ----------------------------------------------------------------------
 
-class ProjectHandler(BaseHandler):
+class ProjectHandler(Authenticated, BaseHandler):
 	
 	@web.authenticated
 	def get(self, projectID=None):
@@ -245,11 +245,11 @@ class ProjectHandler(BaseHandler):
 			client = models.User.retrieveByID(project.clientID)
 			
 			if self.get_argument('edit', False):
-				self.render('project/edit.html', user=user, project=project, client=client, invoices=invoices)
+				self.render('project/edit.html', title=project.name, user=user, project=project, client=client, invoices=invoices, logged_in_user=user)
 			else:
-				self.render('project/show.html', user=user, project=project, client=client, invoices=invoices)
+				self.render('project/show.html', title=project.name, user=user, project=project, client=client, invoices=invoices, logged_in_user=user)
 		else:
-			self.render('project/edit.html', user=user, project=None, client=None, invoices=[])
+			self.render('project/edit.html', title="New Project", user=user, project=None, client=None, invoices=[], logged_in_user=user)
 	
 	@web.authenticated
 	def post(self, projectID=None):
@@ -289,10 +289,25 @@ class ProjectHandler(BaseHandler):
 			client = models.User.retrieveByID(project.clientID)
 			
 			self.set_status(201)
-			self.set_header('Location: http://' + self.server_name + '/project/' + project.id)
-			
-		self.render('project/show.html', user=user,project=project,  client=client, invoices=invoices)
+			self.set_header('Location', 'http://' + self.request.host + '/project/' + str(project.id))
+			return
+		self.render('project/show.html', title=project.name, user=user, project=project,  client=client, invoices=invoices, logged_in_user=user)
 		
+
+
+# ----------------------------------------------------------------------
+# Invoice Handler
+#
+# GET /project will display a form to create a new project
+# GET /project/<ID> will retrieve the project with the specified ID
+# 
+# POST /project will create a new project
+# POST /project/<ID> will update the existing project with that ID
+# ----------------------------------------------------------------------
+
+class InvoiceHandler(Authenticated, BaseHandler):
+	pass
+
 class ForgotPasswordHandler(BaseHandler):
 	ERR = 	{	
 			"email_does_not_exist":"That email does not exist in our system. Please use a different email."
