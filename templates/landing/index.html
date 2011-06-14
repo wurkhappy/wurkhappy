@@ -1,0 +1,20 @@
+{% extends "../base.html" %}
+{% block main %}
+	<h1>{{ title }}</h1>
+	{% if flash.get("error") != None %}
+		{% for e in flash["error"] %}
+			<p class="error">
+				{{ e }}
+			</p>
+		{% end %}
+	{% end %}
+	<form action="/signup" method="post">
+		{{ xsrf_form_html() }}
+		<table id="login-form">
+			<tr>
+				<td class="login-form"><label for "email">Email: </label></td>
+				<td class="login-form"><input type="text" name="email" /></td>
+			</tr>
+		</table>
+	</form>
+{% end %}

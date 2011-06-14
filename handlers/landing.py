@@ -1,20 +1,39 @@
 from base import *
+from models.user import *
+from helpers.verification import Verification
 
 class RootHandler(BaseHandler):
 	def get(self):
-		self.write("How are you gentlemen!")
+		self.render('landing/index.html')
+
+
 
 class SignupHandler(BaseHandler):
 	def get(self):
-		pass
+		self.redirect('/')
+	
 	def post(self):
-		pass
+		email = self.get_argument("email", None)
+		
+		user = User()
+		user.email = email
+		user.confirmed = 0
+		# user.invited = 0
+		user.dateCreated = datetime.now()
+		verifier = Verification()
+		user.confirmationCode = verifier.code
+		user.confirmationHash = verifier.hashDigest
+		user.save()
+		
+		self.render('landing/thankyou.html')
 	
 class AboutHandler(BaseHandler):
 	def get(self):
-		pass
-	
+		self.render('landing/about.html')
+
+
+
 class JobsHandler(BaseHandler):
 	def get(self):
-		pass
-	
+		self.render('landing/jobs.html')
+
