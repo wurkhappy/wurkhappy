@@ -13,7 +13,17 @@ class LineItem(MappedObj):
 		self.description = None
 		self.price = None
 		self.quantity = None
-
+	
+	def getPublicDictionary(self):
+		return {
+			"id": self.id,
+			"invoiceID": self.invoiceID,
+			"name": self.name,
+			"description": self.description,
+			"price": self.price,
+			"quantity": self.quantity
+		}
+	
 	@classmethod
 	def tableName(clz):
 		return "lineItem"

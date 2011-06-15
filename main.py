@@ -30,10 +30,13 @@ class Application(web.Application):
 			(r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', profilehandlers.ProfileHandler),
 			(r'/forgot_password', authhandlers.ForgotPasswordHandler),
 			(r'/reset_password', authhandlers.ResetPasswordHandler),
+			
 			(r'/project/([0-9]+)', projecthandlers.ProjectHandler),
-			(r'/project', projecthandlers.ProjectHandler),
+			(r'/project/?', projecthandlers.ProjectHandler),
 			(r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),
-			(r'/invoice', invoicehandlers.InvoiceHandler),
+			(r'/invoice/?', invoicehandlers.InvoiceHandler),
+			(r'/line_item.json', invoicehandlers.LineItemHandler),
+			(r'/line_item/([0-9]+).json', invoicehandlers.LineItemHandler),
 		]
 		
 		settings = {

@@ -30,15 +30,15 @@ class ProjectHandler(Authenticated, BaseHandler):
 			return
 		
 		if projectID:
-			project = models.Project.retrieveByID(projectID)
+			project = Project.retrieveByID(projectID)
 			
 			if not project:
 				self.set_status(404)
 				self.write("Project not found")
 				return
 			
-			invoices = models.Invoice.iteratorWithProjectID(projectID)
-			client = models.User.retrieveByID(project.clientID)
+			invoices = Invoice.iteratorWithProjectID(projectID)
+			client = User.retrieveByID(project.clientID)
 			
 			if self.get_argument('edit', False):
 				self.render('project/edit.html', title=project.name, user=user, project=project, client=client, invoices=invoices, logged_in_user=user)
@@ -52,7 +52,7 @@ class ProjectHandler(Authenticated, BaseHandler):
 		user = self.current_user
 		
 		if projectID:
-			project = models.Project.retrieveByID(projectID)
+			project = Project.retrieveByID(projectID)
 			
 			if not project:
 				self.set_status(404)
@@ -63,12 +63,12 @@ class ProjectHandler(Authenticated, BaseHandler):
 			project.name = self.get_argument('name')
 			project.save()
 			
-			invoices = models.Invoice.iteratorWithProjectID(projectID)
-			client = models.User.retrieveByID(project.clientID)
+			invoices = Invoice.iteratorWithProjectID(projectID)
+			client = User.retrieveByID(project.clientID)
 			
 			self.set_status(200)
 		else:
-			project = models.Project()
+			project = Project()
 			
 			if not project:
 				self.set_status(404)
@@ -82,7 +82,7 @@ class ProjectHandler(Authenticated, BaseHandler):
 			
 			invoices = []
 			
-			client = models.User.retrieveByID(project.clientID)
+			client = User.retrieveByID(project.clientID)
 			
 			self.set_status(201)
 			self.set_header('Location', 'http://' + self.request.host + '/project/' + str(project.id))

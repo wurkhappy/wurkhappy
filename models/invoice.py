@@ -12,6 +12,7 @@ class Invoice(MappedObj):
 		self.clientID = None
 		self.projectID = None
 		self.dateCreated = None
+		self.dateSent = None
 		self.datePaid = None
 
 	@classmethod
