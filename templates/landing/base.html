@@ -1,14 +1,37 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-	<head>
-		<title>{{ title }}</title>
-		<link rel="stylesheet" type="text/css" href="{{ static_url("css/styles.css") }}" />
-	</head>
-	<body>
-		<div id="main-content">
-			{% block main %}
-			{% end %}
-		</div>
-	</body>
+<!DOCTYPE html>
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+
+	<title>{{ title }}</title>
+	<!--<title>Wurk Happy - Our work agreements get you paid faster.</title>-->
+
+	<link rel="Shortcut Icon" type="images/ico" href="/favicon.ico" />
+
+	<!--[if IE]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<link rel="stylesheet" type="text/css" href="{{ static_url("css/screen.css") }}" media="screen" />
+
+</head>
+<body>
+	
+	{% block header %}
+	{% end %}
+	
+	{% block main %}
+	{% end %}
+	
+	<!-- Javascript at the bottom for fast page loading -->
+
+	<!-- Grab Google CDN's jQuery. fall back to local if necessary -->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+	<script>!window.jQuery && document.write(unescape('%3Cscript src={{ static_url("js/libs/jquery-1.4.2.js") }}%3E%3C/script%3E'))</script>
+
+	<!-- scripts concatenated and minified via ant build script-->
+	<script src={{ static_url("scripts/landing.js") }}></script>
+	<!-- end concatenated and minified scripts-->
+
+</body>
 </html>

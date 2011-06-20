@@ -1,0 +1,168 @@
+/* RESET
+================================================================================ */
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	outline: 0;
+}
+
+
+/* COMMON
+================================================================================ */
+
+
+body {
+	text-align: center;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	background: rgb(244,244,244) url(../images/bg.png);
+	line-height: 1.5em;
+	color: rgb(102,102,102);
+}
+
+a:link,
+a:visited {
+	text-decoration: none;
+	color: rgb(205,0,0);
+}
+
+a:hover,
+a:active {
+	text-decoration: underline;
+	color: rgb(125,0,0);
+}
+
+p {
+	padding: 0 20px;
+	margin-bottom: 20px;
+}
+
+strong {
+	font-weight: bold;
+}
+
+h1 { 
+	font-size: 2em;
+	line-height: 1.25em;
+	font-weight: bold;
+	padding: 0 20px;
+	margin: 20px 0;
+	color: rgb(0,0,0);
+}
+
+
+/* Structure
+================================================================================ */
+
+
+.container {
+	margin: 0 auto;
+	width: 960px;
+}
+
+.column-full {
+	float: left;
+	width: 100%;
+	clear: both;
+}
+
+
+/* Style
+================================================================================ */
+
+
+#header {
+	padding: 20px 0 0 0;
+	background-color: rgb(255,255,255);
+	border-bottom: 1px solid rgb(217,217,217);
+	color: rgb(153,153,153);
+}
+
+#intro {
+	padding: 20px 0;
+}
+
+#form-area {
+	margin-left: 0;
+}
+
+#form-area form {
+  padding: 0 210px 0 230px;
+}
+
+#form-area form fieldset {
+  float: left;
+  text-align: left;
+}
+
+#form-area form fieldset#asking {
+  width: 380px;
+}
+
+#form-area form fieldset#asking input {
+  padding: 10px;
+  font-size: 1em;
+  width: 340px;
+  border: 1px solid rgb(153,153,153);
+}
+
+#form-area form fieldset#submitting {
+  width: 140px;
+}
+
+#form-area form fieldset#submitting input {
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border: 1px solid rgb(136,204,85);
+  background-color: rgb(136,204,85);
+  color: rgb(255,255,255);
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 1px 2px rgb(102,102,102);
+  -moz-box-shadow: 0 1px 2px rgb(102,102,102);
+  box-shadow: 0 1px 2px rgb(102,102,102);
+  text-shadow: 0 -1px 0 rgb(153,153,153);
+  cursor: pointer;
+}
+
+#form-area form fieldset p {
+  padding: 0;
+  font-size: .75em;
+  color: rgb(153,153,153);
+}
+
+#form-area form fieldset label {
+  display: block;
+}
+
+#footer p {
+  font-size: .75em;
+  color: rgb(153,153,153);
+}
+
+
+
+
+
+
+
+

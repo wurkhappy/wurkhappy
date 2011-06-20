@@ -1,20 +1,50 @@
-{% extends "../base.html" %}
+{% extends "base.html" %}
+
+{% block header %}
+	<div id="header" class="column-full">
+		<div class="container">
+			
+			<p>Wurk Happy</p>
+			
+		</div>
+	</div>
+{% end %}
+
 {% block main %}
-	<h1>{{ title }}</h1>
-	{% if flash.get("error") != None %}
-		{% for e in flash["error"] %}
-			<p class="error">
-				{{ e }}
-			</p>
-		{% end %}
-	{% end %}
-	<form action="/signup" method="post">
-		{{ xsrf_form_html() }}
-		<table id="login-form">
-			<tr>
-				<td class="login-form"><label for "email">Email: </label></td>
-				<td class="login-form"><input type="text" name="email" /></td>
-			</tr>
-		</table>
-	</form>
+	<div id="intro" class="column-full">
+		<div class="container">
+			
+			<h1>Our platform gets you paid faster.</h1>
+			<p>Easily create work agreements that get you paid and give your clients more peace of mind.</p>
+			
+		</div>
+	</div>
+
+
+	<div id="form-area" class="column-full">
+		<div class="container">
+			
+			<form action="/signup" method="POST" accept-charset="utf-8" id="signup_form">
+				<fieldset id="asking">
+					<label for="email">Subscribe to Learn More</label>
+					<input type="text" name="email" value="" id="form_email" placeholder="email address" />
+					{{ xsrf_form_html() }}
+					<p>We promise not to spam you.</p>
+				</fieldset>
+				<fieldset id="submitting">
+					<label for="">&nbsp;</label>
+					<input type="submit" id="form_submit_btn" value="Subscribe" />
+				</fieldset>
+			</form>
+			
+		</div>
+	</div>
+	
+	<div id="footer" class="column-full">
+		<div class="container">
+			
+			<p>All text and design is copyright &copy; 2011 Wurk Happy, Inc. All rights reserved.</p>
+			
+		</div>
+	</div>
 {% end %}

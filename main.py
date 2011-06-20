@@ -41,7 +41,7 @@ class Application(web.Application):
 		
 		settings = {
 			"xsrf_cookies": True,
-			#convert cookie_secret from unicode string to ascii string, so as not to break hashlib
+			# Convert cookie_secret from unicode string to ascii string, so as not to break hashlib
 			"cookie_secret": str(config['tornado']['cookie_secret']), 
 			"login_url": "/login",
 			"template_path": "templates",
@@ -67,6 +67,8 @@ class Application(web.Application):
 if __name__ == "__main__":
 	options.define("config", default="config.json", help="load configuration from file", type=str)
 	options.parse_command_line()
+	
+	os.path.chdir(os.path.dirname(__file__))
 	
 	conf = json.load(open(options.options.config, 'r+'))
 	server = HTTPServer(Application(conf))
