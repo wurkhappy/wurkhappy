@@ -20,6 +20,7 @@ except:
 from tools.orm import *
 
 import os
+import logging
 
 # -------------------------------------------------------------------
 # Application main
@@ -71,7 +72,7 @@ if __name__ == "__main__":
 	
 	os.chdir(os.path.dirname(__file__))
 	
-	conf = json.load(open(options.options.config, 'r+'))
+	conf = json.load(open(options.options.config, 'r'))
 	server = HTTPServer(Application(conf))
 	
 	port = options.options.port
