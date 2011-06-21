@@ -32,6 +32,7 @@ class Application(web.Application):
 		handlers = [
 			(r'/', landing.RootHandler),
 			(r'/signup', landing.SignupHandler),
+			(r'/signup.json', landing.SignupJSONHandler),
 			(r'/about', landing.AboutHandler),
 			(r'/jobs', landing.JobsHandler),
 		]
