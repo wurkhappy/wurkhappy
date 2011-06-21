@@ -34,11 +34,9 @@ class SignupHandler(BaseHandler):
 			self.set_status(400)
 			return
 		
-		import dns.resolver
+		r = re.compile(r'^([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$')
 		
-		try:
-			answers = dns.resolver.query(domain, 'MX')
-		except:
+		if not r.search(domain):
 			self.set_status(400)
 			return
 		
@@ -82,7 +80,7 @@ class SignupJSONHandler(BaseHandler):
 			self.write('{"success":false,"message":"I\'m sorry, that didn\'t look like a proper email address. Could you please enter a valid email address?"}')
 			return
 		
-		r = re.compile(r'^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+		r = re.compile(r'^([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$')
 		
 		if not r.search(domain):
 			self.set_status(400)
