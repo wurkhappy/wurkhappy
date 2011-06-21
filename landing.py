@@ -10,17 +10,12 @@ import tornado.options as options
 import tornado.web as web
 
 from handlers import landing
-
-try:
-	import json
-except:
-	import simplejson as json
-
 # from tools.email import *
 from tools.orm import *
 
 import os
-import logging
+
+
 
 # -------------------------------------------------------------------
 # Application main
@@ -65,6 +60,11 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
+	try:
+		import json
+	except:
+		import simplejson as json
+	
 	options.define("config", default="config.json", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)

@@ -13,6 +13,10 @@ from handlers import *
 from tools.email import *
 from tools.orm import *
 
+import os
+
+
+
 # -------------------------------------------------------------------
 # Application main
 # 
@@ -49,6 +53,7 @@ class Application(web.Application):
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
+		self.configuration = config
 		
 		Database.configure({
 			"host": config['database']['host'],
@@ -65,13 +70,30 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
+	try:
+		import json
+	except:
+		import simplejson as json
+	
 	options.define("config", default="config.json", help="load configuration from file", type=str)
+	options.define("port", default=None, help="listen port", type=int)
+	options.define("address", default=None, help="listen address", type=str)
 	options.parse_command_line()
 	
-	os.path.chdir(os.path.dirname(__file__))
+	os.chdir(os.path.dirname(__file__))
 	
-	conf = json.load(open(options.options.config, 'r+'))
+	conf = json.load(open(options.options.config, 'r'))
 	server = HTTPServer(Application(conf))
-	server.listen(conf['tornado']['port'], conf['tornado']['address'])
+	
+	port = options.options.port
+	address = options.options.address
+	
+	if not port:
+		port = conf['tornado']['port']
+	
+	if not address:
+		address = conf['tornado']['address']
+
+	server.listen(port, address)
 	IOLoop.instance().start()
 	
