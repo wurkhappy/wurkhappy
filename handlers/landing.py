@@ -110,11 +110,14 @@ class SignupJSONHandler(BaseHandler):
 
 class AboutHandler(BaseHandler):
 	def get(self):
-		self.render('landing/about.html')
+		self.render('landing/about.html',
+			title="Wurk Happy is in New York City.")
 
 
 
 class JobsHandler(BaseHandler):
 	def get(self):
-		self.render('landing/jobs.html')
+		self.render('landing/jobs.html',
+			title="Wurk Happy is hiring.")
+	
 
