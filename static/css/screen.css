@@ -58,10 +58,12 @@ strong {
 	font-weight: bold;
 }
 
-h1 { 
+h1 {
+	font-family: "museo-sans-1", "museo-sans-2";
 	font-size: 2em;
 	line-height: 1.25em;
 	font-weight: bold;
+	font-weight: 900;
 	padding: 0 20px;
 	margin: 20px 0;
 	color: rgb(0,0,0);
@@ -93,6 +95,9 @@ h1 {
 	background-color: rgb(255,255,255);
 	border-bottom: 1px solid rgb(217,217,217);
 	color: rgb(153,153,153);
+	font-family: "museo-1", "museo-2";
+	font-weight: normal;
+	font-weight: 300;
 }
 
 #intro {
