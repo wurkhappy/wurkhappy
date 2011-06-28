@@ -1,12 +1,41 @@
-<div class="container">
+{% extends "../base.html" %}
 
+### Redefine the main block
+
+{% block main %}
+<div class="container">
+	{% block navigation %}
+	{% end %}
+	
+	{% block header %}
+	{% end %}
+	
+	<div id="content" class="clear">
+		<div class="clear">
+			{% for name, agreements in agreement_groups %}
+				{% block listgroup %}
+				{% end %}
+			{% end %}
+		</div>
+	</div>
+	
+	{% block footer %}
+	{% end %}
+</div>
+{% end %}
+
+
+
+### Component blocks included from above
+
+{% block navigation %}
 	<div id="navigation" class="clear">
 
 		<div class="column-one-half">
 
 			<ul class="clear">
-				<li class="current"><a href="/agreements/clients"><strong>Client Agreements</strong></a></li>
-				<li><a href="/agreements/vendors"><strong>Vendor Agreements</strong></a></li>
+				<li class="current"><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+				<li><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
 				<li><a href="/people"><strong>People</strong></a></li>
 			</ul>
 
@@ -16,20 +45,23 @@
 
 			<ul id="admin" class="clear">
 				<li><a href="/logout">Log Out</a></li>
-				<li><a href="/admin/account.html">Account</a></li>
-				<li><a href="/admin/preferences.html">Preferences</a></li>
+				<li><a href="/admin/account">Account</a></li>
+				<li><a href="/admin/preferences">Preferences</a></li>
 			</ul>
 
 		</div>
 
 	</div>
+{% end %}
 
 
+
+{% block header %}
 	<div id="intro" class="clear">
 
 		<div class="column-three-fourth">
 
-			<h1>6 Client Agreements ($38,400)</h1>
+			<h1>7 Vendor Agreements ($44,800)</h1>
 
 		</div>
 		<div class="column-one-fourth">
@@ -41,103 +73,39 @@
 		</div>
 
 	</div>
+{% end %}
 
 
-	<div id="content" class="clear">
 
-		<div class="clear">
-
-			<h2>Declined Agreement</h2>
+{% block listgroup %}
+			<h2>{{ escape(name) }}</h2>
 			<div class="data-table">
+				{% for agreement in agreements %}
+					{% block listitem %}
+					{% end %}
+				{% end %}
+			</div>
+{% end %}
 
+
+
+{% block listitem %}
 				<table border="0" cellspacing="0" cellpadding="0">
 					<tr>
 						<td class="meta">
-							<span><img src="../_images/dan-face.png" width="50"></span>
+							<span><img src="{{ static_url("images/dan-face.png") }}" width="50"></span>
 						</td>
 						<td>
-							<h3><a href="detail-declined.html">Atheneum Learning - Marketing Website</a></h3>
-							<p>Sent to <a href="../people/detail.html">Joe Smith</a> for $6,400 on April 12, 2011</p>
+							<h3><a href="detail-declined.html">{{ escape(agreement['name']) }}</a></h3>
+							<p>Sent to <a href="../people/detail.html">{{ escape(agreement['client_name']) }}</a> for {{ escape(agreement['amount']) }} on {{ escape(agreement['date']) }}</p>
 						</td>
 					</tr>
 				</table>
-
-			</div>
-
-			<h2>Waiting for Agreement</h2>
-			<div class="data-table">
-
-				<table border="0" cellspacing="0" cellpadding="0">
-					<tr>
-						<td class="meta">
-							<span><img src="../_images/dan-face.png" width="50"></span>
-						</td>
-						<td>
-							<h3><a href="detail.html">Performable - Updating Application</a></h3>
-							<p>Sent to <a href="../people/detail.html">Joe Smith</a> for $6,400 on April 12, 2011</p>
-						</td>
-					</tr>
-				</table>
-
-			</div>
-
-			<h2>Waiting for Verification</h2>
-			<div class="data-table">
-
-				<table border="0" cellspacing="0" cellpadding="0">
-					<tr>
-						<td class="meta">
-							<span><img src="../_images/dan-face.png" width="50"></span>
-						</td>
-						<td>
-							<h3><a href="detail.html">Atheneum Learning - Marketing Website</a></h3>
-							<p>Sent to <a href="../people/detail.html">Joe Smith</a> for $6,400 on April 12, 2011</p>
-						</td>
-					</tr>
-				</table>
-
-			</div>
-
-			<h2>In Progress</h2>
-			<div class="data-table">
-
-				<table border="0" cellspacing="0" cellpadding="0">
-					<tr>
-						<td class="meta">
-							<span><img src="../_images/dan-face.png" width="50"></span>
-						</td>
-						<td>
-							<h3><a href="detail.html">Performable - Updating Application</a></h3>
-							<p>Sent to <a href="../people/detail.html">Joe Smith</a> for $6,400 on April 12, 2011</p>
-						</td>
-					</tr>
-					<tr>
-						<td class="meta">
-							<span><img src="../_images/dan-face.png" width="50"></span>
-						</td>
-						<td>
-							<h3><a href="detail.html">Atheneum Learning - Marketing Website</a></h3>
-							<p>Sent to <a href="../people/detail.html">Joe Smith</a> for $6,400 on April 12, 2011</p>
-						</td>
-					</tr>
-					<tr>
-						<td class="meta">
-							<span><img src="../_images/dan-face.png" width="50"></span>
-						</td>
-						<td>
-							<h3><a href="detail.html">Performable - Updating Application</a></h3>
-							<p>Sent to <a href="../people/detail.html">Joe Smith</a> for $6,400 on April 12, 2011</p>
-						</td>
-					</tr>
-				</table>
-
-			</div>
-
-		</div>
-
-	</div>
+{% end %}
 
 
+
+{% block footer %}
 	<div id="footer" class="clear">
 
 		<div class="column-one-fourth">
@@ -196,6 +164,4 @@
 		<p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
 
 	</div>
-
-
-</div>
+{% end %}

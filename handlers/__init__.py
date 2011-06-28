@@ -1,1 +1,9 @@
-__all__ = ["base", "root", "authhandlers", "profilehandlers", "projecthandlers", "invoicehandlers"]
+__all__ = [
+	"base",
+	"root",
+	"authhandlers",
+	"agreements",
+	"profilehandlers",
+	"projecthandlers",
+	"invoicehandlers"
+]

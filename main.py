@@ -41,6 +41,9 @@ class Application(web.Application):
 			(r'/invoice/?', invoicehandlers.InvoiceHandler),
 			(r'/line_item.json', invoicehandlers.LineItemHandler),
 			(r'/line_item/([0-9]+).json', invoicehandlers.LineItemHandler),
+			
+			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementsHandler),
+			#(r'/agreement/([0-9]+)/?', agreements.AgreementHandler),
 		]
 		
 		settings = {
@@ -49,7 +52,9 @@ class Application(web.Application):
 			"cookie_secret": str(config['tornado']['cookie_secret']), 
 			"login_url": "/login",
 			"template_path": "templates",
-			"static_path": "static"
+			"static_path": "static",
+			# Comment this out in production!
+			"debug": True
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -80,7 +85,9 @@ if __name__ == "__main__":
 	options.define("address", default=None, help="listen address", type=str)
 	options.parse_command_line()
 	
-	os.chdir(os.path.dirname(__file__))
+	workingDir = os.path.dirname(__file__)
+	if workingDir:
+		os.chdir(workingDir)
 	
 	conf = json.load(open(options.options.config, 'r'))
 	server = HTTPServer(Application(conf))
