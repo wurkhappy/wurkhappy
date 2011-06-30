@@ -11,12 +11,36 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<div class="clear">
-			{% for name, agreements in agreement_groups %}
-				{% block listgroup %}
+		{% if 'text' in bag %}
+			<div class="column-one-half">
+				<h2>Service Agreement</h2>
+				{% if 'comment' in bag and 'agreement' in bag['comment'] %}
+					<div class="preview"><p>
+						{{ escape(bag['comment']['agreement']) }}
+					</p></div>
 				{% end %}
-			{% end %}
-		</div>
+				<p>{{ escape(bag['text']['agreement']) }}</p>
+			</div>
+			<div class="column-one-half">
+				{% if 'refund' in bag['text'] %}
+					<h2>Reasons for Refund</h2>
+					{% if 'comment' in bag and 'refund' in bag['comment'] %}
+						<div class="preview"><p>
+							{{ escape(bag['comment']['refund']) }}
+						</p></div>
+					{% end %}
+					<p>{{ escape(bag['text']['refund']) }}</p>
+				{% end %}
+			</div>
+			<div id="history-table" class="clear">
+				<table border="0" cellspacing="0" cellpadding="0">
+					{% for transaction in transactions %}
+						{% block transactionitem %}
+						{% end %}
+					{% end %}
+				</table>
+			</div>
+		{% end %}
 	</div>
 	
 	{% block footer %}
@@ -58,20 +82,21 @@
 
 {% block header %}
 	<div id="intro" class="clear">
-
+		
 		<div class="column-three-fourth">
-			{% if count == 1 %}
-				<h1>1 {{ escape(agreement_with) }} Agreement ({{ total }})</h1>
-			{% else %}
-				<h1>{{ count }} {{ escape(agreement_with) }} Agreements ({{ total }})</h1>
-			{% end %}
-
+			
+			<h1>{{ bag['name'] }}</h1>
+			<p><strong>{{ bag['amount'] }}</strong> - 
+				Sent to <a href="/people/{{ bag[bag['other']]['id'] }}">{{ bag[bag['other']]['name'] }}</a> on {{ bag['date'] }}
+			</p>
+			
 		</div>
 		<div class="column-one-fourth">
-
-			<div class="action-button">
-				<a href="new.html" class="single">Request Agreement</a>
-			</div>
+			
+	      <div class="action-button">
+	        <a href="" class="top"><span>Mark as Complete</a>
+	        <a href="edit.html" class="bottom"><span>Edit Agreement</a>
+	      </div>
 
 		</div>
 
@@ -80,32 +105,12 @@
 
 
 
-{% block listgroup %}
-			<h2>{{ escape(name) }}</h2>
-			<div class="data-table">
-				{% for agreement in agreements %}
-					{% block listitem %}
-					{% end %}
-				{% end %}
-			</div>
-{% end %}
-
-
-
-{% block listitem %}
-				<table border="0" cellspacing="0" cellpadding="0">
-					<tr>
-						<td class="meta">
-							<span><img src="{{ static_url("images/dan-face.png") }}" width="50"></span>
-						</td>
-						<td>
-							<h3><a href="/agreement/{{ agreement['id'] }}">{{ escape(agreement['name']) }}</a></h3>
-							<p>{% if agreement_with == 'Client' %}Sent to {% elif agreement_with == 'Vendor' %}Received from {% end %}
-								<a href="/people/{{ agreement['other_id'] }}">{{ escape(agreement['other_name']) }}</a> 
-								for {{ agreement['amount'] }} on {{ escape(agreement['date']) }}</p>
-						</td>
-					</tr>
-				</table>
+{% block transactionitem %}
+				<tr>
+					<td>
+						{{ transaction['type'] }} <a href="/people/{{ bag[transaction['user']]['id'] }}">{{ bag[transaction['user']]['name'] }}</a> on {{ transaction['date'] }}
+					</td>
+				</tr>
 {% end %}
 
 

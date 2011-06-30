@@ -43,7 +43,7 @@ class Application(web.Application):
 			(r'/line_item/([0-9]+).json', invoicehandlers.LineItemHandler),
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementsHandler),
-			#(r'/agreement/([0-9]+)/?', agreements.AgreementHandler),
+			(r'/agreement/([0-9]+)/?', agreements.AgreementHandler),
 		]
 		
 		settings = {

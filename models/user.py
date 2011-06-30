@@ -51,3 +51,6 @@ class User(MappedObj):
 		
 	def getProfile(self):
 		return Profile.retrieveByUserID(self.id)
+	
+	def getFullName(self):
+		return self.firstName + " " + self.lastName
