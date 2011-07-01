@@ -59,8 +59,13 @@ class AgreementsHandler(Authenticated, BaseHandler):
 class AgreementHandler(Authenticated, BaseHandler):
 	
 	@web.authenticated
-	def get(self, agreementID):
+	def get(self, agreementID=None):
 		user = self.current_user
+		
+		if not agreementID:
+			self.set_status(400)
+			self.write("Blah")
+			return
 		
 		agrmnt = Agreement.retrieveByID(agreementID)
 		
@@ -77,6 +82,34 @@ class AgreementHandler(Authenticated, BaseHandler):
 			self.set_status(403)
 			self.write("Forbidden")
 			return
+		
+		
+		# The agreement data gets wrapped up in a bag of JSON. This
+		# contains name, date, and amount of the agreement, as well as
+		# terms, transaction dates, and relationships.
+		# 
+		# {
+		#     "name": "Wulff Morganthaler",
+		#     "date": "January 1, 1970",
+		#     "amount": "$1,300.52",
+		#     "client": {
+		#         "id": 1,
+		#         "name": "Jim Jones" },
+		#     "vendor": {
+		#         "id": 17,
+		#         "name": "Hannibal Lecter" },
+		#     "self": "client",
+		#     "other": "vendor",
+		#     "transactions": [{
+		#         "user": "client",
+		#         "type": "Sent by ",
+		#         "date": "January 1, 1970"
+		#     }, {
+		#         "user": "vendor",
+		#         "type": "Approved by ",
+		#         "date": "January 3, 1970"
+		#     }]
+		# }
 		
 		agreement = {
 			"name": agrmnt.name,
@@ -109,6 +142,9 @@ class AgreementHandler(Authenticated, BaseHandler):
 			agreement["self"] = "client"
 			agreement["other"] = "vendor"
 		
+		
+		# Add the agreement text and the comment text to the JSON bag
+		
 		text = AgreementTxt.retrieveByAgreementID(agrmnt.id)
 		
 		if text:
@@ -125,6 +161,8 @@ class AgreementHandler(Authenticated, BaseHandler):
 				"refund": comment.refund
 			}
 		
+		
+		# Transactions are datetime properties of the agreement. They
 		
 		transactions = [{
 			"type": "Sent by ",
@@ -160,6 +198,14 @@ class AgreementHandler(Authenticated, BaseHandler):
 				"date": agrmnt.dateVerified.strftime('%B %d, %Y')
 			})
 		
-		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agrmnt.name) 
-		self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement, transactions=transactions)
+		agreement['transactions'] = transactions
+		
+		logging.info(self.request.arguments)
+		
+		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
+			title = "Edit Agreement &ndash; Wurk Happy"
+			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement)
+		else:
+			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agrmnt.name) 
+			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement)
 		

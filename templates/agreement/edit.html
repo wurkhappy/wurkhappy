@@ -11,36 +11,46 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		{% if 'text' in bag %}
-			<div class="column-one-half">
+		<form action="#" method="get" accept-charset="utf-8">
+			<fieldset>
+				<h2>Recipient</h2>
+				<label for="">Name</label>
+				<select name="" id="">
+					<option value="option1">Joe Smith (joe.smith@domain.com)</option>
+					<option value="option2">Jane Doe (jane.doe@domain.com)</option>
+				</select>
+				<p class="action"><a href="../people/new.html">Add new person</a></p>
+				<label for="">Personal Message in Notification Email (optional)</label>
+				<textarea name="name" rows="3" cols="100"></textarea>
+			</fieldset>
+			<fieldset>
 				<h2>Service Agreement</h2>
-				{% if 'comment' in bag and 'agreement' in bag['comment'] %}
-					<div class="preview"><p>
-						{{ escape(bag['comment']['agreement']) }}
-					</p></div>
-				{% end %}
-				<p>{{ escape(bag['text']['agreement']) }}</p>
-			</div>
-			<div class="column-one-half">
-				{% if 'refund' in bag['text'] %}
-					<h2>Reasons for Refund</h2>
-					{% if 'comment' in bag and 'refund' in bag['comment'] %}
-						<div class="preview"><p>
-							{{ escape(bag['comment']['refund']) }}
-						</p></div>
-					{% end %}
-					<p>{{ escape(bag['text']['refund']) }}</p>
-				{% end %}
-			</div>
-			<div id="history-table" class="clear">
-				<table border="0" cellspacing="0" cellpadding="0">
-					{% for transaction in bag['transactions'] %}
-						{% block transactionitem %}
-						{% end %}
-					{% end %}
-				</table>
-			</div>
-		{% end %}
+				<label for="">Title</label>
+				<input type="text" name="" value="" id="" size="100">
+				<label for="">Cost</label>
+				<input type="text" name="" value="" id="" size="100">
+				<label for="">Date of Issue</label>
+				<select name="" id="">
+					<option value="option1">January</option>
+					<option value="option2">February</option>
+				</select>
+				<select name="" id="">
+					<option value="option1">1</option>
+					<option value="option2">2</option>
+				</select>
+				<select name="" id="">
+					<option value="option1">2011</option>
+					<option value="option2">2012</option>
+				</select>
+				<label for="">Service Agreement Details</label>
+				<textarea name="name" rows="20" cols="100"></textarea>
+				<label for="">Reasons for Refund</label>
+				<textarea name="name" rows="10" cols="100"></textarea>
+			</fieldset>
+			<fieldset class="submit-buttons">
+				<a href="" class="single">Save Changes &amp; Resend Client Agreement</a>
+			</fieldset>
+		</form>
 	</div>
 	
 	{% block footer %}
@@ -82,24 +92,21 @@
 
 {% block header %}
 	<div id="intro" class="clear">
-		
+	
 		<div class="column-three-fourth">
-			
-			<h1>{{ bag['name'] }}</h1>
-			<p><strong>{{ bag['amount'] }}</strong> - 
-				Sent to <a href="/people/{{ bag[bag['other']]['id'] }}">{{ bag[bag['other']]['name'] }}</a> on {{ bag['date'] }}
-			</p>
-			
+		
+			<h1>Edit Client Agreement</h1>
+		
 		</div>
+	
 		<div class="column-one-fourth">
-			
-	      <div class="action-button">
-	        <a href="" class="top"><span>Mark as Complete</a>
-	        <a href="edit.html" class="bottom"><span>Edit Agreement</a>
-	      </div>
-
+		
+			<div class="action-button">
+				<a href="../clients/detail.html" class="single cancel">Cancel Changes</a>
+			</div>
+		
 		</div>
-
+	
 	</div>
 {% end %}
 

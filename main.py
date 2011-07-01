@@ -44,6 +44,7 @@ class Application(web.Application):
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementsHandler),
 			(r'/agreement/([0-9]+)/?', agreements.AgreementHandler),
+			(r'/agreement/new/?', agreements.AgreementHandler),
 		]
 		
 		settings = {
