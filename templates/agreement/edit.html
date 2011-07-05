@@ -3,6 +3,29 @@
 ### Redefine the main block
 
 {% block main %}
+
+{% if 'bag' in globals() %}
+	{% set agr_title = bag['name'] %}
+	{% set agr_cost = bag['amount'] %}
+	
+	{% if 'text' in bag and 'agreement' in bag['text'] %}
+		{% set agr_details = bag['text']['agreement'] %}
+	{% else %}
+		{% set agr_details = '' %}
+	{% end %}
+	
+	{% if 'text' in bag and 'refund' in bag['text'] %}
+		{% set agr_refund = bag['text']['refund'] %}
+	{% else %}
+		{% set agr_refund = '' %}
+	{% end %}
+{% else %}
+	{% set agr_title = '' %}
+	{% set agr_cost = '' %}
+	{% set agr_details = '' %}
+	{% set agr_refund = '' %}
+{% end %}
+
 <div class="container">
 	{% block navigation %}
 	{% end %}
@@ -11,24 +34,25 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="#" method="get" accept-charset="utf-8">
+		<form action="/agreement/" method="POST" accept-charset="utf-8">
 			<fieldset>
 				<h2>Recipient</h2>
 				<label for="">Name</label>
 				<select name="" id="">
-					<option value="option1">Joe Smith (joe.smith@domain.com)</option>
-					<option value="option2">Jane Doe (jane.doe@domain.com)</option>
+					<option value="option1">{{ bag['client']['name'] }}</option>
 				</select>
 				<p class="action"><a href="../people/new.html">Add new person</a></p>
+				{% if 'id' not in bag %}
 				<label for="">Personal Message in Notification Email (optional)</label>
 				<textarea name="name" rows="3" cols="100"></textarea>
+				{% end %}
 			</fieldset>
 			<fieldset>
 				<h2>Service Agreement</h2>
 				<label for="">Title</label>
-				<input type="text" name="" value="" id="" size="100">
+				<input type="text" name="title" value="{{ agr_title }}" id="" size="100">
 				<label for="">Cost</label>
-				<input type="text" name="" value="" id="" size="100">
+				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100">
 				<label for="">Date of Issue</label>
 				<select name="" id="">
 					<option value="option1">January</option>
@@ -43,12 +67,12 @@
 					<option value="option2">2012</option>
 				</select>
 				<label for="">Service Agreement Details</label>
-				<textarea name="name" rows="20" cols="100"></textarea>
+				<textarea name="details" rows="20" cols="100">{{ escape(agr_details) }}</textarea>
 				<label for="">Reasons for Refund</label>
-				<textarea name="name" rows="10" cols="100"></textarea>
+				<textarea name="refund" rows="10" cols="100">{{ escape(agr_refund) }}</textarea>
 			</fieldset>
 			<fieldset class="submit-buttons">
-				<a href="" class="single">Save Changes &amp; Resend Client Agreement</a>
+				<input type="submit" id="confirm-edit-button" value="Save Changes &amp; Resend Client Agreement" />
 			</fieldset>
 		</form>
 	</div>
@@ -95,7 +119,7 @@
 	
 		<div class="column-three-fourth">
 		
-			<h1>Edit Client Agreement</h1>
+			<h1>Edit {{ agreement_with }} Agreement</h1>
 		
 		</div>
 	

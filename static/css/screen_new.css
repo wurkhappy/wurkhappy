@@ -269,6 +269,23 @@ h3 {
   margin: 10px 0 0 0;
 }
 
+#content form fieldset.submit-buttons input {
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border: 1px solid rgb(136,204,85);
+  background-color: rgb(136,204,85);
+  color: rgb(255,255,255);
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 1px 2px rgb(102,102,102);
+  -moz-box-shadow: 0 1px 2px rgb(102,102,102);
+  box-shadow: 0 1px 2px rgb(102,102,102);
+  text-shadow: 0 -1px 0 rgb(153,153,153);
+  cursor: pointer;
+}
+
 #content form fieldset.submit-buttons a {
   display: block;
   float: left;

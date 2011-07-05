@@ -89,29 +89,30 @@ class AgreementHandler(Authenticated, BaseHandler):
 		# terms, transaction dates, and relationships.
 		# 
 		# {
-		#     "name": "Wulff Morganthaler",
-		#     "date": "January 1, 1970",
+		#     "name": "Marketing Outline",
+		#     "date": "January 1, 2010",
 		#     "amount": "$1,300.52",
 		#     "client": {
 		#         "id": 1,
-		#         "name": "Jim Jones" },
+		#         "name": "Cindy Jones" },
 		#     "vendor": {
 		#         "id": 17,
-		#         "name": "Hannibal Lecter" },
+		#         "name": "Greg Smith" },
 		#     "self": "client",
 		#     "other": "vendor",
 		#     "transactions": [{
 		#         "user": "client",
 		#         "type": "Sent by ",
-		#         "date": "January 1, 1970"
+		#         "date": "January 1, 2010"
 		#     }, {
 		#         "user": "vendor",
 		#         "type": "Approved by ",
-		#         "date": "January 3, 1970"
+		#         "date": "January 3, 2010"
 		#     }]
 		# }
 		
 		agreement = {
+			"id": agrmnt.id,
 			"name": agrmnt.name,
 			"date": agrmnt.dateCreated.strftime('%B %d, %Y'),
 			"amount": "$%.02f" % (agrmnt.amount / 100)
@@ -203,9 +204,50 @@ class AgreementHandler(Authenticated, BaseHandler):
 		logging.info(self.request.arguments)
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
-			title = "Edit Agreement &ndash; Wurk Happy"
+			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agrmnt.name)
 			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement)
 		else:
 			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agrmnt.name) 
 			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement)
+	
+	@web.authenticated
+	def post(self, agreementID=None):
+		user = self.current_user
 		
+		if not agreementID:
+			self.set_status(400)
+			self.write("Blah")
+			return
+		
+		agrmnt = Agreement.retrieveByID(agreementID)
+		
+		if not agrmnt:
+			# Should we serve a 404 page?
+			self.redirect(self.request.uri)
+			return
+		
+		if agreement.vendorID != user.id:
+			# Likewise, should we serve a "beat it, jerk" page?
+			self.redirect(self.request.uri)
+			return
+		
+		agreementText = None
+		
+		if 'title' in self.request.arguments:
+			agreement.name = self.request.arguments['title']
+		
+		if 'cost' in self.request.arguments:
+			agreement.cost = self.request.arguments['title']
+		
+		if 'details' in self.request.arguments:
+			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
+			agreementText.agreement = self.request.arguments['details']
+		
+		if 'refund' in self.request.arguments:
+			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
+			agreementText.agreement = self.request.arguments['refund']
+		
+		agreement.dateModified = datetime.now()
+		
+		self.redirect(self.request.uri)
+	
