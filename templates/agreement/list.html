@@ -70,7 +70,11 @@
 		<div class="column-one-fourth">
 
 			<div class="action-button">
-				<a href="new.html" class="single">Request Agreement</a>
+				{% if agreement_with == 'Client' %}
+					<a href="/agreement/new" class="single">Create New Agreement</a>
+				{% elif agreement_with == 'Vendor' %}
+					<a href="/message/new" class="single">Request Agreement</a>
+				{% end %}
 			</div>
 
 		</div>

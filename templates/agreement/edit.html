@@ -4,9 +4,11 @@
 
 {% block main %}
 
-{% if 'bag' in globals() %}
+{% if 'bag' in globals() and bag != None %}
+	{% set agr_id = bag['id'] %}
 	{% set agr_title = bag['name'] %}
 	{% set agr_cost = bag['amount'] %}
+	{% set agr_client = bag['client']['name'] %}
 	
 	{% if 'text' in bag and 'agreement' in bag['text'] %}
 		{% set agr_details = bag['text']['agreement'] %}
@@ -20,6 +22,8 @@
 		{% set agr_refund = '' %}
 	{% end %}
 {% else %}
+	{% set agr_id = '' %}
+	{% set agr_client = '' %}
 	{% set agr_title = '' %}
 	{% set agr_cost = '' %}
 	{% set agr_details = '' %}
@@ -34,15 +38,16 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="/agreement/" method="POST" accept-charset="utf-8">
+		<form action="/agreement/{{ agr_id }}" method="POST" accept-charset="utf-8">
+			{{ xsrf_form_html() }}
 			<fieldset>
 				<h2>Recipient</h2>
 				<label for="">Name</label>
 				<select name="" id="">
-					<option value="option1">{{ bag['client']['name'] }}</option>
+					<option value="option1">{{ agr_client }}</option>
 				</select>
 				<p class="action"><a href="../people/new.html">Add new person</a></p>
-				{% if 'id' not in bag %}
+				{% if not 'agr_id' %}
 				<label for="">Personal Message in Notification Email (optional)</label>
 				<textarea name="name" rows="3" cols="100"></textarea>
 				{% end %}
@@ -54,18 +59,7 @@
 				<label for="">Cost</label>
 				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100">
 				<label for="">Date of Issue</label>
-				<select name="" id="">
-					<option value="option1">January</option>
-					<option value="option2">February</option>
-				</select>
-				<select name="" id="">
-					<option value="option1">1</option>
-					<option value="option2">2</option>
-				</select>
-				<select name="" id="">
-					<option value="option1">2011</option>
-					<option value="option2">2012</option>
-				</select>
+				{{ date_html }}
 				<label for="">Service Agreement Details</label>
 				<textarea name="details" rows="20" cols="100">{{ escape(agr_details) }}</textarea>
 				<label for="">Reasons for Refund</label>
@@ -119,29 +113,23 @@
 	
 		<div class="column-three-fourth">
 		
-			<h1>Edit {{ agreement_with }} Agreement</h1>
+			{% if not agr_id %}
+				<h1>New Client Agreement</h1>
+			{% else %}
+				<h1>Edit Client Agreement</h1>
+			{% end %}
 		
 		</div>
 	
 		<div class="column-one-fourth">
 		
 			<div class="action-button">
-				<a href="../clients/detail.html" class="single cancel">Cancel Changes</a>
+				<a href="/agreement/{{ agr_id }}" class="single cancel">Cancel Changes</a>
 			</div>
 		
 		</div>
 	
 	</div>
-{% end %}
-
-
-
-{% block transactionitem %}
-				<tr>
-					<td>
-						{{ transaction['type'] }} <a href="/people/{{ bag[transaction['user']]['id'] }}">{{ bag[transaction['user']]['name'] }}</a> on {{ transaction['date'] }}
-					</td>
-				</tr>
 {% end %}
 
 

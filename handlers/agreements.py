@@ -48,7 +48,7 @@ class AgreementsHandler(Authenticated, BaseHandler):
 				"other_id": other.id,
 				"other_name": other.getFullName(),
 				"date": agrmnt.dateCreated.strftime('%B %d, %Y'),
-				"amount": "$%.02f" % (agrmnt.amount / 100)
+				"amount": "$%.02f" % (agrmnt.amount / 100) if agrmnt.amount else ""
 			})
 		
 		agreements = [("In Progress", agreementList)]
@@ -57,14 +57,70 @@ class AgreementsHandler(Authenticated, BaseHandler):
 
 
 class AgreementHandler(Authenticated, BaseHandler):
+	def parseAmountString(self, string):
+		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
+		m = r.match(string)
+		logging.warn(string)
+		if not m or len(m.groups()) != 2:
+			return None
+		logging.warn(m.groups())
+		d = int(m.groups()[0].replace(',', '')) * 100
+		
+		if m.groups()[1]:
+			d += int(m.groups()[1])
+		
+		return d
+	
+	def constructDateTime(self, day, month, year):
+		return atetime(int(year), int(month), int(day))
+	
+	@staticmethod
+	def constructDateForm(datestamp):
+		# Should probably be somewhere else
+		months = [
+			('January', 1),
+			('February', 2),
+			('March', 3),
+			('April', 4),
+			('May', 5),
+			('June', 6),
+			('July', 7),
+			('August', 8),
+			('September', 9),
+			('October', 10),
+			('November', 11),
+			('December', 12)
+		]
+		
+		html = '<select name="month" id="">'
+		
+		for month, num in months:
+			selected = ' selected="true"' if datestamp.month == num else ''
+			html += '\t<option value="%d"%s>%s</option>' % (num, selected, month)
+		
+		html += '</select>\n<select name="day" id="">'
+		
+		for day in range(1, 32):
+			selected = ' selected="true"' if datestamp.day == day else ''
+			html += '\t<option value="%d"%s>%s</option>' % (day, selected, day)
+			
+		html += '</select>\n<select name="year" id="">'
+		
+		for year in range(2011, 2013):
+			selected = ' selected="true"' if datestamp.year == year else ''
+			html += '\t<option value="%d"%s>%s</option>' % (year, selected, year)
+		
+		html += '</select>'
+		return html
 	
 	@web.authenticated
 	def get(self, agreementID=None):
 		user = self.current_user
 		
 		if not agreementID:
-			self.set_status(400)
-			self.write("Blah")
+			# Must have been routed from /agreement/new
+			title = "New Agreement &ndash; Wurk Happy"
+			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=None, date_html=self.constructDateForm(datetime.now()))
 			return
 		
 		agrmnt = Agreement.retrieveByID(agreementID)
@@ -115,7 +171,7 @@ class AgreementHandler(Authenticated, BaseHandler):
 			"id": agrmnt.id,
 			"name": agrmnt.name,
 			"date": agrmnt.dateCreated.strftime('%B %d, %Y'),
-			"amount": "$%.02f" % (agrmnt.amount / 100)
+			"amount": "$%.02f" % (agrmnt.amount / 100) if agrmnt.amount else ""
 		}
 		
 		if agreementType == 'Client':
@@ -204,27 +260,28 @@ class AgreementHandler(Authenticated, BaseHandler):
 		logging.info(self.request.arguments)
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
+			agreement['uri'] = self.request.uri
 			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agrmnt.name)
-			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement)
+			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement, date_html=self.constructDateForm(agrmnt.dateCreated))
 		else:
 			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agrmnt.name) 
 			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement)
+	
 	
 	@web.authenticated
 	def post(self, agreementID=None):
 		user = self.current_user
 		
-		if not agreementID:
-			self.set_status(400)
-			self.write("Blah")
-			return
+		agreement = Agreement.retrieveByID(agreementID) if agreementID else Agreement()
 		
-		agrmnt = Agreement.retrieveByID(agreementID)
-		
-		if not agrmnt:
+		if not agreement:
 			# Should we serve a 404 page?
 			self.redirect(self.request.uri)
 			return
+		
+		if not agreement.id:
+			agreement.vendorID = user.id
+			agreement.clientID = 2
 		
 		if agreement.vendorID != user.id:
 			# Likewise, should we serve a "beat it, jerk" page?
@@ -234,20 +291,35 @@ class AgreementHandler(Authenticated, BaseHandler):
 		agreementText = None
 		
 		if 'title' in self.request.arguments:
-			agreement.name = self.request.arguments['title']
+			agreement.name = self.request.arguments['title'][0]
 		
 		if 'cost' in self.request.arguments:
-			agreement.cost = self.request.arguments['title']
+			agreement.amount = self.parseAmountString(self.request.arguments['cost'][0])
+			pass
+		
+		if agreement.id:
+			agreement.dateModified = datetime.now()
+		
+		logging.warn(agreement.__dict__)
+		agreement.save()
 		
 		if 'details' in self.request.arguments:
 			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
-			agreementText.agreement = self.request.arguments['details']
+			
+			if not agreementText:
+				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+			
+			agreementText.agreement = self.request.arguments['details'][0]
 		
 		if 'refund' in self.request.arguments:
 			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
-			agreementText.agreement = self.request.arguments['refund']
+			
+			if not agreementText:
+				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+			
+			agreementText.refund = self.request.arguments['refund'][0]
 		
-		agreement.dateModified = datetime.now()
+		agreementText.save()
 		
-		self.redirect(self.request.uri)
+		self.redirect('/agreement/%d' % agreement.id)
 	
