@@ -12,17 +12,36 @@
 		<![endif]-->
 		
  		<link rel="stylesheet" type="text/css" href="{{ static_url("css/screen_new.css") }}" media="screen" />
+		{% block styles-custom %}
+		{% end %}
 	</head>
 	<body>
 		{% block main %}
 		{% end %}
 		
+		{% block scripts-common %}
+		{% end %}
+		
+		{% block scripts-custom %}
+		{% end %}
+	</body>
+</html>
+
+
+{% block styles-custom %}
+{% end %}
+
+
+{% block scripts-common %}
 		<!-- Javascript at the bottom for fast page loading -->
 		<!-- Eventually we need to minify this and host it on a CDN -->
 		<script src="{{ static_url("scripts/libs/jquery-1.4.2.js") }}"></script>
-		
+
 		<!-- scripts concatenated and minified via ant build script-->
 		<script src="{{ static_url("scripts/landing.js") }}"></script>
 		<!-- end concatenated and minified scripts-->
-	</body>
-</html>
+{% end %}
+
+
+{% block scripts-custom %}
+{% end %}

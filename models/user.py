@@ -54,3 +54,51 @@ class User(MappedObj):
 	
 	def getFullName(self):
 		return self.firstName + " " + self.lastName
+	
+	def publicDict(self):
+		return {
+			"id": self.id,
+			"email": self.email,
+			"name": self.getFullName(),
+			"dateCreated": self.dateCreated.strftime("%Y-%m-%dT%H:%M:%SZ")
+		}
+
+
+
+# -------------------------------------------------------------------
+# User Preferences
+# -------------------------------------------------------------------
+
+class UserPrefs(MappedObj):
+
+	def __init__(self):
+		self.id = None
+		self.userID = None
+		self.name = None
+		self.value = None
+	
+	@classmethod
+	def tableName(clz):
+		return "userPrefs"
+	
+	@classmethod
+	def iteratorWithUserID(clz, userID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName(), userID)
+			result = cursor.fetchone()
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+	
+	@classmethod
+	def retrieveByUserIDAndName(clz, userID, name):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s AND name = %%s" % clz.tableName(), (userID, name))
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+	
+	def publicDict(self):
+		return {
+			"name": self.name,
+			"value": self.value
+		}

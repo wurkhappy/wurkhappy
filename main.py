@@ -35,6 +35,9 @@ class Application(web.Application):
 			(r'/forgot_password', authhandlers.ForgotPasswordHandler),
 			(r'/reset_password', authhandlers.ResetPasswordHandler),
 			
+			(r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
+			(r'/user/([0-9]+)/preferences.json', users.PreferencesJSONHandler),
+			
 			(r'/project/([0-9]+)', projecthandlers.ProjectHandler),
 			(r'/project/?', projecthandlers.ProjectHandler),
 			(r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),
