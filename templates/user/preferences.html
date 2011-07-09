@@ -4,32 +4,6 @@
 
 {% block main %}
 
-{% if 'bag' in globals() and bag != None %}
-	{% set agr_id = bag['id'] %}
-	{% set agr_title = bag['name'] %}
-	{% set agr_cost = bag['amount'] %}
-	{% set agr_client = bag['client']['name'] %}
-	
-	{% if 'text' in bag and 'agreement' in bag['text'] %}
-		{% set agr_details = bag['text']['agreement'] %}
-	{% else %}
-		{% set agr_details = '' %}
-	{% end %}
-	
-	{% if 'text' in bag and 'refund' in bag['text'] %}
-		{% set agr_refund = bag['text']['refund'] %}
-	{% else %}
-		{% set agr_refund = '' %}
-	{% end %}
-{% else %}
-	{% set agr_id = '' %}
-	{% set agr_client = '' %}
-	{% set agr_title = '' %}
-	{% set agr_cost = '' %}
-	{% set agr_details = '' %}
-	{% set agr_refund = '' %}
-{% end %}
-
 <div class="container">
 	{% block navigation %}
 	{% end %}
@@ -38,32 +12,26 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="/agreement/{{ agr_id }}" method="POST" accept-charset="utf-8">
+		<form action="/user/{{ user_id }}/preferences" method="POST" accept-charset="utf-8">
 			{{ xsrf_form_html() }}
 			<fieldset>
-				<h2>Recipient</h2>
-				<label for="">Email Address or Name of Existing Contact</label>
-				<input type="text" name="client" size="100" id="client-suggest" />
-				{% if not agr_id %}
-					<label for="">Personal Message in Notification Email (optional)</label>
-					<textarea name="name" rows="3" cols="100"></textarea>
-				{% end %}
+				<h2>Template for Personal Messages</h2>
+				<label for="">When sending an agreement to a client... (optional)</label>
+				<textarea name="client_template" rows="3" cols="100">{{ escape(bag['client_template']) }}</textarea>
+				<label for="">When sending a request for agreement to a vendor... (optional)</label>
+				<textarea name="vendor_template" rows="3" cols="100">{{ escape(bag['vendor_template']) }}</textarea>
+				<label for="">When inviting someone to use Wurk Happy... (optional)</label>
+				<textarea name="invitation_template" rows="3" cols="100">{{ escape(bag['invitation_template']) }}</textarea>
 			</fieldset>
 			<fieldset>
-				<h2>Service Agreement</h2>
-				<label for="">Title</label>
-				<input type="text" name="title" value="{{ agr_title }}" id="" size="100" />
-				<label for="">Cost</label>
-				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100" />
-				<label for="">Date of Issue</label>
-				{{ date_html }}
-				<label for="">Service Agreement Details</label>
-				<textarea name="details" rows="20" cols="100">{{ escape(agr_details) }}</textarea>
-				<label for="">Reasons for Refund</label>
-				<textarea name="refund" rows="10" cols="100">{{ escape(agr_refund) }}</textarea>
+				<h2>Template for Service Agreements</h2>
+				<label for="">Service Agreement Details (optional)</label>
+				<textarea name="agreement_template" rows="20" cols="100">{{ escape(bag['agreement_template']) }}</textarea>
+				<label for="">Reasons for Refund (optional)</label>
+				<textarea name="refund_template" rows="10" cols="100">{{ escape(bag['refund_template']) }}</textarea>
 			</fieldset>
 			<fieldset class="submit-buttons">
-				<input type="submit" id="confirm-edit-button" value="Save Changes &amp; Resend Client Agreement" />
+				<input type="submit" id="confirm-edit-button" value="Save Preferences Information" />
 			</fieldset>
 		</form>
 	</div>
@@ -78,14 +46,7 @@
 
 ### Overridden blocks
 
-{% block styles-custom %}
-	<link rel="stylesheet" type="text/css" href="{{ static_url("css/autosuggest.css") }}" media="screen" />
-{% end %}
-
-
-
 {% block scripts-custom %}
-	<script src="{{ static_url("scripts/libs/jquery-autosuggest-1.3.js") }}" type="text/javascript"></script>
 	<script src="{{ static_url("scripts/application.js") }}" type="text/javascript"></script>
 {% end %}
 
@@ -99,8 +60,8 @@
 		<div class="column-one-half">
 
 			<ul class="clear">
-				<li{% if agreement_with == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li{% if agreement_with == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+				<li><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+				<li><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
 				<li><a href="/people"><strong>People</strong></a></li>
 			</ul>
 
@@ -111,7 +72,7 @@
 			<ul id="admin" class="clear">
 				<li><a href="/logout">Log Out</a></li>
 				<li><a href="/admin/account">Account</a></li>
-				<li><a href="/admin/preferences">Preferences</a></li>
+				<li class="current"><a href="/admin/preferences">Preferences</a></li>
 			</ul>
 
 		</div>
@@ -126,11 +87,7 @@
 	
 		<div class="column-three-fourth">
 		
-			{% if not agr_id %}
-				<h1>New Client Agreement</h1>
-			{% else %}
-				<h1>Edit Client Agreement</h1>
-			{% end %}
+			<h1>Preferences</h1>
 		
 		</div>
 	

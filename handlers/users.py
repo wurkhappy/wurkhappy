@@ -21,7 +21,14 @@ import logging
 class PreferencesHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self, userID):
-		pass
+		user = self.current_user
+		
+		prefs = {}
+		
+		for pref in UserPrefs.iteratorWithUserID(user.id):
+			pref[pref.name] = pref.value
+		
+		self.render('user/preferences.html' title="My Preferences &ndash; Wurk Happy", bag=prefs)
 	
 class PreferencesJSONHandler(Authenticated, BaseHandler):
 	@web.authenticated
