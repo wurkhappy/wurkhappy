@@ -323,3 +323,22 @@ class AgreementHandler(Authenticated, BaseHandler):
 		
 		self.redirect('/agreement/%d' % agreement.id)
 	
+
+
+class AgreementJSONHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID)
+		
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+		
+		if agreement.vendorID != user.id or agreement.clientID != user.id:
+			self.set_status(404)
+			self.write('{"success": false}')
+		
+		agreementDict = agreement.publicDict()
+		pass

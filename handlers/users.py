@@ -23,12 +23,18 @@ class PreferencesHandler(Authenticated, BaseHandler):
 	def get(self, userID):
 		user = self.current_user
 		
-		prefs = {}
+		prefs = {
+			"client_template": "",
+			"vendor_template": "",
+			"invitation_template": "",
+			"agreement_template": "",
+			"refund_template": ""
+		}
 		
 		for pref in UserPrefs.iteratorWithUserID(user.id):
-			pref[pref.name] = pref.value
+			prefs[pref.name] = pref.value
 		
-		self.render('user/preferences.html' title="My Preferences &ndash; Wurk Happy", bag=prefs)
+		self.render('user/preferences.html', title="My Preferences &ndash; Wurk Happy", bag=prefs, user_id=user.id)
 	
 class PreferencesJSONHandler(Authenticated, BaseHandler):
 	@web.authenticated

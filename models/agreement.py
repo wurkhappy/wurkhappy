@@ -70,6 +70,19 @@ class Agreement(MappedObj):
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
 	
+	def publicDict(self):
+		return {
+			"id": self.id,
+			"vendorID": self.vendorID,
+			"clientID": self.clientID,
+			"name": self.name,
+			"dateCreated": self.dateCreated.strftime("%Y-%m-%dT%H:%M:%SZ"),
+			"dateAccepted": self.dateAccepted.strftime("%Y-%m-%dT%H:%M:%SZ"),
+			"dateModified": self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ"),
+			"dateDeclined": self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ"),
+			"dateVerified": self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ"),
+			"dateContested": self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ")
+		}
 
 
 # -------------------------------------------------------------------

@@ -19,20 +19,6 @@
 		{% block main %}
 		{% end %}
 		
-		{% block scripts-common %}
-		{% end %}
-		
-		{% block scripts-custom %}
-		{% end %}
-	</body>
-</html>
-
-
-{% block styles-custom %}
-{% end %}
-
-
-{% block scripts-common %}
 		<!-- Javascript at the bottom for fast page loading -->
 		<!-- Eventually we need to minify this and host it on a CDN -->
 		<script src="{{ static_url("scripts/libs/jquery-1.4.2.js") }}"></script>
@@ -40,8 +26,8 @@
 		<!-- scripts concatenated and minified via ant build script-->
 		<script src="{{ static_url("scripts/landing.js") }}"></script>
 		<!-- end concatenated and minified scripts-->
-{% end %}
-
-
-{% block scripts-custom %}
-{% end %}
+		
+		{% block scripts-custom %}
+		{% end %}
+	</body>
+</html>
