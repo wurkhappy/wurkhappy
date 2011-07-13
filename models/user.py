@@ -60,7 +60,7 @@ class User(MappedObj):
 			"id": self.id,
 			"email": self.email,
 			"name": self.getFullName(),
-			"dateCreated": self.dateCreated.strftime("%Y-%m-%dT%H:%M:%SZ")
+			"dateCreated": self.dateCreated.strftime("%Y-%m-%d %H:%M:%SZ")
 		}
 
 

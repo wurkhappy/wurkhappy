@@ -19,16 +19,20 @@ class AgreementsHandler(Authenticated, BaseHandler):
 	def get(self, withWhom):	
 		user = self.current_user
 		
+		bag = {
+			"userID": user.id
+		}
+		
 		if withWhom.lower() == 'clients':
 			agreementType = 'Client'
 			agrmnts = Agreement.iteratorWithVendorID(user.id)
-			count = Agreement.countWithVendorID(user.id)
-			total = "$%.0f" % (Agreement.amountWithVendorID(user.id) / 100)
+			bag['agreementCount'] = Agreement.countWithVendorID(user.id)
+			bag['aggregateCost'] = "$%.0f" % (Agreement.amountWithVendorID(user.id) / 100)
 		elif withWhom.lower() == 'vendors':
 			agreementType = 'Vendor'
 			agrmnts = Agreement.iteratorWithClientID(user.id)
-			count = Agreement.countWithClientID(user.id)
-			total = "$%.0f" % (Agreement.amountWithClientID(user.id) / 100)
+			bag['agreementCount']  = Agreement.countWithClientID(user.id)
+			bag['aggregateCost']  = "$%.0f" % (Agreement.amountWithClientID(user.id) / 100)
 		else:
 			self.set_status(403)
 			self.write("Forbidden")
@@ -51,9 +55,12 @@ class AgreementsHandler(Authenticated, BaseHandler):
 				"amount": "$%.02f" % (agrmnt.amount / 100) if agrmnt.amount else ""
 			})
 		
+		bag['agreementType'] = agreementType
+		bag['agreementGroups'] = [("In Progress", agreementList)]
+		
 		agreements = [("In Progress", agreementList)]
 		title = "%s Agreements &ndash; Wurk Happy" % agreementType
-		self.render("agreement/list.html", title=title, agreement_with=agreementType, count=count, total=total, agreement_groups=agreements)
+		self.render("agreement/list.html", title=title, bag=bag, agreement_with=agreementType, agreement_groups=agreements)
 
 
 class AgreementHandler(Authenticated, BaseHandler):
@@ -341,4 +348,32 @@ class AgreementJSONHandler(Authenticated, BaseHandler):
 			self.write('{"success": false}')
 		
 		agreementDict = agreement.publicDict()
-		pass
+		
+		client = User.retrieveByID(agreement.clientID)
+		agreementDict['client'] = client.publicDict()
+		
+		vendor = User.retrieveByID(agreement.vendorID)
+		agreementDict['vendor'] = vendor.publicDict()
+		
+		agreementTxt = AgreementTxt.retrieveByAgreementID(agreement.id)
+		
+		if agreementTxt:
+			agreementDict['details'] = agreementTxt.agreement
+			agreementDict['refundPolicy'] = agreementTxt.refund
+		
+		self.write(json.dumps(agreementDict))
+	
+	@web.authenticated
+	def post(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID) or Agreement()
+		
+		if not agreementID:
+			agreement.vendorID = user.id
+		
+		if agreement.vendorID != user.id or agreement.clientID != user.id:
+			self.set_status(403)
+			self.write('{"success": false}')
+		
+		

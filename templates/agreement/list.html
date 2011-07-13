@@ -12,7 +12,7 @@
 	
 	<div id="content" class="clear">
 		<div class="clear">
-			{% for name, agreements in agreement_groups %}
+			{% for name, agreements in bag['agreementGroups'] %}
 				{% block listgroup %}
 				{% end %}
 			{% end %}
@@ -34,8 +34,8 @@
 		<div class="column-one-half">
 
 			<ul class="clear">
-				<li{% if agreement_with == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li{% if agreement_with == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+				<li{% if bag['agreementType'] == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+				<li{% if bag['agreementType'] == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
 				<li><a href="/people"><strong>People</strong></a></li>
 			</ul>
 
@@ -46,7 +46,7 @@
 			<ul id="admin" class="clear">
 				<li><a href="/logout">Log Out</a></li>
 				<li><a href="/admin/account">Account</a></li>
-				<li><a href="/admin/preferences">Preferences</a></li>
+				<li><a href="/user/{{ bag['userID'] }}/preferences">Preferences</a></li>
 			</ul>
 
 		</div>
@@ -60,10 +60,10 @@
 	<div id="intro" class="clear">
 
 		<div class="column-three-fourth">
-			{% if count == 1 %}
-				<h1>1 {{ escape(agreement_with) }} Agreement ({{ total }})</h1>
+			{% if bag['agreementCount'] == 1 %}
+				<h1>1 {{ escape(bag['agreementType']) }} Agreement ({{ bag['agreementCount'] }})</h1>
 			{% else %}
-				<h1>{{ count }} {{ escape(agreement_with) }} Agreements ({{ total }})</h1>
+				<h1>{{ bag['agreementCount'] }} {{ escape(bag['agreementType']) }} Agreements ({{ bag['agreementCount'] }})</h1>
 			{% end %}
 
 		</div>
