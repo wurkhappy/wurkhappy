@@ -8,12 +8,12 @@ except:
 
 class HTTPErrorBetter(HTTPError):
 	def __init__(self, status_code, log_message, body_content, *args):
-		super(HTTPError, self).__init__(status_code, log_message, *args)
+		HTTPError.__init__(self, status_code, log_message, *args)
 		self.body_content = body_content
 
 
 
-class ParamParser(object):
+class Parser(object):
 	
 	def __init__(self, args, required=[], optional=[]):
 		self.args = {}
@@ -24,9 +24,24 @@ class ParamParser(object):
 		
 		err = []
 		
+		for t in required:
+			if len(t) != 2:
+				raise HTTPError(500, "Argument specifications must contain a name and a protocol.")
+			
+			(name, protocol) = t
+			
+			if name not in args:
+				err.append("'%s' parameter is required" % name)
+				continue
+			
+			try:
+				self.args[name] = protocol << args[name][0]
+			except Exception as e:
+				err.append("'%s' parameter %s" % (name, e))
+			
 		for t in optional:
 			if len(t) != 2:
-				HTTPError(500, "Optional arguments must contain a name and a protocol.")
+				raise HTTPError(500, "Argument specifications must contain a name and a protocol.")
 			
 			(name, protocol) = t
 			
@@ -37,49 +52,15 @@ class ParamParser(object):
 			
 		req = []
 		
-		# tempGr = defaultdict(lambda: [])
-		# groups = {}
-		# protos = {}
-		# 
-		# for proto in required:
-		# 	if len(proto) == 3:
-		# 		tempGr[proto[2]].append(proto[0])
-		# 
-		# for group, names in tempGr.iteritems():
-		# 	
-		# 
-		# 	else:
-		# 		groups[proto[0]].append(proto[0])
-		# err = []
-		# 
-		# for name, protocol in req.iteritems():
-		# 	try:
-		# 		if args.get(name, [None])[0] in protocol:
-		# 			self.args[name] = protocol.val
-		# 			del(req[name])
-		# 		else:
-		# 			err.append("'%s' parameter is malformed" % name)
-		# 	except:
-		# 		err.append("'%s' parameter is malformed" % name)
-		# 
-		# for proto in optional:
-		# 	if len(proto) 
-		# 	try:
-		# 		if args.get(name, [None])[0] in protocol:
-		# 			self.args[name] = protocol.val
-		# 		else:
-		# 			err.append("'%s' parameter is malformed" % name)
-		# 	except:
-		# 		err.append("'%s' parameter is malformed" % name)
-		# 
-		# err += ["'" + x + "' parameter is required" for x in req.keys()]
-		# 
 		if len(err):
 			error = {
 				"domain": "web.request",
 				"debug": err
 			}
 			raise HTTPErrorBetter(400, "Error parsing request arguments", json.dumps(error))
+	
+	def iteritems(self):
+		return self.args.iteritems()
 	
 	def __len__(self):
 		return len(self.args)
@@ -108,10 +89,14 @@ class Protocol(object):
 		self.default = default
 	
 	def __lshift__(self, value):
+		if value == None:
+			return self.default
+		
 		try:
-			val = self.type(value) if value != None else self.default
-		except TypeError, e:
-			raise Exception("value must be type '%s'" % self.type.__name__)
+			val = self.type(value)
+		except TypeError as e:
+			raise Exception("value cannot be converted to type '%s'" % self.type.__name__)
+		
 		self.test(val)
 		return val
 
@@ -150,23 +135,21 @@ class StringInSet(Protocol):
 
 
 if __name__ == "__main__":
-	def inSet(st):
-		return lambda x: x in st
-	
 	try:
-		p = ParamParser({"one": ["1"], "three": ["tres"]},
-		# required={
-		# 			"four": Protocol(str)
-		# 		},
+		p = Parser({"one": ["146"], "three": ["tres"], "four": ["foo"], "five": ["23623"]},
+		required=[
+			("four", Protocol(str)),
+			("five", Protocol(int))
+		],
 		optional=[
 			("one", PositiveInteger(int)),
 			("two", Protocol(int, default=4)),
 			("three", StringInSet(["uno","dos","tres"]))
 		])
 		print "----"
-		print "one", p["one"], type(p["one"])
-		print "two", p["two"], type(p["two"])
-		print "three", p["three"], type(p["three"])
+		for k, v in p.iteritems():
+			print k, "(%s)" % type(v).__name__, v
+		
 	except HTTPErrorBetter, e:
 		print e.body_content
 	

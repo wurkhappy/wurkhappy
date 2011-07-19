@@ -14,6 +14,7 @@ from tools.email import *
 from tools.orm import *
 
 import os
+import os.path
 
 
 
@@ -36,21 +37,21 @@ class Application(web.Application):
 			(r'/reset_password', authhandlers.ResetPasswordHandler),
 			
 			(r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
-			(r'/user/([0-9]+)/preferences.json', users.PreferencesJSONHandler),
+			(r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			
 			(r'/project/([0-9]+)', projecthandlers.ProjectHandler),
 			(r'/project/?', projecthandlers.ProjectHandler),
 			(r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),
 			(r'/invoice/?', invoicehandlers.InvoiceHandler),
 			(r'/line_item.json', invoicehandlers.LineItemHandler),
-			(r'/line_item/([0-9]+).json', invoicehandlers.LineItemHandler),
+			(r'/line_item/([0-9]+)\.json', invoicehandlers.LineItemHandler),
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementsHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
 			(r'/agreement/new/?', agreements.AgreementHandler),
 			
-			(r'/agreement/([0-9]+).json', agreements.AgreementJSONHandler),
-			(r'/agreement/new.json', agreements.AgreementJSONHandler)
+			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
+			(r'/agreement/new\.json', agreements.NewAgreementJSONHandler)
 		]
 		
 		settings = {
@@ -58,8 +59,8 @@ class Application(web.Application):
 			# Convert cookie_secret from unicode string to ascii string, so as not to break hashlib
 			"cookie_secret": str(config['tornado']['cookie_secret']), 
 			"login_url": "/login",
-			"template_path": "templates",
-			"static_path": "static",
+			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
+			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			# Comment this out in production!
 			"debug": True
 		}

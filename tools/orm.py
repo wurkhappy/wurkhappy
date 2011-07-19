@@ -77,8 +77,6 @@ class MappedObj(object):
 	
 	def save(self):
 		with Database() as (conn, cursor):
-			cursor = conn.cursor(MySQLdb.cursors.DictCursor)
-		
 			keys = []
 			values = []
 		
@@ -116,6 +114,15 @@ class MappedObj(object):
 				self.id = cursor.lastrowid
 			
 				conn.commit()
+	
+	def refresh(self):
+		with Database() as (conn, cursor):
+			refreshStatement = "SELECT * FROM %s WHERE id = %%s LIMIT 1" % self.tableName()
+			cursor.execute(refreshStatement, self.id)
+			result = cursor.fetchone()
+			
+			for key, value in result.iteritems():
+				self.__dict__[key] = value
 	
 	def getPublicDictionary(self):
 		return {}

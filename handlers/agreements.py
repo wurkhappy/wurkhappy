@@ -5,6 +5,7 @@ from base import *
 from models.user import User
 from models.agreement import *
 from models.profile import Profile
+from helpers import fmt
 
 from datetime import datetime
 import logging
@@ -297,12 +298,28 @@ class AgreementHandler(Authenticated, BaseHandler):
 		
 		agreementText = None
 		
-		if 'title' in self.request.arguments:
-			agreement.name = self.request.arguments['title'][0]
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[
+					('title', fmt.Protocol(str)),
+					('cost', fmt.PositiveInteger(0)),
+					('details', fmt.Protocol(str)),
+					('refund', fmt.Protocol(str))
+				],
+				required=[]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
 		
-		if 'cost' in self.request.arguments:
-			agreement.amount = self.parseAmountString(self.request.arguments['cost'][0])
-			pass
+		if args['title']:
+			agreement.name = args['title']
+		
+		if args['cost']:
+			agreement.cost = args['cost']
 		
 		if agreement.id:
 			agreement.dateModified = datetime.now()
@@ -310,42 +327,33 @@ class AgreementHandler(Authenticated, BaseHandler):
 		logging.warn(agreement.__dict__)
 		agreement.save()
 		
-		if 'details' in self.request.arguments:
+		if args['details']:
 			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
-			
+		
 			if not agreementText:
 				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-			
-			agreementText.agreement = self.request.arguments['details'][0]
 		
-		if 'refund' in self.request.arguments:
+			agreementText.agreement = args['details']
+		
+		if args['refund']:
 			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
 			
 			if not agreementText:
 				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
 			
-			agreementText.refund = self.request.arguments['refund'][0]
+			agreementText.refund = args['refund']
 		
-		agreementText.save()
+		if agreementText:
+			agreementText.save()
 		
 		self.redirect('/agreement/%d' % agreement.id)
-	
 
 
-class AgreementJSONHandler(Authenticated, BaseHandler):
-	@web.authenticated
-	def get(self, agreementID):
-		user = self.current_user
-		
-		agreement = Agreement.retrieveByID(agreementID)
-		
-		if not agreement:
-			self.set_status(404)
-			self.write('{"success": false}')
-		
-		if agreement.vendorID != user.id or agreement.clientID != user.id:
-			self.set_status(404)
-			self.write('{"success": false}')
+
+class AgreementJSON(object):
+	def assembleDictionary(self, agreement):
+		# This should probably go in the model class, but it
+		# could be considered controller, so it's here for now.
 		
 		agreementDict = agreement.publicDict()
 		
@@ -355,25 +363,161 @@ class AgreementJSONHandler(Authenticated, BaseHandler):
 		vendor = User.retrieveByID(agreement.vendorID)
 		agreementDict['vendor'] = vendor.publicDict()
 		
+		del(agreementDict['clientID'])
+		del(agreementDict['vendorID'])
+		
 		agreementTxt = AgreementTxt.retrieveByAgreementID(agreement.id)
 		
 		if agreementTxt:
 			agreementDict['details'] = agreementTxt.agreement
 			agreementDict['refundPolicy'] = agreementTxt.refund
 		
-		self.write(json.dumps(agreementDict))
+		return agreementDict
+
+
+
+class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
+	@web.authenticated
+	def post(self):
+		user = self.current_user
+		
+		agreement = Agreement.initWithDict(dict(vendorID=user.id))
+		
+		agreementText = None
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[
+					('title', fmt.Protocol(str)),
+					('cost', fmt.PositiveInteger(0)),
+					('details', fmt.Protocol(str)),
+					('refund', fmt.Protocol(str)),
+				],
+				required=[
+					('clientID', fmt.PositiveInteger())
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		agreement.name = args['title']
+		agreement.amount = args['cost']
+		agreement.clientID = args['clientID']
+		
+		agreement.save()
+		agreement.refresh()
+		
+		if args['details']:
+			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
+		
+			if not agreementText:
+				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+		
+			agreementText.agreement = args['details']
+		
+		if args['refund']:
+			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
+			
+			if not agreementText:
+				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+			
+			agreementText.refund = args['refund']
+		
+		if agreementText:
+			agreementText.save()
+			agreementText.refresh()
+		
+		self.write(json.dumps(self.assembleDictionary(agreement)))
+
+
+
+class AgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
+	
+	@web.authenticated
+	def get(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID)
+		
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+			return
+		
+		if agreement.vendorID != user.id and agreement.clientID != user.id:
+			self.set_status(403)
+			self.write('{"success": false}')
+			return
+		
+		self.write(json.dumps(self.assembleDictionary(agreement)))
 	
 	@web.authenticated
 	def post(self, agreementID):
 		user = self.current_user
 		
-		agreement = Agreement.retrieveByID(agreementID) or Agreement()
+		agreement = Agreement.retrieveByID(agreementID)
 		
-		if not agreementID:
-			agreement.vendorID = user.id
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+			return
 		
-		if agreement.vendorID != user.id or agreement.clientID != user.id:
+		if agreement.vendorID != user.id:
 			self.set_status(403)
 			self.write('{"success": false}')
+			return
 		
+		agreementText = None
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[
+					('title', fmt.Protocol(str)),
+					('cost', fmt.PositiveInteger(0)),
+					('details', fmt.Protocol(str)),
+					('refund', fmt.Protocol(str)),
+					('clientID', fmt.PositiveInteger())
+				],
+				required=[]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		if args['title']:
+			agreement.name = args['title']
+		
+		if args['cost']:
+			agreement.cost = args['cost']
+		
+		if agreement.id:
+			agreement.dateModified = datetime.now()
+		
+		agreement.save()
+		
+		if args['details']:
+			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
+		
+			if not agreementText:
+				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+		
+			agreementText.agreement = args['details']
+		
+		if args['refund']:
+			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
+			
+			if not agreementText:
+				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+			
+			agreementText.refund = args['refund']
+		
+		if agreementText:
+			agreementText.save()
+		
+		self.write(json.dumps(self.assembleDictionary(agreement)))
 		

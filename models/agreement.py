@@ -77,11 +77,11 @@ class Agreement(MappedObj):
 			"clientID": self.clientID,
 			"name": self.name,
 			"dateCreated": self.dateCreated.strftime("%Y-%m-%dT%H:%M:%SZ"),
-			"dateAccepted": self.dateAccepted.strftime("%Y-%m-%dT%H:%M:%SZ"),
-			"dateModified": self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ"),
-			"dateDeclined": self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ"),
-			"dateVerified": self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ"),
-			"dateContested": self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ")
+			"dateAccepted": self.dateAccepted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateAccepted else None,
+			"dateModified": self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateModified else None,
+			"dateDeclined": self.dateDeclined.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateDeclined else None,
+			"dateVerified": self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateVerified else None,
+			"dateContested": self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateContested else None
 		}
 
 
