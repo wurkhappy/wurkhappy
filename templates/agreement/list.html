@@ -63,7 +63,7 @@
 			{% if bag['agreementCount'] == 1 %}
 				<h1>1 {{ escape(bag['agreementType']) }} Agreement ({{ bag['agreementCount'] }})</h1>
 			{% else %}
-				<h1>{{ bag['agreementCount'] }} {{ escape(bag['agreementType']) }} Agreements ({{ bag['agreementCount'] }})</h1>
+				<h1>{{ bag['agreementCount'] }} {{ escape(bag['agreementType']) }} Agreements ({{ bag['aggregateCost'] }})</h1>
 			{% end %}
 
 		</div>

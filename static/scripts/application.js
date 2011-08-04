@@ -39,7 +39,10 @@ jQuery.postJSON = function(url, data, callback) {
 }
 
 $(document).ready(function() {
-	$("input#client-suggest").autoSuggest(data.items, {selectedItemProp: "name", searchObjProps: "name"});
+	$.getJSON("/user/me/contacts.json", null, function (data, status, xhr) {
+		$("input#client-suggest").autoSuggest(data.contacts, {selectedItemProp: "name", searchObjProps: "name,email"});
+	});
+	
 	$("#confirm-edit-button").click(function() {
 		var data = {};
 		

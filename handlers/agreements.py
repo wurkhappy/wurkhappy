@@ -301,10 +301,10 @@ class AgreementHandler(Authenticated, BaseHandler):
 		try:
 			args = fmt.Parser(self.request.arguments,
 				optional=[
-					('title', fmt.Protocol(str)),
+					('title', fmt.Enforce(str)),
 					('cost', fmt.PositiveInteger(0)),
-					('details', fmt.Protocol(str)),
-					('refund', fmt.Protocol(str))
+					('details', fmt.Enforce(str)),
+					('refund', fmt.Enforce(str))
 				],
 				required=[]
 			)
@@ -388,10 +388,10 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 		try:
 			args = fmt.Parser(self.request.arguments,
 				optional=[
-					('title', fmt.Protocol(str)),
+					('title', fmt.Enforce(str)),
 					('cost', fmt.PositiveInteger(0)),
-					('details', fmt.Protocol(str)),
-					('refund', fmt.Protocol(str)),
+					('details', fmt.Enforce(str)),
+					('refund', fmt.Enforce(str)),
 				],
 				required=[
 					('clientID', fmt.PositiveInteger())
@@ -475,10 +475,10 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 		try:
 			args = fmt.Parser(self.request.arguments,
 				optional=[
-					('title', fmt.Protocol(str)),
+					('title', fmt.Enforce(str)),
 					('cost', fmt.PositiveInteger(0)),
-					('details', fmt.Protocol(str)),
-					('refund', fmt.Protocol(str)),
+					('details', fmt.Enforce(str)),
+					('refund', fmt.Enforce(str)),
 					('clientID', fmt.PositiveInteger())
 				],
 				required=[]

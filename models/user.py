@@ -48,7 +48,23 @@ class User(MappedObj):
 			result = cursor.fetchone()
 
 		return clz.initWithDict(result)
-		
+	
+	@classmethod
+	def iteratorWithContactsForID(clz, userID):
+		with Database() as (conn, cursor):
+			query = """SELECT %s.* FROM %s 
+				LEFT JOIN agreement AS a ON user.id = a.clientID
+				LEFT JOIN agreement AS b ON user.id = b.vendorID 
+				WHERE b.clientID = %%s OR a.vendorID = %%s 
+				GROUP BY user.id""" % (clz.tableName(), clz.tableName())
+			
+			cursor.execute(query, (userID, userID))
+			result = cursor.fetchone()
+			
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+	
 	def getProfile(self):
 		return Profile.retrieveByUserID(self.id)
 	

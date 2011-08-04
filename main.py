@@ -38,6 +38,7 @@ class Application(web.Application):
 			
 			(r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			(r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
+			(r'/user/me/contacts.json', users.ContactsJSONHandler),
 			
 			(r'/project/([0-9]+)', projecthandlers.ProjectHandler),
 			(r'/project/?', projecthandlers.ProjectHandler),
@@ -62,7 +63,7 @@ class Application(web.Application):
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			# Comment this out in production!
-			"debug": True
+			"debug": config['tornado']['debug']
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -83,21 +84,20 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	try:
-		import json
-	except:
-		import simplejson as json
+	import yaml
 	
-	options.define("config", default="config.json", help="load configuration from file", type=str)
+	options.define("config", default="config.yaml", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)
+	options.define("debug", default=False, help="start in debug mode", type=bool)
 	options.parse_command_line()
 	
 	workingDir = os.path.dirname(__file__)
 	if workingDir:
 		os.chdir(workingDir)
 	
-	conf = json.load(open(options.options.config, 'r'))
+	conf = yaml.load(open(options.options.config, 'r'))
+	conf['tornado']['debug'] = options.options.debug
 	server = HTTPServer(Application(conf))
 	
 	port = options.options.port

@@ -74,10 +74,10 @@ class Parser(object):
 
 
 # -------------------------------------------------------------------
-# Protocols
+# Protocols (Sublcasses of `Enforce`)
 # -------------------------------------------------------------------
 
-class Protocol(object):
+class Enforce(object):
 	inRange = lambda mn, mx: (lambda x: x >= mn and x <= mx)
 	inSet = lambda st: (lambda x: x in st)
 	
@@ -102,7 +102,7 @@ class Protocol(object):
 
 
 
-class PositiveInteger(Protocol):
+class PositiveInteger(Enforce):
 	def __init__(self, default=None):
 		Protocol.__init__(self, int, default)
 	
@@ -112,7 +112,7 @@ class PositiveInteger(Protocol):
 
 
 
-class IntegerInRange(Protocol):
+class IntegerInRange(Enforce):
 	def __init__(self, r, default=None):
 		Protocol.__init__(self, int, default)
 		self.range = r
@@ -123,7 +123,7 @@ class IntegerInRange(Protocol):
 
 
 
-class StringInSet(Protocol):
+class StringInSet(Enforce):
 	def __init__(self, s, default=None):
 		Protocol.__init__(self, str, default)
 		self.set = s
@@ -138,12 +138,12 @@ if __name__ == "__main__":
 	try:
 		p = Parser({"one": ["146"], "three": ["tres"], "four": ["foo"], "five": ["23623"]},
 		required=[
-			("four", Protocol(str)),
-			("five", Protocol(int))
+			("four", Enforce(str)),
+			("five", Enforce(int))
 		],
 		optional=[
 			("one", PositiveInteger(int)),
-			("two", Protocol(int, default=4)),
+			("two", Enforce(int, default=4)),
 			("three", StringInSet(["uno","dos","tres"]))
 		])
 		print "----"

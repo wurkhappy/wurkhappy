@@ -15,6 +15,24 @@ from datetime import datetime
 import logging
 
 # -------------------------------------------------------------------
+# Contact listing
+# -------------------------------------------------------------------
+
+class ContactsJSONHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self):
+		user = self.current_user
+		
+		contacts = []
+		
+		for user in User.iteratorWithContactsForID(user.id):
+			contacts.append(user.publicDict())
+		
+		self.renderJSON({"contacts": contacts})
+
+
+
+# -------------------------------------------------------------------
 # Profile (Add / Edit)
 # -------------------------------------------------------------------
 

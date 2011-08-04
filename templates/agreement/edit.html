@@ -39,7 +39,7 @@
 	
 	<div id="content" class="clear">
 		<form action="/agreement/{{ agr_id }}" method="POST" accept-charset="utf-8">
-			{{ xsrf_form_html() }}
+			{% raw xsrf_form_html() %}
 			<fieldset>
 				<h2>Recipient</h2>
 				<label for="">Email Address or Name of Existing Contact</label>
@@ -50,17 +50,43 @@
 				{% end %}
 			</fieldset>
 			<fieldset>
-				<h2>Service Agreement</h2>
+				<h2>Estimate</h2>
 				<label for="">Title</label>
 				<input type="text" name="title" value="{{ agr_title }}" id="" size="100" />
-				<label for="">Cost</label>
-				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100" />
 				<label for="">Date of Issue</label>
-				{{ date_html }}
-				<label for="">Service Agreement Details</label>
-				<textarea name="details" rows="20" cols="100">{{ escape(agr_details) }}</textarea>
-				<label for="">Reasons for Refund</label>
-				<textarea name="refund" rows="10" cols="100">{{ escape(agr_refund) }}</textarea>
+				{% raw date_html %}
+				<!-- -->
+				<h2>Phase One</h2>
+				<label for="">Deposit</label>
+				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100" />
+				<label for="">Estimated Date of Completion</label>
+				{% raw date_html %}
+				<label for="">Describe timeframe, services performed, and deliverables for phase one.</label>
+				<textarea name="details" rows="5" cols="100">{{ escape(agr_details) }}</textarea>
+				<!-- -->
+				<h2>Phase Two</h2>
+				<label for="">Amount Due on Completion</label>
+				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100" />
+				<label for="">Estimated Date of Completion</label>
+				{% raw date_html %}
+				<label for="">Describe timeframe, services performed, and deliverables for phase two.</label>
+				<textarea name="details" rows="5" cols="100">{{ escape(agr_details) }}</textarea>
+				<!-- -->
+				<h2>Phase Three</h2>
+				<label for="">Amount Due on Completion</label>
+				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100" />
+				<label for="">Estimated Date of Completion</label>
+				{% raw date_html %}
+				<label for="">Describe timeframe, services performed, and deliverables for phase three.</label>
+				<textarea name="details" rows="5" cols="100">{{ escape(agr_details) }}</textarea>
+				<!-- -->
+				<h2>Phase Four</h2>
+				<label for="">Amount Due on completion</label>
+				<input type="text" name="cost" value="{{ agr_cost }}" id="" size="100" />
+				<label for="">Estimated Date of Completion</label>
+				{% raw date_html %}
+				<label for="">Describe timeframe, services performed, and deliverables for phase four.</label>
+				<textarea name="details" rows="5" cols="100">{{ escape(agr_details) }}</textarea>
 			</fieldset>
 			<fieldset class="submit-buttons">
 				<input type="submit" id="confirm-edit-button" value="Save Changes &amp; Resend Client Agreement" />
@@ -128,7 +154,7 @@
 		<div class="column-three-fourth">
 		
 			{% if not agr_id %}
-				<h1>New Client Agreement</h1>
+				<h1>New Estimate</h1>
 			{% else %}
 				<h1>Edit Client Agreement</h1>
 			{% end %}
