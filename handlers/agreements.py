@@ -366,11 +366,10 @@ class AgreementJSON(object):
 		del(agreementDict['clientID'])
 		del(agreementDict['vendorID'])
 		
-		agreementTxt = AgreementTxt.retrieveByAgreementID(agreement.id)
+		agreementDict['phases'] = []
 		
-		if agreementTxt:
-			agreementDict['details'] = agreementTxt.agreement
-			agreementDict['refundPolicy'] = agreementTxt.refund
+		for phase in AgreementPhase.iteratorForAgreementID(agreement.id):
+			agreementDict['phases'].append(phase.publicDict())
 		
 		return agreementDict
 
