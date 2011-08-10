@@ -104,7 +104,7 @@ class Enforce(object):
 
 class PositiveInteger(Enforce):
 	def __init__(self, default=None):
-		Protocol.__init__(self, int, default)
+		Enforce.__init__(self, int, default)
 	
 	def test(self, value):
 		if value < 0:
@@ -114,7 +114,7 @@ class PositiveInteger(Enforce):
 
 class IntegerInRange(Enforce):
 	def __init__(self, r, default=None):
-		Protocol.__init__(self, int, default)
+		Enforce.__init__(self, int, default)
 		self.range = r
 	
 	def test(self, value):
@@ -125,7 +125,7 @@ class IntegerInRange(Enforce):
 
 class StringInSet(Enforce):
 	def __init__(self, s, default=None):
-		Protocol.__init__(self, str, default)
+		Enforce.__init__(self, str, default)
 		self.set = s
 
 	def test(self, value):

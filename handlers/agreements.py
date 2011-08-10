@@ -280,6 +280,8 @@ class AgreementHandler(Authenticated, BaseHandler):
 	def post(self, agreementID=None):
 		user = self.current_user
 		
+		logging.warn(self.request.arguments)
+		
 		agreement = Agreement.retrieveByID(agreementID) if agreementID else Agreement()
 		
 		if not agreement:
@@ -379,6 +381,8 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 	@web.authenticated
 	def post(self):
 		user = self.current_user
+		
+		logging.warn(self.request.arguments)
 		
 		agreement = Agreement.initWithDict(dict(vendorID=user.id))
 		
