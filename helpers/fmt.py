@@ -13,6 +13,11 @@ class HTTPErrorBetter(HTTPError):
 
 
 
+# Possibly a weirdo thing: Distinguishing between scalar and array types.
+# Each Enforcer subclass should unpack values? That way a list will always be
+# retrieved by the Parser and sent to the Enforcer, and the Enforcer is
+# responsible for massaging it into the correct type.
+
 class Parser(object):
 	
 	def __init__(self, args, required=[], optional=[]):
@@ -35,7 +40,7 @@ class Parser(object):
 				continue
 			
 			try:
-				self.args[name] = protocol << args[name][0]
+				self.args[name] = protocol << args[name]
 			except Exception as e:
 				err.append("'%s' parameter %s" % (name, e))
 			
@@ -46,7 +51,7 @@ class Parser(object):
 			(name, protocol) = t
 			
 			try:
-				self.args[name] = protocol << args.get(name, [None])[0]
+				self.args[name] = protocol << args.get(name, None)
 			except Exception as e:
 				err.append("'%s' parameter %s" % (name, e))
 			
@@ -93,11 +98,29 @@ class Enforce(object):
 			return self.default
 		
 		try:
-			val = self.type(value)
+			val = self.type(value[0])
 		except TypeError as e:
 			raise Exception("value cannot be converted to type '%s'" % self.type.__name__)
 		
 		self.test(val)
+		return val
+
+
+
+class List(Enforce):
+	def __init__(self, protocol=Enforce(str), default=[]):
+		Enforce.__init__(self, list, default)
+		self.protocol = protocol
+	
+	def __lshift__(self, value):
+		if value == None:
+			return self.default
+		
+		val = []
+		
+		for item in value:
+			val.append(self.protocol << [item])
+		
 		return val
 
 

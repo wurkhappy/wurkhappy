@@ -7,20 +7,6 @@ __      ___   _ _ __| | __ | |__   __ _ _ __  _ __  _   _
                                        |_|   |_|    |___/ 
 */
 
-var data = {items:[
-	{value: "01", name: "Brendan Berg"},
-	{value: "02", name: "Marcus Ellison"},
-	{value: "03", name: "Frank Saulter"},
-	{value: "04", name: "Matt Tretin"},
-	{value: "05", name: "James Callender"},
-	{value: "06", name: "Scott Siegel"},
-	{value: "07", name: "David Lynch"},
-	{value: "08", name: "Milton Glasser"},
-	{value: "09", name: "Mike Bloomberg"},
-	{value: "10", name: "Spencer Finch"},
-	{value: "11", name: "George Bush"},
-	{value: "12", name: "Nick D'Angelo"}
-]};
 
 function getCookie(name) {
 	var c = document.cookie.match("\\b" + name + "=([^;]*)\\b");
@@ -36,24 +22,49 @@ jQuery.postJSON = function(url, data, callback) {
 		type: "POST",
 		success: callback
 	});
-}
+};
+
+
+$.fn.submitAJAX = function(callback) {
+	var $form = this, params = $form.serializeArray();
+	$.postJSON($form.attr('action') + '.json', params, callback);
+};
 
 $(document).ready(function() {
-	$.getJSON("/user/me/contacts.json", null, function (data, status, xhr) {
-		$("input#client-suggest").autoSuggest(data.contacts, {selectedItemProp: "name", searchObjProps: "name,email"});
+	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
+		selectedItemProp: "name",
+		selectedValuesProp: "id",
+		inputName: "clientID",
+		searchObjProps: "name,email",
+		startText: "Email Address or Name of Existing Contact",
+		resultsHighlight: false,
+		neverSubmit: true,
+		selectionLimit: 1,
+		
+		// See if we can't muck around with internals here and add an email
+		// address to the internal data structure if that's what is typed, 
+		// and set the data object accordingly... We can handle the hidden 
+		// input based on the data, e.g.
+		// {"id": null, "name": "joe@example.org", "email": "joe@example.org"}
+		
+		retrieveComplete: function(data) {
+			return data.contacts;
+		},
+		selectionAdded: function(elem, data) {
+			$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="clientID" value="'+data.id+'" />');
+		},
+		selectionDeleted: function(elem) {
+			$('#wh-'+elem.attr('id')).remove();
+		}
 	});
 	
+	
 	$("#confirm-edit-button").click(function() {
-		var data = {};
-		
-		var textareas = $('form textarea');
-		for (var i = 0, len = textareas.length; i < len; i++) {
-			data[textareas[i].name] = textareas[i].value;
-		}
-		
-		$.postJSON($("form").attr('action') + '.json', data, function(data, status, xhr) {
-			alert('success');
+		$("form").submitAJAX(function(data, status, xhr) {
+			//console.log(xhr.getResponseHeader('Location'));
+			//console.log(data);
 		});
 		return false;
 	});
 });
+

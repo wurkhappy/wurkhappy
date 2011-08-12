@@ -392,13 +392,15 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 			args = fmt.Parser(self.request.arguments,
 				optional=[
 					('title', fmt.Enforce(str)),
-					('cost', fmt.PositiveInteger(0)),
-					('details', fmt.Enforce(str)),
-					('refund', fmt.Enforce(str)),
-				],
-				required=[
-					('clientID', fmt.PositiveInteger())
+					('email', fmt.Enforce(str)),
+					('clientID', fmt.PositiveInteger()),
+					('cost', fmt.List(fmt.PositiveInteger())),
+					('details', fmt.List(fmt.Enforce(str))),
+					('estDateCompleted', fmt.List(fmt.Enforce(str)))
 				]
+				# required=[
+				# 	('clientID', fmt.PositiveInteger())
+				# ]
 			)
 		except fmt.HTTPErrorBetter as e:
 			logging.warn(e.__dict__)
@@ -407,32 +409,21 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 			return
 		
 		agreement.name = args['title']
-		agreement.amount = args['cost']
 		agreement.clientID = args['clientID']
 		
 		agreement.save()
 		agreement.refresh()
 		
-		if args['details']:
-			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
+		for (num, cost, descr) in zip(range(0, 4), args['cost'], args['details']):
+			phase = AgreementPhase()
+			phase.agreementID = agreement.id
+			phase.phaseNumber = num
+			phase.amount = cost
+			phase.description = descr
+			phase.save()
 		
-			if not agreementText:
-				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-		
-			agreementText.agreement = args['details']
-		
-		if args['refund']:
-			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
-			
-			if not agreementText:
-				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-			
-			agreementText.refund = args['refund']
-		
-		if agreementText:
-			agreementText.save()
-			agreementText.refresh()
-		
+		self.set_status(201)
+		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement.id))
 		self.write(json.dumps(self.assembleDictionary(agreement)))
 
 
