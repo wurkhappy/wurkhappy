@@ -2,15 +2,15 @@
 # and the ability to include comments. Config files need comments.
 
 tornado:
-    address: localhost
+    address: 127.0.0.1
     port: 5000
     cookie_secret: 21a820a1d0f4b11b3c6f38b0e7849b7702b398a4
 
 database:
     host: localhost
     db: wurkhappy
-    user: www
-    passwd: "_/$!'e4#^,bL0x"
+    user: emma
+    passwd: ""
 
 smtp:
     user: contact@wurkhappy.com

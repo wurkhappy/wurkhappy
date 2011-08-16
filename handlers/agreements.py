@@ -337,6 +337,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
 			agreement['uri'] = self.request.uri
+			logging.info(agreement)
 			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agrmnt.name)
 			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement, date_html=self.constructDateForm(agrmnt.dateCreated))
 		else:

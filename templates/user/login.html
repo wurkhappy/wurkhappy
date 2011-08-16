@@ -9,7 +9,7 @@
 		{% end %}
 	{% end %}
 	<form action="/login" method="post">
-		{{ xsrf_form_html() }}
+		{% raw xsrf_form_html() %}
 		<table id="login-form">
 			<tr>
 				<td class="login-form"><label for "email">Email: </label></td>

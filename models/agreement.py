@@ -15,6 +15,7 @@ class Agreement(MappedObj):
 		self.name = None
 		# self.amount = None
 		self.dateCreated = None
+		self.dateSent = None
 		self.dateAccepted = None
 		self.dateModified = None
 		self.dateDeclined = None
@@ -42,16 +43,16 @@ class Agreement(MappedObj):
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(amount) FROM %s WHERE vendorID = %%s" % clz.tableName(), vendorID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
 			result = cursor.fetchone()
-			return result['SUM(amount)']
+			return result['SUM(a.amount)']
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(amount) FROM %s WHERE clientID = %%s" % clz.tableName(), clientID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
 			result = cursor.fetchone()
-			return result['SUM(amount)']
+			return result['SUM(a.amount)']
 	
 	@classmethod
 	def iteratorWithVendorID(clz, vendorID):
