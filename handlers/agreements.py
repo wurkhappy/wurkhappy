@@ -82,29 +82,44 @@ class AgreementsHandler(Authenticated, BaseHandler):
 			self.write("Forbidden")
 			return
 		
-		agreementList = []
+		# agreementList = []
+		
+		actionItems = []
+		awaitingReply = []
+		inProgress = []
+		
+		def appendAgreement(lst, agr, usr):
+			lst.append({
+				"id": agr.id,
+				"name": agr.name,
+				"other_id": usr.id,
+				"other_name": usr.getFullName(),
+				"date": agr.dateCreated.strftime('%B %d, %Y'),
+				"amount": "$%.02f" % (agr.amount / 100) if agr.amount else ""
+			})
 		
 		for agrmnt in agrmnts:
 			if agreementType == 'Client':
 				other = User.retrieveByID(agrmnt.clientID)
+				if agrmnt.dateDeclined or agrmnt.dateContested:
+					appendAgreement(actionItems, agrmnt, other)
+				elif not agrmnt.dateAccepted:
+					appendAgreement(awaitingReply, agrmnt, other)
+				else:
+					appendAgreement(inProgress, agrmnt, other)
 			else:
-				other = User.retrieveByID(agrmnt.vendorID)
-			
-			agreementList.append({
-				"id": agrmnt.id,
-				"name": agrmnt.name,
-				"other_id": other.id,
-				"other_name": other.getFullName(),
-				"date": agrmnt.dateCreated.strftime('%B %d, %Y'),
-				"amount": "$%.02f" % (agrmnt.amount / 100) if agrmnt.amount else ""
-			})
+				appendAgreement(actionItems, agrmnt, User.retrieveByID(agrmnt.vendorID))
 		
 		bag['agreementType'] = agreementType
-		bag['agreementGroups'] = [("In Progress", agreementList)]
+		bag['agreementGroups'] = [
+			("Requires Attention", actionItems),
+			("Waiting for Client", awaitingReply),
+			("In Progress", inProgress)
+		]
 		
-		agreements = [("In Progress", agreementList)]
+		#agreements = [("In Progress", agreementList)]
 		title = "%s Agreements &ndash; Wurk Happy" % agreementType
-		self.render("agreement/list.html", title=title, bag=bag, agreement_with=agreementType, agreement_groups=agreements)
+		self.render("agreement/list.html", title=title, bag=bag, agreement_with=agreementType)
 
 
 class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
