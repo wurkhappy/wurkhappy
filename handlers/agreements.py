@@ -229,6 +229,15 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		#         "dateCompleted": None,
 		#         "description": "Sit amet hoc infinitim...",
 		#         "comments": "Bacon mustache fixie PBR..."
+		#     }],
+		#     "actions": [{
+		#         "name": "Accept Agreement",
+		#         "action": "/agreement/15/status.json",
+		#         "params": "status=accepted"
+		#     },{
+		#         "name": "Request Changes",
+		#         "action": "/agreement/15/status.json",
+		#         "params": "status=declined"
 		#     }]
 		# }
 		
