@@ -63,7 +63,7 @@ class Application(web.Application):
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			# Comment this out in production!
-			"debug": config['tornado']['debug'] #test
+			"debug": config['tornado']['debug']
 		}
 		
 		web.Application.__init__(self, handlers, **settings)

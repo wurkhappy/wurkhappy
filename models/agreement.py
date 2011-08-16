@@ -133,7 +133,7 @@ class AgreementPhase (MappedObj):
 		return "agreementPhase"
 	
 	@classmethod
-	def iteratorForAgreementID(clz, agreementID):
+	def iteratorWithAgreementID(clz, agreementID):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s ORDER BY phaseNumber" % clz.tableName(), agreementID)
 			result = cursor.fetchone()

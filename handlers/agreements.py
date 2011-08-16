@@ -10,6 +10,49 @@ from helpers import fmt
 from datetime import datetime
 import logging
 
+
+
+class AgreementBase(object):
+	def parseAmountString(self, string):
+		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
+		m = r.match(string)
+		logging.warn(string)
+		if not m or len(m.groups()) != 2:
+			return None
+		logging.warn(m.groups())
+		d = int(m.groups()[0].replace(',', '')) * 100
+		
+		if m.groups()[1]:
+			d += int(m.groups()[1])
+		
+		return d
+	
+	
+	
+	def assembleDictionary(self, agreement):
+		# This should probably go in the model class, but it
+		# could be considered controller, so it's here for now.
+		
+		agreementDict = agreement.publicDict()
+		
+		client = User.retrieveByID(agreement.clientID)
+		agreementDict['client'] = client.publicDict()
+		
+		vendor = User.retrieveByID(agreement.vendorID)
+		agreementDict['vendor'] = vendor.publicDict()
+		
+		del(agreementDict['clientID'])
+		del(agreementDict['vendorID'])
+		
+		agreementDict['phases'] = []
+		
+		for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
+			agreementDict['phases'].append(phase.publicDict())
+		
+		return agreementDict
+
+
+
 # -------------------------------------------------------------------
 # Profile (Add / Edit)
 # -------------------------------------------------------------------
@@ -64,23 +107,9 @@ class AgreementsHandler(Authenticated, BaseHandler):
 		self.render("agreement/list.html", title=title, bag=bag, agreement_with=agreementType, agreement_groups=agreements)
 
 
-class AgreementHandler(Authenticated, BaseHandler):
-	def parseAmountString(self, string):
-		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
-		m = r.match(string)
-		logging.warn(string)
-		if not m or len(m.groups()) != 2:
-			return None
-		logging.warn(m.groups())
-		d = int(m.groups()[0].replace(',', '')) * 100
-		
-		if m.groups()[1]:
-			d += int(m.groups()[1])
-		
-		return d
-	
+class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 	def constructDateTime(self, day, month, year):
-		return atetime(int(year), int(month), int(day))
+		return datetime(int(year), int(month), int(day))
 	
 	@staticmethod
 	def constructDateForm(datestamp):
@@ -148,9 +177,10 @@ class AgreementHandler(Authenticated, BaseHandler):
 			return
 		
 		
-		# The agreement data gets wrapped up in a bag of JSON. This
-		# contains name, date, and amount of the agreement, as well as
-		# terms, transaction dates, and relationships.
+		# The agreement data gets wrapped up in a dictionary for
+		# the template. This contains name, date, and amount of
+		# the agreement, as well as terms, transaction dates, and
+		# relationships.
 		# 
 		# {
 		#     "name": "Marketing Outline",
@@ -172,6 +202,18 @@ class AgreementHandler(Authenticated, BaseHandler):
 		#         "user": "vendor",
 		#         "type": "Approved by ",
 		#         "date": "January 3, 2010"
+		#     }],
+		#     "phases": [{
+		#         "amount": "2,500.00",
+		#         "estDateCompleted": "August 1, 2011",
+		#         "dateCompleted": "August 1, 2011,
+		#         "description": "Lorem ipsum dolor..."
+		#     }, {
+		#         "amount": "1,500.00",
+		#         "estDateCompleted": "August 15, 2011",
+		#         "dateCompleted": None,
+		#         "description": "Sit amet hoc infinitim...",
+		#         "comments": "Bacon mustache fixie PBR..."
 		#     }]
 		# }
 		
@@ -208,26 +250,28 @@ class AgreementHandler(Authenticated, BaseHandler):
 			agreement["other"] = "vendor"
 		
 		
-		# Add the agreement text and the comment text to the JSON bag
+		# Add the agreement phase data to the JSON bag
 		
-		text = AgreementTxt.retrieveByAgreementID(agrmnt.id)
+		phases = AgreementPhase.iteratorWithAgreementID(agrmnt.id)
+		agreement["phases"] = []
+		totalAmount = 0
 		
-		if text:
-			agreement["text"] = {
-				"agreement": text.agreement,
-				"refund": text.refund
-			}
+		for phase in phases:
+			totalAmount += phase.amount if phase.amount else 0
+			
+			agreement["phases"].append({
+				"amount": "$%.02f" % (phase.amount / 100) if phase.amount else "",
+				"description": phase.description,
+				"estDateCompleted": phase.estDateCompleted.strftime('%B %d, %Y') if phase.estDateCompleted else None,
+				"dateCompleted": phase.dateCompleted.strftime('%B %d, %Y') if phase.dateCompleted else None
+			})
+			
+			if phase.comments:
+				agreement["phases"]["comments"] = phase.comments
 		
-		comment = AgreementComment.retrieveByAgreementID(agrmnt.id)
+		agreement["amount"] = "$%.02f" % (totalAmount / 100)
 		
-		if comment:
-			agreement["comment"] = {
-				"agreement": comment.agreement,
-				"refund": comment.refund
-			}
-		
-		
-		# Transactions are datetime properties of the agreement. They
+		# Transactions are datetime properties of the agreement.
 		
 		transactions = [{
 			"type": "Sent by ",
@@ -352,32 +396,7 @@ class AgreementHandler(Authenticated, BaseHandler):
 
 
 
-class AgreementJSON(object):
-	def assembleDictionary(self, agreement):
-		# This should probably go in the model class, but it
-		# could be considered controller, so it's here for now.
-		
-		agreementDict = agreement.publicDict()
-		
-		client = User.retrieveByID(agreement.clientID)
-		agreementDict['client'] = client.publicDict()
-		
-		vendor = User.retrieveByID(agreement.vendorID)
-		agreementDict['vendor'] = vendor.publicDict()
-		
-		del(agreementDict['clientID'])
-		del(agreementDict['vendorID'])
-		
-		agreementDict['phases'] = []
-		
-		for phase in AgreementPhase.iteratorForAgreementID(agreement.id):
-			agreementDict['phases'].append(phase.publicDict())
-		
-		return agreementDict
-
-
-
-class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
+class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 	@web.authenticated
 	def post(self):
 		user = self.current_user
@@ -394,7 +413,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 					('title', fmt.Enforce(str)),
 					('email', fmt.Enforce(str)),
 					('clientID', fmt.PositiveInteger()),
-					('cost', fmt.List(fmt.PositiveInteger())),
+					('cost', fmt.List(fmt.Enforce(str))),
 					('details', fmt.List(fmt.Enforce(str))),
 					('estDateCompleted', fmt.List(fmt.Enforce(str)))
 				]
@@ -418,7 +437,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 			phase = AgreementPhase()
 			phase.agreementID = agreement.id
 			phase.phaseNumber = num
-			phase.amount = cost
+			phase.amount = self.parseAmountString(cost)
 			phase.description = descr
 			phase.save()
 		
@@ -428,7 +447,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 
 
 
-class AgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
+class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 	
 	@web.authenticated
 	def get(self, agreementID):
@@ -470,7 +489,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 			args = fmt.Parser(self.request.arguments,
 				optional=[
 					('title', fmt.Enforce(str)),
-					('cost', fmt.PositiveInteger(0)),
+					('cost', fmt.Enforce(str)),
 					('details', fmt.Enforce(str)),
 					('refund', fmt.Enforce(str)),
 					('clientID', fmt.PositiveInteger())
@@ -487,7 +506,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementJSON):
 			agreement.name = args['title']
 		
 		if args['cost']:
-			agreement.cost = args['cost']
+			agreement.cost = self.parseAmountString(args['cost'])
 		
 		if agreement.id:
 			agreement.dateModified = datetime.now()
