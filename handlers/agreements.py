@@ -71,12 +71,12 @@ class AgreementsHandler(Authenticated, BaseHandler):
 			agreementType = 'Client'
 			agrmnts = Agreement.iteratorWithVendorID(user.id)
 			bag['agreementCount'] = Agreement.countWithVendorID(user.id)
-			bag['aggregateCost'] = "$%.0f" % (Agreement.amountWithVendorID(user.id) / 100)
+			bag['aggregateCost'] = "$%.0f" % ((Agreement.amountWithVendorID(user.id) or 0.0) / 100)
 		elif withWhom.lower() == 'vendors':
 			agreementType = 'Vendor'
 			agrmnts = Agreement.iteratorWithClientID(user.id)
 			bag['agreementCount']  = Agreement.countWithClientID(user.id)
-			bag['aggregateCost']  = "$%.0f" % (Agreement.amountWithClientID(user.id) / 100)
+			bag['aggregateCost']  = "$%.0f" % ((Agreement.amountWithClientID(user.id) or 0.0) / 100)
 		else:
 			self.set_status(403)
 			self.write("Forbidden")
