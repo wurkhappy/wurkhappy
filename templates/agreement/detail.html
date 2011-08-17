@@ -108,14 +108,15 @@
 			
 		</div>
 		<div class="column-one-fourth">
-			
-	      <div class="action-button">
-	        <a href="" class="top"><span>Mark as Complete</a>
-	        <a href="/agreement/{{ bag['id'] }}?edit=true" class="bottom"><span>Edit Agreement</a>
-	      </div>
-
+		
+			<div class="action-button">
+			{% for action in bag['actions'] %}
+				<a href="{{ action['action'] }}?{{ action['params'] }}&_method={{ action['method'] }}" class="top"><span>{{ action['name'] }}</span></a>
+			{% end %}
+			</div>
+		
 		</div>
-
+	
 	</div>
 {% end %}
 
