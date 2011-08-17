@@ -127,6 +127,76 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return datetime(int(year), int(month), int(day))
 	
 	@staticmethod
+	def generateActionList(agreement, state, role):
+		return {
+			"state": {
+				"role": {
+					"name": "ActionName",
+					"action": "/path/to/action.json",
+					"params": "key=value"
+				}
+			},
+			"draftState": {
+				"vendor": [ {
+					"name": "Send Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=send"
+				} ]
+			},
+			"estimateState": {
+				"vendor": [ {
+					"name": "Edit Estimate",
+					"action": "/agreement/%d.json" % agreement.id,
+					"method": "GET",
+					"params": "edit=true"
+				} ],
+				"client": [ {
+					"name": "Accept Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=accept"
+				}, {
+					"name": "Decline Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=decline"
+				} ]
+			},
+			"declinedState": {
+				"vendor": [ {
+					"name": "Edit and Re-send",
+					"action": "/agreement/%d.json" % agreement.id,
+					"method": "GET",
+					"params": "edit=true"
+				} ]
+			},
+			"agreementState": {
+				"vendor": [ {
+					"name": "Mark Completed",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=markComplete"
+				} ]
+			},
+			"completedState": {
+				"client": [ {
+					"name": "Verify and Pay",
+					# The verify and pay action should redirect to payment page.
+					# But we do this for now to prove it works.
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=verify"
+				}, {
+					"name": "Dispute",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=dispute"
+				} ]
+			}
+		}[state][role]
+	
+	@staticmethod
 	def constructDateForm(datestamp):
 		# Should probably be somewhere else
 		months = [
@@ -344,7 +414,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 		
 		agreement['transactions'] = transactions
+		agreement['actions'] = self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
 		
+		logging.info(agreement['actions'])
 		logging.info(self.request.arguments)
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
@@ -593,7 +665,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			"agreement": {
 				"id": agreement.id
 			},
-			"state": agreement.getState().dictionary()
+			"state": AgreementState.currentState(agreement)
 		}
 		
 		self.write(json.dumps(stateDict))
@@ -620,7 +692,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			args = fmt.Parser(self.request.arguments,
 				optional=[],
 				required=[
-					('state', fmt.Enforce(str))
+					('action', fmt.Enforce(str))
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
@@ -629,13 +701,14 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write(e.body_content)
 			return
 		
-		state = agreement.getState().doTransition(args['state'])
+		AgreementState.currentState(agreement)
+		currentState = AgreementStaet.doTransition(agreement, user, args['action'])
 		
 		stateDict = {
 			"agreement": {
 				"id": agreement.id
 			},
-			"state": state.dictionary()
+			"state": currentState
 		}
 		
 		self.write(json.dumps(stateDict))
