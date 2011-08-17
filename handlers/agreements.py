@@ -172,7 +172,19 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if not agreementID:
 			# Must have been routed from /agreement/new
 			title = "New Agreement &ndash; Wurk Happy"
-			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=None, date_html=self.constructDateForm(datetime.now()))
+			
+			empty = {
+				"id": None,
+				"name": "",
+				"date": "",
+				"amount": "",
+				"client": None,
+				"vendor": None,
+				"phases": [],
+				"actions": []
+			}
+				
+			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=empty, date_html=self.constructDateForm(datetime.now()))
 			return
 		
 		agrmnt = Agreement.retrieveByID(agreementID)
@@ -210,34 +222,34 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		#     "self": "client",
 		#     "other": "vendor",
 		#     "transactions": [{
-		#         "user": "client",
-		#         "type": "Sent by ",
-		#         "date": "January 1, 2010"
-		#     }, {
-		#         "user": "vendor",
-		#         "type": "Approved by ",
-		#         "date": "January 3, 2010"
-		#     }],
+		#             "user": "client",
+		#             "type": "Sent by ",
+		#             "date": "January 1, 2010"
+		#         }, {
+		#             "user": "vendor",
+		#             "type": "Approved by ",
+		#             "date": "January 3, 2010"
+		#         }],
 		#     "phases": [{
-		#         "amount": "2,500.00",
-		#         "estDateCompleted": "August 1, 2011",
-		#         "dateCompleted": "August 1, 2011,
-		#         "description": "Lorem ipsum dolor..."
-		#     }, {
-		#         "amount": "1,500.00",
-		#         "estDateCompleted": "August 15, 2011",
-		#         "dateCompleted": None,
-		#         "description": "Sit amet hoc infinitim...",
-		#         "comments": "Bacon mustache fixie PBR..."
+		#             "amount": "2,500.00",
+		#             "estDateCompleted": "August 1, 2011",
+		#             "dateCompleted": "August 1, 2011,
+		#             "description": "Lorem ipsum dolor..."
+		#         }, {
+		#             "amount": "1,500.00",
+		#             "estDateCompleted": "August 15, 2011",
+		#             "dateCompleted": None,
+		#             "description": "Sit amet hoc infinitim...",
+		#             "comments": "Bacon mustache fixie PBR..."
 		#     }],
 		#     "actions": [{
-		#         "name": "Accept Agreement",
-		#         "action": "/agreement/15/status.json",
-		#         "params": "status=accepted"
-		#     },{
-		#         "name": "Request Changes",
-		#         "action": "/agreement/15/status.json",
-		#         "params": "status=declined"
+		#             "name": "Accept Agreement",
+		#             "action": "/agreement/15/status.json",
+		#             "params": "status=accepted"
+		#         },{
+		#             "name": "Request Changes",
+		#             "action": "/agreement/15/status.json",
+		#             "params": "status=declined"
 		#     }]
 		# }
 		

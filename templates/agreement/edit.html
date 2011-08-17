@@ -4,32 +4,6 @@
 
 {% block main %}
 
-{% if 'bag' in globals() and bag != None %}
-	{% set agr_id = bag['id'] %}
-	{% set agr_title = bag['name'] %}
-	{% set agr_cost = bag['amount'] %}
-	{% set agr_client = bag['client']['name'] %}
-	
-	{% if 'text' in bag and 'agreement' in bag['text'] %}
-		{% set agr_details = bag['text']['agreement'] %}
-	{% else %}
-		{% set agr_details = '' %}
-	{% end %}
-	
-	{% if 'text' in bag and 'refund' in bag['text'] %}
-		{% set agr_refund = bag['text']['refund'] %}
-	{% else %}
-		{% set agr_refund = '' %}
-	{% end %}
-{% else %}
-	{% set agr_id = '' %}
-	{% set agr_client = '' %}
-	{% set agr_title = '' %}
-	{% set agr_cost = '' %}
-	{% set agr_details = '' %}
-	{% set agr_refund = '' %}
-{% end %}
-
 <div class="container">
 	{% block navigation %}
 	{% end %}
@@ -38,13 +12,13 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="/agreement/{% if agr_id %}{{ agr_id }}{% else %}new{% end %}" method="POST" accept-charset="utf-8">
+		<form action="/agreement/{% if bag['id'] %}{{ bag['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8">
 			{% raw xsrf_form_html() %}
 			<fieldset>
 				<h2>Recipient</h2>
 				<label for="">Email Address or Name of Existing Contact</label>
 				<input type="text" name="email" size="100" id="client-suggest" />
-				{% if not agr_id %}
+				{% if not bag['id'] %}
 					<label for="">Personal Message in Notification Email (optional)</label>
 					<textarea name="name" rows="3" cols="100"></textarea>
 				{% end %}
@@ -52,7 +26,7 @@
 			<fieldset>
 				<h2>Estimate</h2>
 				<label for="">Title</label>
-				<input type="text" name="title" value="{{ agr_title }}" size="100" />
+				<input type="text" name="title" value="{{ bag['name'] }}" size="100" />
 				<label for="">Date of Issue</label>
 				{% raw date_html %}
 				<!-- -->
@@ -156,7 +130,7 @@
 	
 		<div class="column-three-fourth">
 		
-			{% if not agr_id %}
+			{% if not bag['id'] %}
 				<h1>New Estimate</h1>
 			{% else %}
 				<h1>Edit Client Agreement</h1>
@@ -167,7 +141,7 @@
 		<div class="column-one-fourth">
 		
 			<div class="action-button">
-				<a href="/agreement/{{ agr_id }}" class="single cancel">Cancel Changes</a>
+				<a href="/agreement/{{ bag['id'] }}" class="single cancel">Cancel Changes</a>
 			</div>
 		
 		</div>

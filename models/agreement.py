@@ -43,14 +43,20 @@ class Agreement(MappedObj):
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a \
+				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id \
+				WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL \
+				AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
 			result = cursor.fetchone()
 			return result['SUM(a.amount)']
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a \
+				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id \
+				WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL \
+				AND a.dateVerified IS NULL" % clz.tableName(), clientID)
 			result = cursor.fetchone()
 			return result['SUM(a.amount)']
 	
@@ -79,37 +85,13 @@ class Agreement(MappedObj):
 			('clientID', self.clientID),
 			('name', self.name),
 			('dateCreated', self.dateCreated.strftime("%Y-%m-%dT%H:%M:%SZ")),
+			('dateSent', self.dateSent.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateSent else None),
 			('dateAccepted', self.dateAccepted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateAccepted else None),
 			('dateModified', self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateModified else None),
 			('dateDeclined', self.dateDeclined.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateDeclined else None),
 			('dateVerified', self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateVerified else None),
 			('dateContested', self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateContested else None)
 		])
-
-
-# -------------------------------------------------------------------
-# Agreement Text
-# -------------------------------------------------------------------
-
-class AgreementTxt (MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.agreementID = None
-		self.agreement = None
-		self.refund = None
-		self.dateCreated = None
-	
-	@classmethod
-	def tableName(clz):
-		return "agreementTxt"
-	
-	@classmethod
-	def retrieveByAgreementID(clz, agreementID):
-		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
-			result = cursor.fetchone()
-			return clz.initWithDict(result)
 
 
 
@@ -153,29 +135,3 @@ class AgreementPhase (MappedObj):
 		])
 
 
-# -------------------------------------------------------------------
-# Agreement Comment
-# -------------------------------------------------------------------
-
-class AgreementComment (MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.agreementID = None
-		self.agreement = None
-		self.refund = None
-		self.dateCreated = None
-	
-	@classmethod
-	def tableName(clz):
-		return "agreementComment"
-	
-	@classmethod
-	def retrieveByAgreementID(clz, agreementID):
-		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
-			result = cursor.fetchone()
-			return clz.initWithDict(result)
-	
-
-	
