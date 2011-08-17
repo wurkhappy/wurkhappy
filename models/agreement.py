@@ -43,14 +43,20 @@ class Agreement(MappedObj):
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a \
+				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id \
+				WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL \
+				AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
 			result = cursor.fetchone()
 			return result['SUM(a.amount)']
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a \
+				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id \
+				WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL \
+				AND a.dateVerified IS NULL" % clz.tableName(), clientID)
 			result = cursor.fetchone()
 			return result['SUM(a.amount)']
 	
@@ -86,31 +92,6 @@ class Agreement(MappedObj):
 			('dateVerified', self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateVerified else None),
 			('dateContested', self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateContested else None)
 		])
-
-
-# -------------------------------------------------------------------
-# Agreement Text
-# -------------------------------------------------------------------
-
-class AgreementTxt (MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.agreementID = None
-		self.agreement = None
-		self.refund = None
-		self.dateCreated = None
-	
-	@classmethod
-	def tableName(clz):
-		return "agreementTxt"
-	
-	@classmethod
-	def retrieveByAgreementID(clz, agreementID):
-		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
-			result = cursor.fetchone()
-			return clz.initWithDict(result)
 
 
 
@@ -154,6 +135,7 @@ class AgreementPhase (MappedObj):
 		])
 
 
+<<<<<<< HEAD
 # -------------------------------------------------------------------
 # Agreement Comment
 # -------------------------------------------------------------------
@@ -233,3 +215,5 @@ def testCurrentState():
 					 ('dateVerified', None), 
 					 ('dateContested', None)])
 	return currentState(agreementInstance)
+=======
+>>>>>>> 66ff2dfb847f8ce03756e73e0035ea65a557c94d

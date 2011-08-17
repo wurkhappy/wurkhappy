@@ -127,6 +127,76 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return datetime(int(year), int(month), int(day))
 	
 	@staticmethod
+	def generateActionList(agreement, state, role):
+		return {
+			"state": {
+				"role": {
+					"name": "ActionName",
+					"action": "/path/to/action.json",
+					"params": "key=value"
+				}
+			},
+			"draftState": {
+				"vendor": [ {
+					"name": "Send Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=send"
+				} ]
+			},
+			"estimateState": {
+				"vendor": [ {
+					"name": "Edit Estimate",
+					"action": "/agreement/%d.json" % agreement.id,
+					"method": "GET",
+					"params": "edit=true"
+				} ],
+				"client": [ {
+					"name": "Accept Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=accept"
+				}, {
+					"name": "Decline Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=decline"
+				} ]
+			},
+			"declinedState": {
+				"vendor": [ {
+					"name": "Edit and Re-send",
+					"action": "/agreement/%d.json" % agreement.id,
+					"method": "GET",
+					"params": "edit=true"
+				} ]
+			},
+			"agreementState": {
+				"vendor": [ {
+					"name": "Mark Completed",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=markComplete"
+				} ]
+			},
+			"completedState": {
+				"client": [ {
+					"name": "Verify and Pay",
+					# The verify and pay action should redirect to payment page.
+					# But we do this for now to prove it works.
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=verify"
+				}, {
+					"name": "Dispute",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=dispute"
+				} ]
+			}
+		}[state][role]
+	
+	@staticmethod
 	def constructDateForm(datestamp):
 		# Should probably be somewhere else
 		months = [
@@ -172,7 +242,19 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if not agreementID:
 			# Must have been routed from /agreement/new
 			title = "New Agreement &ndash; Wurk Happy"
-			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=None, date_html=self.constructDateForm(datetime.now()))
+			
+			empty = {
+				"id": None,
+				"name": "",
+				"date": "",
+				"amount": "",
+				"client": None,
+				"vendor": None,
+				"phases": [],
+				"actions": []
+			}
+				
+			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=empty, date_html=self.constructDateForm(datetime.now()))
 			return
 		
 		agrmnt = Agreement.retrieveByID(agreementID)
@@ -210,25 +292,34 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		#     "self": "client",
 		#     "other": "vendor",
 		#     "transactions": [{
-		#         "user": "client",
-		#         "type": "Sent by ",
-		#         "date": "January 1, 2010"
-		#     }, {
-		#         "user": "vendor",
-		#         "type": "Approved by ",
-		#         "date": "January 3, 2010"
-		#     }],
+		#             "user": "client",
+		#             "type": "Sent by ",
+		#             "date": "January 1, 2010"
+		#         }, {
+		#             "user": "vendor",
+		#             "type": "Approved by ",
+		#             "date": "January 3, 2010"
+		#         }],
 		#     "phases": [{
-		#         "amount": "2,500.00",
-		#         "estDateCompleted": "August 1, 2011",
-		#         "dateCompleted": "August 1, 2011,
-		#         "description": "Lorem ipsum dolor..."
-		#     }, {
-		#         "amount": "1,500.00",
-		#         "estDateCompleted": "August 15, 2011",
-		#         "dateCompleted": None,
-		#         "description": "Sit amet hoc infinitim...",
-		#         "comments": "Bacon mustache fixie PBR..."
+		#             "amount": "2,500.00",
+		#             "estDateCompleted": "August 1, 2011",
+		#             "dateCompleted": "August 1, 2011,
+		#             "description": "Lorem ipsum dolor..."
+		#         }, {
+		#             "amount": "1,500.00",
+		#             "estDateCompleted": "August 15, 2011",
+		#             "dateCompleted": None,
+		#             "description": "Sit amet hoc infinitim...",
+		#             "comments": "Bacon mustache fixie PBR..."
+		#     }],
+		#     "actions": [{
+		#             "name": "Accept Agreement",
+		#             "action": "/agreement/15/status.json",
+		#             "params": "status=accepted"
+		#         },{
+		#             "name": "Request Changes",
+		#             "action": "/agreement/15/status.json",
+		#             "params": "status=declined"
 		#     }]
 		# }
 		
@@ -323,7 +414,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 		
 		agreement['transactions'] = transactions
+		agreement['actions'] = self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
 		
+		logging.info(agreement['actions'])
 		logging.info(self.request.arguments)
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
@@ -550,3 +643,72 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		self.write(json.dumps(self.assembleDictionary(agreement)))
 		
+class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
+	
+	@web.authenticated
+	def get(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID)
+		
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+			return
+		
+		if agreement.vendorID != user.id and agreement.clientID != user.id:
+			self.set_status(403)
+			self.write('{"success": false}')
+			return
+		
+		stateDict = {
+			"agreement": {
+				"id": agreement.id
+			},
+			"state": AgreementState.currentState(agreement)
+		}
+		
+		self.write(json.dumps(stateDict))
+	
+	@web.authenticated
+	def post(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID)
+		
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+			return
+		
+		if agreement.vendorID != user.id:
+			self.set_status(403)
+			self.write('{"success": false}')
+			return
+		
+		agreementText = None
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					('action', fmt.Enforce(str))
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		AgreementState.currentState(agreement)
+		currentState = AgreementStaet.doTransition(agreement, user, args['action'])
+		
+		stateDict = {
+			"agreement": {
+				"id": agreement.id
+			},
+			"state": currentState
+		}
+		
+		self.write(json.dumps(stateDict))
