@@ -6,6 +6,7 @@ import random
 import hmac
 import os
 import smtplib
+import bcrypt
 
 # -------------------------------------------------------------------
 # Verification
@@ -57,18 +58,19 @@ class Verification (object):
 	
 	@staticmethod
 	def hash_password(plain_password):
-	  	salt = Verification.__random_bytes(8) # 64 bits
+		#   	salt = Verification.__random_bytes(8) # 64 bits
+		salt = bcrypt.gensalt() # default log_rounds is 12
+		#   	hashed_password = Verification.__pbkdf_sha256(plain_password, salt, Verification.NUM_ITERATIONS)
+		hashed_password = bcrypt.hashpw(plain_password, salt)
+		#   	return salt.encode("base64").strip() + "," + hashed_password.encode("base64").strip()
+		return salt.encode("base64").strip() + "," + hashed_password.encode("base64").strip()
 
-	  	hashed_password = Verification.__pbkdf_sha256(plain_password, salt, Verification.NUM_ITERATIONS)
-
-	  	# return the salt and hashed password, encoded in base64 and split with ","
-	  	return salt.encode("base64").strip() + "," + hashed_password.encode("base64").strip()
-	
 	@staticmethod
 	def check_password(saved_password_entry, plain_password):
 	  	salt, hashed_password = saved_password_entry.split(",")
 	  	salt = salt.decode("base64")
 	  	hashed_password = hashed_password.decode("base64")
-
-	  	return hashed_password == Verification.__pbkdf_sha256(plain_password, salt, Verification.NUM_ITERATIONS)
+	  	# return hashed_password == Verification.__pbkdf_sha256(plain_password, salt, Verification.NUM_ITERATIONS)
+		return hashed_password == bcrypt.hashpw(plain_password, salt)
+			
 
