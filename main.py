@@ -52,6 +52,7 @@ class Application(web.Application):
 			(r'/agreement/new/?', agreements.AgreementHandler),
 			
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
+			(r'/agreement/([0-9]+)/status.json', agreements.AgreementStatusJSONHandler),
 			(r'/agreement/new\.json', agreements.NewAgreementJSONHandler)
 		]
 		
@@ -62,7 +63,6 @@ class Application(web.Application):
 			"login_url": "/login",
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
-			# Comment this out in production!
 			"debug": config['tornado']['debug']
 		}
 		

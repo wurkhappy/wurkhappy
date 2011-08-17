@@ -571,3 +571,71 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		self.write(json.dumps(self.assembleDictionary(agreement)))
 		
+class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
+	
+	@web.authenticated
+	def get(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID)
+		
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+			return
+		
+		if agreement.vendorID != user.id and agreement.clientID != user.id:
+			self.set_status(403)
+			self.write('{"success": false}')
+			return
+		
+		stateDict = {
+			"agreement": {
+				"id": agreement.id
+			},
+			"state": agreement.getState().dictionary()
+		}
+		
+		self.write(json.dumps(stateDict))
+	
+	@web.authenticated
+	def post(self, agreementID):
+		user = self.current_user
+		
+		agreement = Agreement.retrieveByID(agreementID)
+		
+		if not agreement:
+			self.set_status(404)
+			self.write('{"success": false}')
+			return
+		
+		if agreement.vendorID != user.id:
+			self.set_status(403)
+			self.write('{"success": false}')
+			return
+		
+		agreementText = None
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					('state', fmt.Enforce(str))
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		state = agreement.getState().doTransition(args['state'])
+		
+		stateDict = {
+			"agreement": {
+				"id": agreement.id
+			},
+			"state": state.dictionary()
+		}
+		
+		self.write(json.dumps(stateDict))
