@@ -349,7 +349,6 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 #self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
 		
 		logging.info(agreement['actions'])
-		logging.info(self.request.arguments)
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
 			agreement['uri'] = self.request.uri

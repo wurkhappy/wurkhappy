@@ -160,9 +160,12 @@ class AgreementStates(object):
 		assert type(agreementInstance)==Agreement
 		self.agreementInstance=agreementInstance
 		# {'vendor' : [{"name" : "send", "text" : "Send Estimate", "db_action" : "SELECT ..."}} ...
-		self.buttons = {"vendor": [{}], "client" : [{}]}
-		bnames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
-		self._bmap = dict(zip(bnames, ['dateSent', ',dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']))
+		self.buttons = {"vendor": [], "client" : []}
+		
+		transitionNames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
+		fieldNames = ['dateSent', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
+		
+		self._bmap = dict(zip(transitionNames, fieldNames))
 		# self._jsmap = dict(zip(bnames, [{}
 		# 				,{"action" : "/agreement/%d.json" % self.agreementInstance.id, "http" : "GET", 
 		# add in js actions keywords?
@@ -192,13 +195,15 @@ class AgreementStates(object):
 		
 		states = [('PaidState', dateVerified)
 			  ,('DraftState', not dateSent)
-			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
-			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined >= dateSent)
-			  ,('AgreementState',(not dateContested and dateAccepted and dateAccepted >= dateSent) \
-				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
-			  ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
-				    or (dateContested and dateContested < dateSent and dateAccepted < dateContested))
-			  ,('InvalidState', dateContested and dateAccepted and dateAccepted > dateSent)]
+			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined))# or dateDeclined < dateSent))
+			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined)# and dateDeclined >= dateSent)
+			  # ,('AgreementState',(not dateContested and dateAccepted and dateAccepted >= dateSent) \
+			  # 				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
+			  # ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
+			  # 				    or (dateContested and dateContested < dateSent and dateAccepted < dateContested))
+			  ,('AgreementState',(not dateContested and dateAccepted) or dateContested)
+			  ,('CompletedState', (not dateContested and dateAccepted) or dateContested)
+			  ,('InvalidState', dateContested and dateAccepted)]# and dateAccepted > dateSent)]
 		
 		# like find-first
 		subStateName = [s[0] for s in states if s[1]][0]
