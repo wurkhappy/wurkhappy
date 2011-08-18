@@ -73,7 +73,7 @@ class User(MappedObj):
 				result = cursor.fetchone()
 	
 	def setProfileImage(self, data):
-		key = SHA1(uuid.uuid4().bytes)).digest()
+		key = SHA1(uuid.uuid4().bytes).digest()
 		with AmazonS3() as (conn, bucket):
 			k = Key(bucket)
 			k.key = 'fooop'

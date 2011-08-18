@@ -43,20 +43,14 @@ class Agreement(MappedObj):
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a \
-				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id \
-				WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL \
-				AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
 			result = cursor.fetchone()
 			return result['SUM(a.amount)']
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a \
-				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id \
-				WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL \
-				AND a.dateVerified IS NULL" % clz.tableName(), clientID)
+			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
 			result = cursor.fetchone()
 			return result['SUM(a.amount)']
 	
@@ -135,33 +129,7 @@ class AgreementPhase (MappedObj):
 		])
 
 
-#<<<<<<< HEAD
-# -------------------------------------------------------------------
-# Agreement Comment
-# -------------------------------------------------------------------
 
-class AgreementComment (MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.agreementID = None
-		self.agreement = None
-		self.refund = None
-		self.dateCreated = None
-	
-	@classmethod
-	def tableName(clz):
-		return "agreementComment"
-	
-	@classmethod
-	def retrieveByAgreementID(clz, agreementID):
-		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
-			result = cursor.fetchone()
-			return clz.initWithDict(result)
-	
-
-	
 # -------------------------------------------------------------------
 # Add agreement state -> button stuff
 # DraftState -> agreement.dateSent null
@@ -183,37 +151,138 @@ class AgreementComment (MappedObj):
 #  what to show?
 # Do we store elsewhere a history of edits?
 # -------------------------------------------------------------------
-def currentState(agreementInstance):
-	""" currentState : AgreementInstance -> AgreementState """
-	
-	dateVerified = agreementInstance["dateVerified"]
-	dateSent =  agreementInstance["dateSent"]
-	dateContested = agreementInstance["dateContested"]
-	dateAccepted = agreementInstance["dateAccepted"]
-	dateDeclined = agreementInstance["dateDeclined"]
-	
-	states = [('PaidState', dateVerified)
-		  ,('DraftState', not dateSent)
-		  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
-		  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined >= dateSent)
-		  ,('AgreementState', (not dateContested and dateAccepted >= dateSent) \
-			    or (dateContested > dateSent and dateAccepted < dateSent))
-		  ,('CompletedState', (not dateContested and dateAccepted < dateSent) \
-			    or (dateContested < dateSent and dateAccepted < dateContested))
-		  ,('InvalidState', dateContested and dateAccepted > dateSent)]
-	
-	# like find-first
-	return [s[0] for s in states if s[1]][0]
 
-def testCurrentState():
-	from datetime import datetime
-	agreementInstance = OrderedDict([('dateCreated', datetime(2011, 8, 1)),
-					 ('dateSent', None),
-					 ('dateAccepted', None),
-					 ('dateModified', None),
-					 ('dateDeclined', None),
-					 ('dateVerified', None), 
-					 ('dateContested', None)])
-	return currentState(agreementInstance)
-#=======
-#>>>>>>> 66ff2dfb847f8ce03756e73e0035ea65a557c94d
+class AgreementStates(object):
+	""" AgreementState """
+
+	def __init__(self, agreementInstance):
+		assert type(agreementInstance)==Agreement
+		from datetime import datetime
+		self.agreementInstance=agreementInstance
+		def update_datetime(colName):
+			return "UPDATE agreement SET %s = NOW() WHERE id=%d" \
+			    % (colName
+			       , datetime.strftime(datetime.now(), '%Y-%M-%d %H:%M:%S')
+			       , agreementInstance.publicDict()['id'])
+		def action_assoc(symbol, name, db_action=None):
+			return {"symbol" : symbol, "name" : name, "db_action" : db_action}
+		# consider changing this to a comprehension
+		self._button_action_map = {"send" : action_assoc("send", "Send Estimate", update_datetime('dateSent'))
+					   , "resend" : action_assoc("resend", "Resend Estimate", update_datetime('dateSent'))
+					   , "edit" : action_assoc("edit", "Edit Estimate")
+					   , "accept" : action_assoc("accept", "Accept Estimate", update_datetime('dateAccepted'))
+					   , "decline": action_assoc("decline", "Decline Estimate", update_datetime('dateDeclined'))
+					   , "mark_completed" : action_assoc("mark_complete", "Mark Complete", update_datetime('dateSent'))
+					   , "dispute" : action_assoc("dispute", "Dispute", update_datetime('dateContested'))
+					   , "verify" : action_assoc("verify", "Verify", update_datetime('dateVerified'))}
+		self._buttons = {"vendor": [{}], "client" : [{}]}
+
+	# Should change asserts to exceptions later
+	def getButtons(self, vendorOrClient=None):
+		assert vendorOrClient
+		return self._buttons[vendorOrClient]
+
+	def setButtons(self, buttonList, vendorOrClient=None):
+		assert vendorOrClient
+		self._buttons[vendorOrClient]=[self._button_action_map[b] for b in buttonList]
+		# {'vendor' : {"send" : {"name" : "send", "text" : "Send Estimate", "db_action" : "SELECT ..."}} ...
+
+	def addActions(self, actionMap, button, vendorOrClient=None):
+		assert vendorOrClient
+		index = [i for (i, data) in enumerate(self._buttons[vendorOrClient]) if data['symbol'] == button][0]
+		self._buttons[vendorOrClient][index].update(actionMap)
+		
+	def addFormActions(self, action, method, params):
+		""" Special Utility function for adding this specific map. Macro-esque? """
+		return {"action" : action, "method" : method, "params" : params}
+
+	@classmethod
+	def currentState(clz, agreementInstance):
+		""" currentState : Agreement -> AgreementState """
+
+		agreementDict = agreementInstance.publicDict()
+		
+		dateVerified = agreementDict["dateVerified"]
+		dateSent =  agreementDict["dateSent"]
+		dateContested = agreementDict["dateContested"]
+		dateAccepted = agreementDict["dateAccepted"]
+		dateDeclined = agreementDict["dateDeclined"]
+		
+		states = [('PaidState', dateVerified)
+			  ,('DraftState', not dateSent)
+			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
+			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined >= dateSent)
+			  ,('AgreementState',(not dateContested and dateAccepted and dateAccepted >= dateSent) \
+				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
+			  ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
+				    or (dateContested and dateContested < dateSent and dateAccepted < dateContested))
+			  ,('InvalidState', dateContested and dateAccepted and dateAccepted > dateSent)]
+		
+		# like find-first
+		return [s[0] for s in states if s[1]][0]
+
+	@classmethod
+	def testCurrentState(clz):
+		from datetime import datetime
+		agreementInstance = OrderedDict([('dateCreated', datetime(2011, 8, 1)),
+						 ('dateSent', None),
+						 ('dateAccepted', None),
+						 ('dateModified', None),
+						 ('dateDeclined', None),
+						 ('dateVerified', None), 
+						 ('dateContested', None)])
+		assert currentState(agreementInstance)=='DraftState'
+		for day, (col, state) in enumerate([('dateSent', 'EstimateState')
+						    ,('dateDeclined', 'DeclinedState')
+						    ,('dateSent', 'EstimateState')
+						    ,('dateAccepted', 'AgreementState')
+						    ,('dateSent', 'CompletedState')
+						    ,('dateContested', 'AgreementState')
+						    ,('dateSent', 'CompletedState')
+						    ,('dateVerified' ,'PaidState')]):
+			agreementInstance[col]=datetime(2011, 8, day+1)
+			assert currentState(agreementInstance)==state
+
+
+class DraftState(AgreementStates):
+	
+	def __init__(self, agreementInstance):
+		super(DraftState, self).__init__(agreementInstance)
+		self.setButtons(["edit", "send"], 'vendor')
+		self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=send"), "send", 'vendor')
+		self.addActions(self.addFormActions("/agreement/%d.json" % self.agreementInstance.id, "GET", "edit=true"), "edit", 'vendor')
+		print self._buttons
+
+
+class EstimateState(AgreementStates):
+
+	def __init__(self, agreementInstance):
+		super(EstimateState, self).__init__(agreementInstance)
+		self.setButtons(["edit"], vendorOrClient='vendor')
+		self.setButtons(["accept", "decline"], vendorOrClient='client')
+		self.addActions(self.addFormActions("/agreement/%d.json" % self.agreementInstance.id, "GET", "edit=true"), 'edit', 'vendor')
+		self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=accept"), 'accept', 'client')
+		self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=decline"), 'decline', 'client')
+
+class DeclinedState(AgreementStates):
+
+	def __init__(self, agreement):
+		super(DeclinedState, self).__init__(agreementInstance)
+		self.setButtons(["edit", "send"], vendorOrClient='vendor')
+		self.addActions(self.addFormActions("/agreement/%d.json" % self.agreementInstance.id, "GET", "edit=true"), 'edit', 'client')
+		self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=send"), 'send', 'client')
+
+class AgreementState(AgreementStates):
+	
+	def __init__(self, agreement):
+		super(AgreementState, self).__init__(agreementInstance)
+		self.setButtons([mark_completed], vendorOrClient='vendor')
+		self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=markComplete"), 'mark_completed', 'vendor')
+
+class CompletedState(AgreementStates):
+	
+	def __init__(self, agreement):
+		super(CompletedState, self).__init__(agreementInstance)
+		self.setButtons([verify, dispute], vendorOrClient='client')
+		self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=verify"), 'verify', 'client')
+		self.addActions(self.addFormActions("/ageement/%d/status.json" % self.agreementInstance.id, "POST", "action=dispute"), 'dispute', 'client')
