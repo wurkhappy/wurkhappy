@@ -25,38 +25,15 @@
 			<p>{{ phase['comments'] }}</p>
 		{% end %}
 	{% end %}
-	<div id="history-table" class="clear">
-		<table border="0" cellspacing="0" cellpadding="0">
-			{% for transaction in bag['transactions'] %}
-				{% block transactionitem %}
-				{% end %}
-			{% end %}
-		</table>
-	</div>
-	
-		{% if 'text' in bag %}
-			<div class="column-one-half">
-				
-				<h2>Service Agreement</h2>
-				{% if 'comment' in bag and 'agreement' in bag['comment'] %}
-					<div class="preview"><p>
-						{{ escape(bag['comment']['agreement']) }}
-					</p></div>
-				{% end %}
-				<p>{{ escape(bag['text']['agreement']) }}</p>
-			</div>
-			<div class="column-one-half">
-				{% if 'refund' in bag['text'] %}
-					<h2>Reasons for Refund</h2>
-					{% if 'comment' in bag and 'refund' in bag['comment'] %}
-						<div class="preview"><p>
-							{{ escape(bag['comment']['refund']) }}
-						</p></div>
+		<div id="history-table" class="clear">
+			<table border="0" cellspacing="0" cellpadding="0">
+				{% for transaction in bag['transactions'] %}
+					{% block transactionitem %}
 					{% end %}
-					<p>{{ escape(bag['text']['refund']) }}</p>
 				{% end %}
-			</div>
-		{% end %}
+			</table>
+		</div>
+	
 	</div>
 	
 	{% block footer %}

@@ -199,14 +199,12 @@ class AgreementStates(object):
 	@classmethod
 	def currentState(clz, agreementInstance):
 		""" currentState : Agreement -> AgreementState """
-
-		agreementDict = agreementInstance.publicDict()
 		
-		dateVerified = agreementDict["dateVerified"]
-		dateSent =  agreementDict["dateSent"]
-		dateContested = agreementDict["dateContested"]
-		dateAccepted = agreementDict["dateAccepted"]
-		dateDeclined = agreementDict["dateDeclined"]
+		dateVerified = agreementInstance.dateVerified
+		dateSent =  agreementInstance.dateSent
+		dateContested = agreementInstance.dateContested
+		dateAccepted = agreementInstance.dateAccepted
+		dateDeclined = agreementInstance.dateDeclined
 		
 		states = [('PaidState', dateVerified)
 			  ,('DraftState', not dateSent)

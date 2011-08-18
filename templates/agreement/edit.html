@@ -29,7 +29,7 @@
 				<input type="text" name="title" value="{{ bag['name'] }}" size="100" />
 				<label for="">Date of Issue</label>
 				{% raw date_html %}
-				<!-- -->
+				
 				<!-- write code to dynamically generate this -->
 				<h2>Phase One</h2>
 				<label for="">Deposit</label>
@@ -38,7 +38,7 @@
 				{% raw date_html %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase one.</label>
 				<textarea name="details" rows="5" cols="100">{% if len(bag["phases"]) > 0 %}{{ bag["phases"][0]["description"] }}{% end %}</textarea>
-				<!-- -->
+				
 				<h2>Phase Two</h2>
 				<label for="">Amount Due on Completion</label>
 				<input type="text" name="cost" value="{% if len(bag["phases"]) > 1 %}{{ bag["phases"][1]["amount"] }}{% end %}" size="100" />
@@ -46,7 +46,6 @@
 				{% raw date_html %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase two.</label>
 				<textarea name="details" rows="5" cols="100" value="" >{% if len(bag["phases"]) > 1 %}{{ bag["phases"][1]["description"] }}{% end %}</textarea>
-				<!-- -->
 				
 				<h2>Phase Three</h2>
 				<label for="">Amount Due on Completion</label>
@@ -55,7 +54,6 @@
 				{% raw date_html %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase three.</label>
 				<textarea name="details" rows="5" cols="100" value="" >{% if len(bag["phases"]) > 2 %}{{ bag["phases"][2]["description"] }}{% end %}</textarea>
-				<!-- -->
 				
 				<h2>Phase Four</h2>
 				<label for="">Amount Due on completion</label>
@@ -64,9 +62,10 @@
 				{% raw date_html %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase four.</label>
 				<textarea name="details" rows="5" cols="100" value="" >{% if len(bag["phases"]) > 3 %}{{ bag["phases"][3]["description"] }}{% end %}</textarea>
+				
 			</fieldset>
 			<fieldset class="submit-buttons">
-				<input type="submit" id="confirm-edit-button" value="Save Changes &amp; Resend Client Agreement" />
+				<input type="submit" id="confirm-edit-button" value="Save Changes &amp; Resend Client Agreement" /><!-- populate from agreement state info -->
 			</fieldset>
 		</form>
 	</div>
