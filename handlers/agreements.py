@@ -128,17 +128,21 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return datetime(int(year), int(month), int(day))
 	
 	def generateActionList(self, agreementState, role):
-		state = agreementState.__class__
-		agreement = agreementState.agreementInstance
-		
-		return {
+		"""Returns an action list
+			
 			"state": {
 				"role": {
 					"name": "ActionName",
 					"action": "/path/to/action.json",
 					"params": "key=value"
 				}
-			},
+			}
+		"""
+		
+		state = agreementState.__class__
+		agreement = agreementState.agreementInstance
+		
+		return {
 			DraftState : {
 				"vendor": [ {
 					"name": "Send Estimate",
