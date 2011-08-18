@@ -204,6 +204,10 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"method": "POST",
 					"params": "action=dispute"
 				} ]
+			},
+			PaidState : {
+				"vendor": [],
+				"client": []
 			}
 		}[state][role]
 		
@@ -425,10 +429,12 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 		
 		agreement['transactions'] = transactions
-		agreement['actions'] = self.generateActionList(AgreementStates.currentState(agrmnt), agreement['self'])
+		currentState = AgreementStates.currentState(agrmnt)
+		agreement['actions'] = self.generateActionList(currentState, agreement['self'])
 #self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
 		
 		logging.info(agreement['actions'])
+		logging.info(currentState.__class__.__name__)
 		
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
 			agreement['uri'] = self.request.uri

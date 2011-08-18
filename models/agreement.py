@@ -195,8 +195,8 @@ class AgreementStates(object):
 		
 		states = [('PaidState', dateVerified)
 			  ,('DraftState', not dateSent)
-			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined))# or dateDeclined < dateSent))
-			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined)# and dateDeclined >= dateSent)
+			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
+			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined >= dateSent)
 			  # ,('AgreementState',(not dateContested and dateAccepted and dateAccepted >= dateSent) \
 			  # 				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
 			  # ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
@@ -257,7 +257,7 @@ class EstimateState(AgreementStates):
 class DeclinedState(AgreementStates):
 
 	def __init__(self, agreement):
-		super(DeclinedState, self).__init__(agreementInstance)
+		super(DeclinedState, self).__init__(agreement)
 		self.addButton('vendor', "edit")
 		self.addButton('vendor', "send")
 		# self.addActions(self.addFormActions("/agreement/%d.json" % self.agreementInstance.id, "GET", "edit=true"), 'edit', 'client')
@@ -266,15 +266,20 @@ class DeclinedState(AgreementStates):
 class AgreementState(AgreementStates):
 	
 	def __init__(self, agreement):
-		super(AgreementState, self).__init__(agreementInstance)
+		super(AgreementState, self).__init__(agreement)
 		self.addButton('vendor', 'mark_completed')
 		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=markComplete"), 'mark_completed', 'vendor')
 
 class CompletedState(AgreementStates):
 	
 	def __init__(self, agreement):
-		super(CompletedState, self).__init__(agreementInstance)
+		super(CompletedState, self).__init__(agreement)
 		self.addButton('client', 'verify')
 		self.addButton('client', 'dispute')
 		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=verify"), 'verify', 'client')
 		# self.addActions(self.addFormActions("/ageement/%d/status.json" % self.agreementInstance.id, "POST", "action=dispute"), 'dispute', 'client')
+
+class PaidState(AgreementStates):
+	def __inti__(self, agreement):
+		super(self.__class__, self).__init__(agreement)
+	
