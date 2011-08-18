@@ -345,8 +345,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 		
 		agreement['transactions'] = transactions
-		cState = AgreementStates.currentState(agrmnt)
-		agreement['actions'] = {cState : globals()[cState](agrmnt)._buttons}
+		agreement['actions'] = AgreementStates.currentState(agrmnt).buttons[agreement['self']]
 #self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
 		
 		logging.info(agreement['actions'])
@@ -634,9 +633,8 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write(e.body_content)
 			return
 		
-		# AgreementState.currentState(agreement)
+		currentStateName = AgreementState.currentState(agreement)
 		# currentState = AgreementStates.doTransition(agreement, user, args['action']) ***
-		currentState = AgreementStates.currentState(AgreementHandler.get())
 		
 		stateDict = {
 			"agreement": {
