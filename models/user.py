@@ -1,5 +1,9 @@
 from tools.orm import *
+from tools.amazonaws import *
 from profile import Profile
+
+import uuid
+from hashlib import sha1
 
 # -------------------------------------------------------------------
 # Users
@@ -19,6 +23,9 @@ class User(MappedObj):
 		self.accessToken = None
 		self.accessTokenSecret = None
 		self.accessTokenExpiration = None
+		self.profileOrigURL = None
+		self.profileSmallURL = None
+		self.profileLargeURL = None
 		self.dateCreated = None
 	
 	@classmethod
@@ -64,6 +71,14 @@ class User(MappedObj):
 			while result:
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
+	
+	def setProfileImage(self, data):
+		key = SHA1(uuid.uuid4().bytes)).digest()
+		with AmazonS3() as (conn, bucket):
+			k = Key(bucket)
+			k.key = 'fooop'
+			k.set_contents_from_stream(data)
+	
 	
 	def getProfile(self):
 		return Profile.retrieveByUserID(self.id)

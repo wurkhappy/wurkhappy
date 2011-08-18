@@ -6,5 +6,7 @@ __all__ = [
 	"profilehandlers",
 	"projecthandlers",
 	"invoicehandlers",
-	"users"
+	"users",
+	
+	"files"
 ]

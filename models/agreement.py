@@ -135,7 +135,7 @@ class AgreementPhase (MappedObj):
 		])
 
 
-<<<<<<< HEAD
+#<<<<<<< HEAD
 # -------------------------------------------------------------------
 # Agreement Comment
 # -------------------------------------------------------------------
@@ -215,5 +215,5 @@ def testCurrentState():
 					 ('dateVerified', None), 
 					 ('dateContested', None)])
 	return currentState(agreementInstance)
-=======
->>>>>>> 66ff2dfb847f8ce03756e73e0035ea65a557c94d
+#=======
+#>>>>>>> 66ff2dfb847f8ce03756e73e0035ea65a557c94d

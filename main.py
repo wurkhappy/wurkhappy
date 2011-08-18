@@ -53,7 +53,9 @@ class Application(web.Application):
 			
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
 			(r'/agreement/([0-9]+)/status.json', agreements.AgreementStatusJSONHandler),
-			(r'/agreement/new\.json', agreements.NewAgreementJSONHandler)
+			(r'/agreement/new\.json', agreements.NewAgreementJSONHandler),
+			
+			(r'/file', files.FileHandler)
 		]
 		
 		settings = {
