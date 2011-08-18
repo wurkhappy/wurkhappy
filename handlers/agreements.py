@@ -96,7 +96,7 @@ class AgreementsHandler(Authenticated, BaseHandler):
 				"other_name": usr.getFullName(),
 				"date": agr.dateCreated.strftime('%B %d, %Y'),
 				"amount": "$%.02f" % (agr.amount / 100) if agr.amount else "",
-				"state": AgreementState.currentState(agr),
+				#"state": AgreementState.currentState(agr),
 			})
 		
 		for agrmnt in agrmnts:
@@ -127,6 +127,82 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 	def constructDateTime(self, day, month, year):
 		return datetime(int(year), int(month), int(day))
 	
+	def generateActionList(self, agreementState, role):
+		state = agreementState.__class__
+		agreement = agreementState.agreementInstance
+		
+		return {
+			"state": {
+				"role": {
+					"name": "ActionName",
+					"action": "/path/to/action.json",
+					"params": "key=value"
+				}
+			},
+			DraftState : {
+				"vendor": [ {
+					"name": "Send Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=send"
+				} ],
+				"client": []
+			},
+			EstimateState : {
+				"vendor": [ {
+					"name": "Edit Estimate",
+					"action": "/agreement/%d.json" % agreement.id,
+					"method": "GET",
+					"params": "edit=true"
+				} ],
+				"client": [ {
+					"name": "Accept Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=accept"
+				}, {
+					"name": "Decline Estimate",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=decline"
+				} ]
+			},
+			DeclinedState : {
+				"vendor": [ {
+					"name": "Edit and Re-send",
+					"action": "/agreement/%d.json" % agreement.id,
+					"method": "GET",
+					"params": "edit=true"
+				} ],
+				"client": []
+			},
+			AgreementState : {
+				"vendor": [ {
+					"name": "Mark Completed",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=markComplete"
+				} ],
+				"client": []
+			},
+			CompletedState : {
+				"vendor": [],
+				"client": [ {
+					"name": "Verify and Pay",
+					# The verify and pay action should redirect to payment page.
+					# But we do this for now to prove it works.
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=verify"
+				}, {
+					"name": "Dispute",
+					"action": "/agreement/%d/status.json" % agreement.id,
+					"method": "POST",
+					"params": "action=dispute"
+				} ]
+			}
+		}[state][role]
+		
 	@staticmethod
 	def constructDateForm(datestamp):
 		# Should probably be somewhere else
@@ -345,7 +421,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 		
 		agreement['transactions'] = transactions
-		agreement['actions'] = AgreementStates.currentState(agrmnt).buttons[agreement['self']]
+		agreement['actions'] = self.generateActionList(AgreementStates.currentState(agrmnt), agreement['self'])
 #self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
 		
 		logging.info(agreement['actions'])
