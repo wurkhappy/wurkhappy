@@ -135,3 +135,85 @@ class AgreementPhase (MappedObj):
 		])
 
 
+<<<<<<< HEAD
+# -------------------------------------------------------------------
+# Agreement Comment
+# -------------------------------------------------------------------
+
+class AgreementComment (MappedObj):
+	
+	def __init__(self):
+		self.id = None
+		self.agreementID = None
+		self.agreement = None
+		self.refund = None
+		self.dateCreated = None
+	
+	@classmethod
+	def tableName(clz):
+		return "agreementComment"
+	
+	@classmethod
+	def retrieveByAgreementID(clz, agreementID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+	
+
+	
+# -------------------------------------------------------------------
+# Add agreement state -> button stuff
+# DraftState -> agreement.dateSent null
+#  vendor sees draft, edit (?) and send buttons; send updates dateSent
+#  client sees nothing
+# EstimateState -> dateSent not null and dateAccepted null and (dateDeclined null or (dateDeclined < dateSent))
+#  vendor sees estimate, edit buttons
+#  client sees estimate, accept and decline buttons; accept updates dateAccepted; decline updates dateDeclined
+# DeclinedState -> dateAccepted null and dateDecline > dateSent
+#  vendor sees estimate, edit and re-send buttons; re-sent updates dateSent
+#  client sees nothing ?
+# AgreementState -> (dateAccepted > dateSent and dateContested null) or (dateContested > dateSent > dateAccepted)
+#  vendor sees agreement, mark-completed buttons; mark-completed updates dateSent
+#  client sees agreement
+# CompletedState -> (dateSent > dateAccepted and dateContested null) or (dateSent > dateContested > dateAccepted)
+#  vendor sees agreement
+#  client sees agreement, dispute and verify buttons; dispute updates dateContested; verify updates dateVerified
+# PaidState -> dateVerified is not null 
+#  what to show?
+# Do we store elsewhere a history of edits?
+# -------------------------------------------------------------------
+def currentState(agreementInstance):
+	""" currentState : AgreementInstance -> AgreementState """
+	
+	dateVerified = agreementInstance["dateVerified"]
+	dateSent =  agreementInstance["dateSent"]
+	dateContested = agreementInstance["dateContested"]
+	dateAccepted = agreementInstance["dateAccepted"]
+	dateDeclined = agreementInstance["dateDeclined"]
+	
+	states = [('PaidState', dateVerified)
+		  ,('DraftState', not dateSent)
+		  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
+		  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined >= dateSent)
+		  ,('AgreementState', (not dateContested and dateAccepted >= dateSent) \
+			    or (dateContested > dateSent and dateAccepted < dateSent))
+		  ,('CompletedState', (not dateContested and dateAccepted < dateSent) \
+			    or (dateContested < dateSent and dateAccepted < dateContested))
+		  ,('InvalidState', dateContested and dateAccepted > dateSent)]
+	
+	# like find-first
+	return [s[0] for s in states if s[1]][0]
+
+def testCurrentState():
+	from datetime import datetime
+	agreementInstance = OrderedDict([('dateCreated', datetime(2011, 8, 1)),
+					 ('dateSent', None),
+					 ('dateAccepted', None),
+					 ('dateModified', None),
+					 ('dateDeclined', None),
+					 ('dateVerified', None), 
+					 ('dateContested', None)])
+	return currentState(agreementInstance)
+=======
+>>>>>>> 66ff2dfb847f8ce03756e73e0035ea65a557c94d

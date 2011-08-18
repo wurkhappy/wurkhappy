@@ -9,7 +9,7 @@
 		{% end %}
 	{% end %}
 	<form action="/profile" method="post">
-		{{ xsrf_form_html() }}
+		{% raw xsrf_form_html() %}
 		<fieldset>
 			<label for "firstName">First Name*</label> <input type="text" name="firstName" {% if user.firstName %}value="{{ escape(user.firstName) }}"{% end %}/><br />
 			<label for "lastName">Last Name*</label> <input type="text" name="lastName" {% if user.lastName %}value="{{ escape(user.lastName) }}"{% end %}/><br />
