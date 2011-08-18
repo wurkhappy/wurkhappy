@@ -95,7 +95,8 @@ class AgreementsHandler(Authenticated, BaseHandler):
 				"other_id": usr.id,
 				"other_name": usr.getFullName(),
 				"date": agr.dateCreated.strftime('%B %d, %Y'),
-				"amount": "$%.02f" % (agr.amount / 100) if agr.amount else ""
+				"amount": "$%.02f" % (agr.amount / 100) if agr.amount else "",
+				"state": AgreementState.currentState(agr),
 			})
 		
 		for agrmnt in agrmnts:
