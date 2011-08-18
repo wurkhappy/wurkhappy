@@ -28,7 +28,7 @@
 				<fieldset id="asking">
 					<label for="email">Subscribe to Learn More</label>
 					<input type="text" name="email" value="" id="form_email" placeholder="email address" />
-					{{ xsrf_form_html() }}
+					{% raw xsrf_form_html() %}
 					<p>We promise not to spam you.</p>
 				</fieldset>
 				<fieldset id="submitting">
