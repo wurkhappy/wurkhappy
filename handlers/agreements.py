@@ -63,20 +63,20 @@ class AgreementsHandler(Authenticated, BaseHandler):
 	def get(self, withWhom):	
 		user = self.current_user
 		
-		bag = {
+		templateDict = {
 			"userID": user.id
 		}
 		
 		if withWhom.lower() == 'clients':
 			agreementType = 'Client'
-			agrmnts = Agreement.iteratorWithVendorID(user.id)
-			bag['agreementCount'] = Agreement.countWithVendorID(user.id)
-			bag['aggregateCost'] = "$%.0f" % ((Agreement.amountWithVendorID(user.id) or 0.0) / 100)
+			agreements = Agreement.iteratorWithVendorID(user.id)
+			templateDict['agreementCount'] = Agreement.countWithVendorID(user.id)
+			templateDict['aggregateCost'] = "$%.0f" % ((Agreement.amountWithVendorID(user.id) or 0.0) / 100)
 		elif withWhom.lower() == 'vendors':
 			agreementType = 'Vendor'
-			agrmnts = Agreement.iteratorWithClientID(user.id)
-			bag['agreementCount']  = Agreement.countWithClientID(user.id)
-			bag['aggregateCost']  = "$%.0f" % ((Agreement.amountWithClientID(user.id) or 0.0) / 100)
+			agreements = Agreement.iteratorWithClientID(user.id)
+			templateDict['agreementCount']  = Agreement.countWithClientID(user.id)
+			templateDict['aggregateCost']  = "$%.0f" % ((Agreement.amountWithClientID(user.id) or 0.0) / 100)
 		else:
 			self.set_status(403)
 			self.write("Forbidden")
@@ -99,21 +99,21 @@ class AgreementsHandler(Authenticated, BaseHandler):
 				#"state": AgreementState.currentState(agr),
 			})
 		
-		for agrmnt in agrmnts:
+		for agreement in agreements:
 			if agreementType == 'Client':
-				other = User.retrieveByID(agrmnt.clientID)
+				other = User.retrieveByID(agreement.clientID)
 				#TODO: use agreement states here
-				if agrmnt.dateDeclined or agrmnt.dateContested:
-					appendAgreement(actionItems, agrmnt, other)
-				elif not agrmnt.dateAccepted:
-					appendAgreement(awaitingReply, agrmnt, other)
+				if agreement.dateDeclined or agreement.dateContested:
+					appendAgreement(actionItems, agreement, other)
+				elif not agreement.dateAccepted:
+					appendAgreement(awaitingReply, agreement, other)
 				else:
-					appendAgreement(inProgress, agrmnt, other)
+					appendAgreement(inProgress, agreement, other)
 			else:
-				appendAgreement(actionItems, agrmnt, User.retrieveByID(agrmnt.vendorID))
+				appendAgreement(actionItems, agreement, User.retrieveByID(agreement.vendorID))
 		
-		bag['agreementType'] = agreementType
-		bag['agreementGroups'] = [
+		templateDict['agreementType'] = agreementType
+		templateDict['agreementGroups'] = [
 			("Requires Attention", actionItems),
 			("Waiting for Client", awaitingReply),
 			("In Progress", inProgress)
@@ -121,7 +121,7 @@ class AgreementsHandler(Authenticated, BaseHandler):
 		
 		#agreements = [("In Progress", agreementList)]
 		title = "%s Agreements &ndash; Wurk Happy" % agreementType
-		self.render("agreement/list.html", title=title, bag=bag, agreement_with=agreementType)
+		self.render("agreement/list.html", title=title, bag=templateDict, agreement_with=agreementType)
 
 
 class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
@@ -281,16 +281,16 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=empty, date_html=self.constructDateForm(datetime.now()))
 			return
 		
-		agrmnt = Agreement.retrieveByID(agreementID)
+		agreement = Agreement.retrieveByID(agreementID)
 		
-		if not agrmnt:
+		if not agreement:
 			self.set_status(404)
 			self.write("Not Found")
 			return
 		
-		if agrmnt.vendorID == user.id:
+		if agreement.vendorID == user.id:
 			agreementType = 'Client'
-		elif agrmnt.clientID == user.id:
+		elif agreement.clientID == user.id:
 			agreementType = 'Vendor'
 		else:
 			self.set_status(403)
@@ -304,6 +304,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		# relationships.
 		# 
 		# {
+		#     "id": 123
 		#     "name": "Marketing Outline",
 		#     "date": "January 1, 2010",
 		#     "amount": "$1,300.52",
@@ -347,49 +348,49 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		#     }]
 		# }
 		
-		agreement = {
-			"id": agrmnt.id,
-			"name": agrmnt.name,
-			"date": agrmnt.dateCreated.strftime('%B %d, %Y'),
-			"amount": "$%.02f" % (agrmnt.amount / 100) if agrmnt.amount else ""
+		templateDict = {
+			"id": agreement.id,
+			"name": agreement.name,
+			"date": agreement.dateCreated.strftime('%B %d, %Y'),
+			"amount": "$%.02f" % (agreement.amount / 100) if agreement.amount else ""
 		}
 		
 		if agreementType == 'Client':
-			client = User.retrieveByID(agrmnt.clientID)
-			agreement["client"] = {
+			client = User.retrieveByID(agreement.clientID)
+			templateDict["client"] = {
 				"id": client.id,
 				"name": client.getFullName()
 			}
-			agreement["vendor"] = {
+			templateDict["vendor"] = {
 				"id": user.id,
 				"name": user.getFullName()
 			}
-			agreement["self"] = "vendor"
-			agreement["other"] = "client"
+			templateDict["self"] = "vendor"
+			templateDict["other"] = "client"
 		else:
-			vendor = User.retrieveByID(agrmnt.vendorID)
-			agreement["client"] = {
+			vendor = User.retrieveByID(agreement.vendorID)
+			templateDict["client"] = {
 				"id": user.id,
 				"name": user.getFullName()
 			}
-			agreement["vendor"] = {
+			templateDict["vendor"] = {
 				"id": vendor.id,
 				"name": vendor.getFullName()
 			}
-			agreement["self"] = "client"
-			agreement["other"] = "vendor"
+			templateDict["self"] = "client"
+			templateDict["other"] = "vendor"
 		
 		
-		# Add the agreement phase data to the JSON bag
+		# Add the agreement phase data to the template dict
 		
-		phases = AgreementPhase.iteratorWithAgreementID(agrmnt.id)
-		agreement["phases"] = []
+		phases = AgreementPhase.iteratorWithAgreementID(agreement.id)
+		templateDict["phases"] = []
 		totalAmount = 0
 		
 		for phase in phases:
 			totalAmount += phase.amount if phase.amount else 0
 			
-			agreement["phases"].append({
+			templateDict["phases"].append({
 				"amount": "$%.02f" % (phase.amount / 100) if phase.amount else "",
 				"description": phase.description,
 				"estDateCompleted": phase.estDateCompleted.strftime('%B %d, %Y') if phase.estDateCompleted else None,
@@ -397,70 +398,69 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 			
 			if phase.comments:
-				agreement["phases"]["comments"] = phase.comments
+				templateDict["phases"]["comments"] = phase.comments
 		
-		agreement["amount"] = "$%.02f" % (totalAmount / 100)
+		templateDict["amount"] = "$%.02f" % (totalAmount / 100)
 		
 		# Transactions are datetime properties of the agreement.
 		
 		transactions = [{
 			"type": "Sent by ",
 			"user": "vendor",
-			"date": agrmnt.dateCreated.strftime('%B %d, %Y')
+			"date": agreement.dateCreated.strftime('%B %d, %Y')
 		}]
 		
-		if agrmnt.dateDeclined:
+		if agreement.dateDeclined:
 			transactions.append({
 				"type": "Declined by ",
 				"user": "client",
-				"date": agrmnt.dateDeclined.strftime('%B %d, %Y')
+				"date": agreement.dateDeclined.strftime('%B %d, %Y')
 			})
 		
-		if agrmnt.dateModified:
+		if agreement.dateModified:
 			transactions.append({
 				"type": "Modified by ",
 				"user": "vendor",
-				"date": agrmnt.dateModified.strftime('%B %d, %Y')
+				"date": agreement.dateModified.strftime('%B %d, %Y')
 			})
 		
-		if agrmnt.dateAccepted:
+		if agreement.dateAccepted:
 			transactions.append({
 				"type": "Accepted by ",
 				"user": "client",
-				"date": agrmnt.dateAccepted.strftime('%B %d, %Y')
+				"date": agreement.dateAccepted.strftime('%B %d, %Y')
 			})
 		
-		if agrmnt.dateCompleted:
+		if agreement.dateCompleted:
 			transactions.append({
 				"type": "Completed by ",
 				"user": "vendor",
-				"date": agrmnt.dateCompleted.strftime('%B %d, %Y')
+				"date": agreement.dateCompleted.strftime('%B %d, %Y')
 			})
 		
-		if agrmnt.dateVerified:
+		if agreement.dateVerified:
 			transactions.append({
 				"type": "Verified and paid by ",
 				"user": "client",
-				"date": agrmnt.dateVerified.strftime('%B %d, %Y')
+				"date": agreement.dateVerified.strftime('%B %d, %Y')
 			})
 		
-		agreement['transactions'] = transactions
-		currentState = AgreementStates.currentState(agrmnt)
-		agreement['actions'] = self.generateActionList(currentState, agreement['self'])
-#self.generateActionList(agrmnt, AgreementState.currentState(agrmnt), agreement['self'])
+		templateDict['transactions'] = transactions
+		currentState = AgreementStates.currentState(agreement)
+		templateDict['actions'] = self.generateActionList(currentState, templateDict['self'])
 		
-		logging.info(agreement['actions'])
+		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
 		
 		#TODO: display edit interface depending on agreement state
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
-			agreement['uri'] = self.request.uri
-			logging.info(agreement)
-			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agrmnt.name)
-			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement, date_html=self.constructDateForm(agrmnt.dateCreated), json=json.dumps)
+			templateDict['uri'] = self.request.uri
+			logging.info(templateDict)
+			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agreement.name)
+			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=templateDict, date_html=self.constructDateForm(agreement.dateCreated), json=json.dumps)
 		else:
-			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agrmnt.name) 
-			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement, json=json.dumps)
+			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name) 
+			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=templateDict, json=json.dumps)
 	
 	
 	@web.authenticated
