@@ -7,7 +7,6 @@ __      ___   _ _ __| | __ | |__   __ _ _ __  _ __  _   _
                                        |_|   |_|    |___/ 
 */
 
-
 function getCookie(name) {
 	var c = document.cookie.match("\\b" + name + "=([^;]*)\\b");
 	return c ? c[1] : undefined;
@@ -66,5 +65,27 @@ $(document).ready(function() {
 		});
 		return false;
 	});
+	
+	for (var i = 0, len = buttonMaps.length; i < len; i++) {
+		if (buttonMaps.hasOwnProperty(i)) {
+			var map = buttonMaps[i];
+			$("#" + map['id']).click(function(m) {
+				return function() {
+					var data = m['params'];
+					data._xsrf = getCookie("_xsrf");
+					$.ajax({
+						url: m['action'],
+						data: $.param(data),
+						dataType: "text",
+						type: m['method'],
+						success: function(data, status, xhr) {
+							console.log(data);
+						}
+					});
+					return false;
+				}
+			}(map));
+		}
+	}
 });
 

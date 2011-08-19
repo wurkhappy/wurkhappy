@@ -102,6 +102,7 @@ class AgreementsHandler(Authenticated, BaseHandler):
 		for agrmnt in agrmnts:
 			if agreementType == 'Client':
 				other = User.retrieveByID(agrmnt.clientID)
+				#TODO: use agreement states here
 				if agrmnt.dateDeclined or agrmnt.dateContested:
 					appendAgreement(actionItems, agrmnt, other)
 				elif not agrmnt.dateAccepted:
@@ -145,64 +146,72 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return {
 			DraftState : {
 				"vendor": [ {
+					"id": "action-send-button",
 					"name": "Send Estimate",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
-					"params": "action=send"
+					"params": { "action": "send" }
 				} ],
 				"client": []
 			},
 			EstimateState : {
 				"vendor": [ {
+					"id": "action-edit-button",
 					"name": "Edit Estimate",
 					"action": "/agreement/%d.json" % agreement.id,
 					"method": "GET",
-					"params": "edit=true"
+					"params": { "edit": True }
 				} ],
 				"client": [ {
+					"id": "action-accept-button",
 					"name": "Accept Estimate",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
-					"params": "action=accept"
+					"params": { "action": "accept" }
 				}, {
+					"id": "action-decline-button",
 					"name": "Decline Estimate",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
-					"params": "action=decline"
+					"params": { "action": "decline" }
 				} ]
 			},
 			DeclinedState : {
 				"vendor": [ {
+					"id": "action-resend-button",
 					"name": "Edit and Re-send",
 					"action": "/agreement/%d.json" % agreement.id,
 					"method": "GET",
-					"params": "edit=true"
+					"params": { "edit": True }
 				} ],
 				"client": []
 			},
 			AgreementState : {
 				"vendor": [ {
+					"id": "action-markcomplete-button",
 					"name": "Mark Completed",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
-					"params": "action=markComplete"
+					"params": { "action": "mark_completed" }
 				} ],
 				"client": []
 			},
 			CompletedState : {
 				"vendor": [],
 				"client": [ {
+					"id": "action-verify-button",
 					"name": "Verify and Pay",
 					# The verify and pay action should redirect to payment page.
 					# But we do this for now to prove it works.
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
-					"params": "action=verify"
+					"params": { "action": "verify" }
 				}, {
+					"id": "action-dispute-button",
 					"name": "Dispute",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
-					"params": "action=dispute"
+					"params": { "action": "dispute" }
 				} ]
 			},
 			PaidState : {
@@ -421,10 +430,17 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"date": agrmnt.dateAccepted.strftime('%B %d, %Y')
 			})
 		
+		if agrmnt.dateCompleted:
+			transactions.append({
+				"type": "Completed by ",
+				"user": "vendor",
+				"date": agrmnt.dateCompleted.strftime('%B %d, %Y')
+			})
+		
 		if agrmnt.dateVerified:
 			transactions.append({
-				"type": "Verified by ",
-				"user": "vendor",
+				"type": "Verified and paid by ",
+				"user": "client",
 				"date": agrmnt.dateVerified.strftime('%B %d, %Y')
 			})
 		
@@ -436,14 +452,15 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(agreement['actions'])
 		logging.info(currentState.__class__.__name__)
 		
+		#TODO: display edit interface depending on agreement state
 		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
 			agreement['uri'] = self.request.uri
 			logging.info(agreement)
 			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agrmnt.name)
-			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement, date_html=self.constructDateForm(agrmnt.dateCreated))
+			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=agreement, date_html=self.constructDateForm(agrmnt.dateCreated), json=json.dumps)
 		else:
 			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agrmnt.name) 
-			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement)
+			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=agreement, json=json.dumps)
 	
 	
 	@web.authenticated
@@ -698,7 +715,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write('{"success": false}')
 			return
 		
-		if agreement.vendorID != user.id:
+		if agreement.vendorID != user.id and agreement.clientID != user.id:
 			self.set_status(403)
 			self.write('{"success": false}')
 			return
@@ -709,7 +726,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			args = fmt.Parser(self.request.arguments,
 				optional=[],
 				required=[
-					('action', fmt.Enforce(str))
+					('action', fmt.StringInSet(AgreementStates.transitionNames))
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
@@ -718,14 +735,18 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write(e.body_content)
 			return
 		
-		currentStateName = AgreementState.currentState(agreement)
-		# currentState = AgreementStates.doTransition(agreement, user, args['action']) ***
+		role = "vendor" if agreement.vendorID == user.id else "client"
+		logging.info(role)
+		logging.info(args['action'])
+		currentState = AgreementStates.currentState(agreement)
+		logging.info(currentState.__class__.__name__)
+		currentState = currentState.doTransition(role, args['action'])
 		
 		stateDict = {
 			"agreement": {
 				"id": agreement.id
 			},
-			"state": currentState
+			"state": currentState.__class__.__name__
 		}
 		
 		self.write(json.dumps(stateDict))

@@ -3,6 +3,7 @@ from profile import Profile
 from collections import OrderedDict
 from datetime import datetime
 
+import logging
 # -------------------------------------------------------------------
 # Agreements
 # -------------------------------------------------------------------
@@ -20,6 +21,7 @@ class Agreement(MappedObj):
 		self.dateAccepted = None
 		self.dateModified = None
 		self.dateDeclined = None
+		self.dateCompleted = None
 		self.dateVerified = None
 		self.dateContested = None
 	
@@ -155,33 +157,23 @@ class AgreementPhase (MappedObj):
 
 class AgreementStates(object):
 	""" AgreementState """
-
+	
+	transitionNames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
+	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
+	
 	def __init__(self, agreementInstance):
-		assert type(agreementInstance)==Agreement
+		assert type(agreementInstance) == Agreement
 		self.agreementInstance=agreementInstance
-		# {'vendor' : [{"name" : "send", "text" : "Send Estimate", "db_action" : "SELECT ..."}} ...
-		self.buttons = {"vendor": [], "client" : []}
-		
-		transitionNames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
-		fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateSent', 'dateContested', 'dateVerified']
-		
-		self._bmap = dict(zip(transitionNames, fieldNames))
-		# self._jsmap = dict(zip(bnames, [{}
-		# 				,{"action" : "/agreement/%d.json" % self.agreementInstance.id, "http" : "GET", 
-		# add in js actions keywords?
-
-	def getBmap(self, role, button):
-		""" Returns the appropriate buttom mapping of the form button_name : column_name"""
-		index = [i for (i, data) in enumerate(self._buttons[role]) if button in data][0]
-		return self.buttons[role][index]
+		self.buttons = {"vendor": {}, "client" : {}}
+		self._bmap = dict(zip(self.transitionNames, self.fieldNames))
 
 	def addButton(self, role, button_name):
-		self.buttons[role].extend([{button_name : self._bmap[button_name]}])
+		self.buttons[role][button_name] = self._bmap[button_name]
 
 	def doTransition(self, role, button):
-		self.agreementInstance.__dict__[self.getBmap(role, button)[button]] = datetime.now()
+		self.agreementInstance.__dict__[self.buttons[role][button]] = datetime.now()
 		self.agreementInstance.save()
-		return self.currentState(agreementInstance)
+		return self.currentState(self.agreementInstance)
 
 	@classmethod
 	def currentState(clz, agreementInstance):
@@ -192,18 +184,19 @@ class AgreementStates(object):
 		dateContested = agreementInstance.dateContested
 		dateAccepted = agreementInstance.dateAccepted
 		dateDeclined = agreementInstance.dateDeclined
+		dateCompleted = agreementInstance.dateCompleted
 		
 		states = [('PaidState', dateVerified)
+			  ,('CompletedState', (not dateContested and dateAccepted and dateCompleted))
 			  ,('DraftState', not dateSent)
 			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
 			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined > dateSent)
-			  ,('AgreementState',(not dateContested and dateAccepted and dateAccepted > dateSent) \
+			  ,('AgreementState', (not dateContested and dateAccepted and dateAccepted > dateSent) \
  				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
-			  ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
- 				    or (dateContested and dateContested < dateSent and dateAccepted < dateContested))
-			  ,('InvalidState', dateContested and dateAccepted and dateAccepted > dateSent)]
+			  ,('InvalidState', True)]
 		
 		# like find-first
+		logging.info([s[0] for s in states if s[1]])
 		subStateName = [s[0] for s in states if s[1]][0]
 		return globals()[subStateName](agreementInstance)
 
@@ -228,60 +221,46 @@ class AgreementStates(object):
 			agreementInstance[col]=datetime(2011, 8, day+1)
 			assert currentState(agreementInstance)==state
 
-
 class DraftState(AgreementStates):
-	
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
 		self.addButton('vendor', "edit")
 		self.addButton('vendor', "send")
-		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=send"), "send", 'vendor')
-		# self.addActions(self.addFormActions("/agreement/%d.json" % self.agreementInstance.id, "GET", "edit=true"), "edit", 'vendor')
-		# print self.buttons
-
-
 
 class EstimateState(AgreementStates):
-
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
 		self.addButton('vendor', "edit")
 		self.addButton('client', "accept")
 		self.addButton('client', "decline")
-		# self.addActions(self.addFormActions(, "GET", "edit=true"), 'edit', 'vendor')
-		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=accept"), 'accept', 'client')
-		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=decline"), 'decline', 'client')
 
 class DeclinedState(AgreementStates):
-
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
 		self.addButton('vendor', "edit")
 		self.addButton('vendor', "send")
-		# self.addActions(self.addFormActions("/agreement/%d.json" % self.agreementInstance.id, "GET", "edit=true"), 'edit', 'client')
-		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=send"), 'send', 'client')
 
 class AgreementState(AgreementStates):
-	
 	def __init__(self, agreement):
 		super(AgreementState, self).__init__(agreement)
 		self.addButton('vendor', 'mark_completed')
-		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=markComplete"), 'mark_completed', 'vendor')
 
 class CompletedState(AgreementStates):
-	
 	def __init__(self, agreement):
 		super(CompletedState, self).__init__(agreement)
 		self.addButton('client', 'verify')
 		self.addButton('client', 'dispute')
-		# self.addActions(self.addFormActions("/agreement/%d/status.json" % self.agreementInstance.id, "POST", "action=verify"), 'verify', 'client')
-		# self.addActions(self.addFormActions("/ageement/%d/status.json" % self.agreementInstance.id, "POST", "action=dispute"), 'dispute', 'client')
 
 class PaidState(AgreementStates):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
+	def doTransition(self, r, b):
+		return self
+	
 class InvalidState(AgreementStates):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
+	def doTransition(self, r, b):
+		return self

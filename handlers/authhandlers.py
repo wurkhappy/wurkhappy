@@ -66,12 +66,13 @@ class LoginHandler(BaseHandler):
 		email = self.get_argument("email")
 		password = self.get_argument("password")
 		user = User.retrieveByEmail(email)
-		profile = user.getProfile()
+		
 		if not user or not Verification.check_password(user.password, str(password)):
 			# User wasn't found, or password is wrong, redirect to login with error
 			self.redirect("/login?err=auth_invalid")
 		else:
- 			self.set_secure_cookie("user_id", str(user.id))
+ 			profile = user.getProfile()
+			self.set_secure_cookie("user_id", str(user.id))
 			self.redirect('/profile/'+profile.urlStub)
 			
 # -------------------------------------------------------------------
