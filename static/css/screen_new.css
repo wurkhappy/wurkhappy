@@ -487,3 +487,32 @@ h3 {
   font-size: .75em;
   color: rgb(150,150,150);
 }
+
+/* INTERNAL --> copied from new screen css 8/19/11
+================================================================================ */
+
+
+#internal {
+  background-color: rgb(223,245,255);
+}
+
+#internal ul {
+  padding: 0;
+  margin: 0;
+}
+
+#internal ul li {
+  list-style: none;
+  display: block;
+  float: left;
+}
+
+#internal ul li a {
+  display: block;
+  float: left;
+  padding: 20px;
+}
+
+#internal ul li.current a {
+  background-color: rgb(255,255,255);
+}

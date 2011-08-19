@@ -39,6 +39,8 @@ class Application(web.Application):
 			(r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			(r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			(r'/user/me/contacts.json', users.ContactsJSONHandler),
+			(r'/user/me/account', accounts.AccountHandler),
+			(r'/user/me/account.json', accounts.AccountJSONHandler),
 			
 			(r'/project/([0-9]+)', projecthandlers.ProjectHandler),
 			(r'/project/?', projecthandlers.ProjectHandler),
