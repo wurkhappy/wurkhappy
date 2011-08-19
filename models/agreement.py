@@ -163,7 +163,7 @@ class AgreementStates(object):
 		self.buttons = {"vendor": [], "client" : []}
 		
 		transitionNames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
-		fieldNames = ['dateSent', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
+		fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateSent', 'dateContested', 'dateVerified']
 		
 		self._bmap = dict(zip(transitionNames, fieldNames))
 		# self._jsmap = dict(zip(bnames, [{}
@@ -196,14 +196,12 @@ class AgreementStates(object):
 		states = [('PaidState', dateVerified)
 			  ,('DraftState', not dateSent)
 			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
-			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined >= dateSent)
-			  # ,('AgreementState',(not dateContested and dateAccepted and dateAccepted >= dateSent) \
-			  # 				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
-			  # ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
-			  # 				    or (dateContested and dateContested < dateSent and dateAccepted < dateContested))
-			  ,('AgreementState',(not dateContested and dateAccepted) or dateContested)
-			  ,('CompletedState', (not dateContested and dateAccepted) or dateContested)
-			  ,('InvalidState', dateContested and dateAccepted)]# and dateAccepted > dateSent)]
+			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined > dateSent)
+			  ,('AgreementState',(not dateContested and dateAccepted and dateAccepted > dateSent) \
+ 				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
+			  ,('CompletedState', (not dateContested and dateAccepted and dateAccepted < dateSent) \
+ 				    or (dateContested and dateContested < dateSent and dateAccepted < dateContested))
+			  ,('InvalidState', dateContested and dateAccepted and dateAccepted > dateSent)]
 		
 		# like find-first
 		subStateName = [s[0] for s in states if s[1]][0]
@@ -280,6 +278,10 @@ class CompletedState(AgreementStates):
 		# self.addActions(self.addFormActions("/ageement/%d/status.json" % self.agreementInstance.id, "POST", "action=dispute"), 'dispute', 'client')
 
 class PaidState(AgreementStates):
-	def __inti__(self, agreement):
+	def __init__(self, agreement):
+		super(self.__class__, self).__init__(agreement)
+	
+class InvalidState(AgreementStates):
+	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
