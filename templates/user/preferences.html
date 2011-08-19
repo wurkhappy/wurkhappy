@@ -13,7 +13,7 @@
 	
 	<div id="content" class="clear">
 		<form action="/user/{{ user_id }}/preferences" method="POST" accept-charset="utf-8">
-			{{ xsrf_form_html() }}
+			{% raw xsrf_form_html() %}
 			<fieldset>
 				<h2>Template for Personal Messages</h2>
 				<label for="">When sending an agreement to a client... (optional)</label>
