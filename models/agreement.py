@@ -160,21 +160,21 @@ class AgreementStates(object):
 	
 	transitionNames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
 	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
+	actionMap = dict(zip(transitionNames, fieldNames))
 	
 	def __init__(self, agreementInstance):
 		assert type(agreementInstance) == Agreement
 		self.agreementInstance=agreementInstance
 		self.buttons = {"vendor": {}, "client" : {}}
-		self._bmap = dict(zip(self.transitionNames, self.fieldNames))
-
+	
 	def addButton(self, role, button_name):
-		self.buttons[role][button_name] = self._bmap[button_name]
-
+		self.buttons[role][button_name] = self.actionMap[button_name]
+	
 	def doTransition(self, role, button):
 		self.agreementInstance.__dict__[self.buttons[role][button]] = datetime.now()
 		self.agreementInstance.save()
 		return self.currentState(self.agreementInstance)
-
+	
 	@classmethod
 	def currentState(clz, agreementInstance):
 		""" currentState : Agreement -> AgreementState """
@@ -187,12 +187,12 @@ class AgreementStates(object):
 		dateCompleted = agreementInstance.dateCompleted
 		
 		states = [('PaidState', dateVerified)
-			  ,('CompletedState', (not dateContested and dateAccepted and dateCompleted))
+			  ,('CompletedState', (not dateContested) and dateAccepted and dateCompleted)
 			  ,('DraftState', not dateSent)
-			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateDeclined < dateSent))
-			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateDeclined > dateSent)
-			  ,('AgreementState', (not dateContested and dateAccepted and dateAccepted > dateSent) \
- 				    or (dateContested and dateContested > dateSent and dateAccepted < dateSent))
+			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateSent and dateDeclined < dateSent))
+			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent)
+			  ,('AgreementState', (not dateContested and dateAccepted and dateSent and dateAccepted > dateSent) \
+ 				    or (dateContested and dateAccepted and dateSent and dateContested > dateSent and dateAccepted < dateSent))
 			  ,('InvalidState', True)]
 		
 		# like find-first
