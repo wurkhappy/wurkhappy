@@ -25,6 +25,7 @@ class AccountHandler(Authenticated, BaseHandler):
 	phoneNumber = ("phoneNumber" in dir(user) and user.phoneNumber) or ""
         details = {"userID" : user.id # just here to make the preference link work
 		   , 'actions' : [{'name' : 'Personal Details'
+				   , 'submit-button' : "Save Personal Details"
 				   , 'sections' : [{'title' : 'Profile Preview'
 						    , 'table' : [[{'class' : 'meta'
 								   , 'entries' : [{'value' : ''
@@ -47,12 +48,14 @@ class AccountHandler(Authenticated, BaseHandler):
 						     }]
 				   }
 				  ,{'name' : 'Change Your Password' 
+				    , 'submit-button' : "Save New Password"
 				    , 'sections' : [{'title' : 'Change Your Password'
 						     , 'textfields' : {"Current Password" : ""
 								       ,"New Password" : ""
 								       , "Confirm New Password" : ""}
 						     }]}
 				  , {'name' : 'Credit Card Details'
+				     , 'submit-button' : "Save Credit Card Details"
 				     , 'sections' : [{'title' : 'Stored Credit Card'
 						      , 'table' : [[{'entries' : [{'value' : "**** **** **** 8765"
 										   ,'tags' : [('h3', None)]}
@@ -68,6 +71,7 @@ class AccountHandler(Authenticated, BaseHandler):
 							, 'datefields' : ["Expires On"]}
 						     ]}
 				  ,{'name' : 'Bank Account Details'
+				    , 'submit-button' : "Save Bank Details"
 				    , 'sections' : [{'title' : 'Stored Bank Account'
 						     ,'table' : [[{'entries' : [{'value' : 'Checking Account'
 										 , 'tags' : [('h3', None)]}
