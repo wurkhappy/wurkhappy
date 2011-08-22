@@ -11,128 +11,112 @@
   {% block header %}
   {% end %}
 
-  <div id="content" class="clear">
-
-    <form action="" method="post">
-      <fieldset>
-	<!-- not sure why the star is included, but it's in edit_profile.html -->
-	<label for "firstName">First Name</label>
-	<input type="text" name="firstName" {% if "firstName" in bag["userInfo"].keys() %}value="{{ escape(bag['userInfo']['firstName']) }}"{% end %} />
-	<label for "lastName">Last Name</label>
-	<input  type="text" name="lastName" {% if "lastName" in bag["userInfo"].keys() %}value="{{ escape(bag['userInfo']['lastName']) }}"{% end %} />
-	<label for "profileURL">Photo</label>
-	<!--choose photo...write right tag-->
-	<label for "email">Email</label>
-	<input  type="text" name="email" {% if "email" in bag["userInfo"].keys() %}value="{{ escape(bag['userInfo']['email']) }}"{% end %} />
-	<label for "phoneNumber">Phone Number</label>
-	<input  type="text" name="phoneNumber" {% if "phoneNumber" in bag["userInfo"].keys() %}value="{{ escape(bag['userInfo']['phoneNumber']) }}"{% end %} />
-      </fieldset>
-    </form>
-  </div>
-{% block footer %}
-{% end %}
+  {% block footer %}
+  {% end %}
 </div>
 {% end %}
 
 {% block footer %}
-	<div id="footer" class="clear">
+<div id="footer" class="clear">
+  <div class="column-one-fourth">
+    <h3>Archives</h3>
+    <ul>
+      <li><a href="">All Client Agreements</a></li>
+      <li><a href="">All Vendor Agreements</a></li>
+      <li><a href="">All People</a></li>
+    </ul>
+  </div>
+  <div class="column-one-fourth">
+    <h3>Section 2</h3>
+    <ul>
+      <li><a href="#">Links</a></li>
+      <li><a href="#">Links</a></li>
+      <li><a href="#">Links</a></li>
+    </ul>
+  </div>
+  <div class="column-one-fourth">
+    <h3>Section 3</h3>
+    <ul>
+      <li><a href="#">Links</a></li>
+      <li><a href="#">Links</a></li>
+      <li><a href="#">Links</a></li>
+    </ul>
+  </div>
+  <div class="column-one-fourth">
+    <h3>Section 4</h3>
+    <ul>
+      <li><a href="#">Links</a></li>
+      <li><a href="#">Links</a></li>
+      <li><a href="#">Links</a></li>
+    </ul>
+  </div>
+</div>
 
-		<div class="column-one-fourth">
-
-			<h3>Archives</h3>
-
-			<ul>
-				<li><a href="">All Client Agreements</a></li>
-				<li><a href="">All Vendor Agreements</a></li>
-				<li><a href="">All People</a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-fourth">
-
-			<h3>Section 2</h3>
-
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-fourth">
-
-			<h3>Section 3</h3>
-
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-fourth">
-
-			<h3>Section 4</h3>
-
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-
-		</div>
-
-	</div>
-
-
-	<div id="copyright" class="clear">
-
-		<p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
-
-	</div>
+<div id="copyright" class="clear">
+  <p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
+</div>
 {% end %}
 
 {% block navigation %}
-	<div id="navigation" class="clear">
-
-		<div class="column-one-half">
-
-			<ul class="clear">
-				<li><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
-				<li><a href="/people"><strong>People</strong></a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-half">
-
-			<ul id="admin" class="clear">
-				<li><a href="/logout">Log Out</a></li>
-				<li><a href="/user/me/account">Account</a></li>
-				<li><a href="/user/{{ bag['userID'] }}/preferences">Preferences</a></li>
-			</ul>
-
-		</div>
-
-	</div>
+<div id="navigation" class="clear">
+  <div class="column-one-half">
+    <ul class="clear">
+      <li><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+      <li><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+      <li><a href="/people"><strong>People</strong></a></li>
+    </ul>
+  </div>
+  <div class="column-one-half">
+    <ul id="admin" class="clear">
+      <li><a href="/logout">Log Out</a></li>
+      <li class="current"><a href="/user/me/account">Account</a></li>
+      <li><a href="/user/{{ bag['userID'] }}/preferences">Preferences</a></li>
+    </ul>
+  </div>
+</div>
 {% end %}
 
 {% block header %}
-	<div id="intro" class="clear">
-	  <div class="column-three-fourth">
-	    <h1>Account</h1>
-	  </div>	  
-	  <div id="internal" class="clear">
-	    <ul>
-	      {% for action in bag["actions"] %}
-	      <li{% if current == action['name'] %} class="current" {% end %}><a href="{{ action['action'] }}" class="top">
-		<span>{{ action['name'] }}</span>
-	      </a></li>
-	      {% end %}
-	    </ul>
-	  </div>
+<div id="intro" class="clear">
+  <div class="column-three-fourth">
+    <h1>Account</h1>
+  </div>	  
+</div>
+<div id="internal" class="clear">
+  {% for action in bag["actions"] %}
+  <ul>
+    <li{% if action['name'] == "Personal Details" %} 
+	  class="current"
+	  {% end %}>
+      <!-- how to use re.replace in tornado? -->
+	<a href="#{{ action['name'].replace(' ', '_')}}" 
+	   class="top"
+	   onclick="$('#internal li').removeClass('current');
+		    {% for a in bag['actions'] %}
+		    $('.{{ a['name'].replace(' ','_') }}').hide();
+		    {% end %}
+		    $(this).parent('li').addClass('current');
+		    $('.{{ action['name'].replace(' ', '_') }}').show();"
+	   >
+	   <span>{{ action['name'] }}</span></a></li>
+  </ul>
+  {% end %}
+  {% for action in bag['actions'] %}
+  <div id="content" class="clear {{ action['name'].replace(' ','_') }}"
+       {% if action['name'] != "Personal Details" %} 
+       style="display : none;"
+       {% end %} >
+    <h2> {{ action['title'] }} </h2>
+    <form action="" method="post">
+      <fieldset>
+	{% for field in action['textfields'] %}
+    	<label for {{ field.replace(' ', '_') }}>{{ field }}</label>
+    	<input type="text" value="{{ action['textfields'][field]  }}" />
+      {% end %}
+      </fieldset>
+    </form>
+  </div>
+  {% end %}
+</div>
 {% end %}
+

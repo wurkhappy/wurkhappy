@@ -17,31 +17,46 @@ import logging
 # -------------------------------------------------------------------
 
 class AccountHandler(Authenticated, BaseHandler):
+
     @web.authenticated
     def get(self):
         # inherited from web.RequestHandler:
         user = self.current_user
 
         details = {"userID" : user.id # just here to make the preference link work
-		   ,"userInfo" : {"firstName" : user.firstName
-				  ,"lastName" : user.lastName
-				  , "profileURL" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]
-				  , "email" : user.email
-				  , "phoneNumber" : ("phoneNumber" in dir(user) and user.phoneNumber) or ""
-				  }
 		   , 'actions' : [{'name' : 'Personal Details'
-				   ,'action' : ""
+				   , 'title' : 'Profile Preview'
+				   , 'textfields' : {"First Name" : user.firstName
+						   ,"Last Name" : user.lastName
+						   , "Email" : user.email
+						   , "Phone Number" : ("phoneNumber" in dir(user) and user.phoneNumber) or ""
+						   }
+				   ,'fileselectors' : {"Photo" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]}
+				   , 'method' : 'GET'
 				   ,'params' : ""}
 				  ,{'name' : 'Change Your Password' 
-				   ,'action' : ""
-				   ,'params' : ""}
+				    , 'title' : 'Change Your Password'
+				    , 'textfields' : {}
+				    , 'fileselectors' : {}
+				    ,'action' : "/usr/me/tab.json"
+				    , 'method' : 'GET'
+				    ,'params' : ""}
 				  , {'name' : 'Credit Card Details'
-				   ,'action' : ""
-				   ,'params' : ""}
+				     , 'title' : 'Stored Credit Card'
+				    , 'textfields' : {}
+				    , 'fileselectors' : {}
+				     ,'action' : "/usr/me/tab.json"
+				     , 'method' : 'GET'
+				     ,'params' : ""}
 				  , {'name' : 'Bank Account Details'
-				   ,'action' : ""
-				   ,'params' : ""}
-				  ]}
+				     , 'title' : 'Stored Bank Account'
+				    , 'textfields' : {}
+				    , 'fileselectors' : {}
+				     , 'action' : "/usr/me/tab.json"
+				     , 'method' : 'GET'
+				     , 'params' : ""}]
+		   }
+		   
 	html = 'new_from_designer/admin/account.html'
 	torn_html = 'user/account.html'
         self.render(torn_html, title="Hello, World!", bag=details, user_id=user.id, current="")
