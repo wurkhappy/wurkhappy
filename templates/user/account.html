@@ -103,18 +103,63 @@
   {% end %}
   {% for action in bag['actions'] %}
   <div id="content" class="clear {{ action['name'].replace(' ','_') }}"
-       {% if action['name'] != "Personal Details" %} 
+       {% if action['name'] != "Personal Details" %}
        style="display : none;"
        {% end %} >
-    <h2> {{ action['title'] }} </h2>
-    <form action="" method="post">
+
+    {% for section in action['sections'] %}
+
+    {% if 'title' in section %}
+    <h2> {{ section['title'] }} </h2>    
+    {% end %}
+
+    {% if 'table' in section %}
+    <div class="data-table"> 
+      <table border="0" cellspacing="0" cellpadding="0"> 
+	{% for row in section['table'] %}
+        <tr> 
+	  {% for col in row %}
+	  <td{% if 'class' in col %} class="{{ col['class'] }}" {% end %}>
+	    {% for entry in col['entries'] %}
+	    {% for (tag, params) in entry['tags'] %}
+	    <{{ tag }}{% if params %}{% for name in params %} {{ name }}="{{ params[name] }}" {% end %}{% end %}>
+	      {% end %} <!--closes tag/param/entry -->
+	      {{ entry['value'] }}
+	      {% for (tag, params) in reversed(entry['tags']) %}
+	      </{{ tag }}>
+	    {% end %} <!-- closes tag/param/entry -->
+	    {% end %}<!-- closes entry-->
+	    </td>
+	  {% end %} <!-- closes col -->
+        </tr> 
+	{% end %} <!-- closes row -->
+      </table> 
+    </div>
+    {% end %} <!-- closes table -->
+    {% end %} <!-- closes if-table -->
+
+    <form action="" method="get">
       <fieldset>
-	{% for field in action['textfields'] %}
-    	<label for {{ field.replace(' ', '_') }}>{{ field }}</label>
-    	<input type="text" value="{{ action['textfields'][field]  }}" />
-      {% end %}
+	{% if 'radiobuttons' in section %}
+	{% for radiobutton in section['radiobuttons'] %}
+	<label for {{ radiobutton['label'] }}>
+	  <input type="radio" name="{{ radiobutton['name'] }}" id="{{ radiobutton['label']}}" checked>
+	  {{ radiobutton['value'] }}
+	</label>
+	{% end %}{% end %}
+	{% if 'textfields' in section %}
+	{% for textfield in section['textfields'] %}
+    	<label for {{ textfield.replace(' ', '_') }}>{{ textfield }}</label>
+    	<input type="text" value="{{ section['textfields'][textfield]  }}" id="" size="50"/>
+	{% end %}{% end %}
+	{% if 'fileselectors' in section %}
+	{% for fileselector in section['fileselectors'] %}
+	<label for "">{{ fileselector }}</label><br/>
+	<input type="file" class="upload">
+	{% end %}{% end %}
       </fieldset>
     </form>
+
   </div>
   {% end %}
 </div>

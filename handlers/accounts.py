@@ -22,44 +22,74 @@ class AccountHandler(Authenticated, BaseHandler):
     def get(self):
         # inherited from web.RequestHandler:
         user = self.current_user
-
+	phoneNumber = ("phoneNumber" in dir(user) and user.phoneNumber) or ""
         details = {"userID" : user.id # just here to make the preference link work
 		   , 'actions' : [{'name' : 'Personal Details'
-				   , 'title' : 'Profile Preview'
-				   , 'textfields' : {"First Name" : user.firstName
-						   ,"Last Name" : user.lastName
-						   , "Email" : user.email
-						   , "Phone Number" : ("phoneNumber" in dir(user) and user.phoneNumber) or ""
-						   }
-				   ,'fileselectors' : {"Photo" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]}
-				   , 'method' : 'GET'
-				   ,'params' : ""}
+				   , 'sections' : [{'title' : 'Profile Preview'
+						    , 'table' : [[{'class' : 'meta'
+								   , 'entries' : [{'value' : ''
+										   , 'tags' : [('span' , None)
+											       ,('img' , {'src' : user.profileSmallURL
+													  ,'width' : '50'})]}]}
+								  ,{'entries' : [{'value' : " ".join([user.firstName, user.lastName])
+										  ,'tags' : [('h3', None)
+											     ,('a', {'href' : '/detail.html'})]}
+										 ,{'value' : " ".join([user.email, '-', phoneNumber])
+										   ,'tags' : [('p', None)]}]}
+								  ]]}
+						   ,{'title' : 'Personal Detail'
+						     , 'textfields' : {"First Name" : user.firstName
+								       ,"Last Name" : user.lastName
+								       , "Email" : user.email
+								       , "Phone Number" : phoneNumber
+								       }
+						     , 'fileselectors' : {"Photo" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]}
+						     }]
+				   }
 				  ,{'name' : 'Change Your Password' 
-				    , 'title' : 'Change Your Password'
-				    , 'textfields' : {}
-				    , 'fileselectors' : {}
-				    ,'action' : "/usr/me/tab.json"
-				    , 'method' : 'GET'
-				    ,'params' : ""}
+				    , 'sections' : [{'title' : 'Change Your Password'
+						     , 'textfields' : {"Current Password" : ""
+								       ,"New Password" : ""
+								       , "Confirm New Password" : ""}
+						     }]}
 				  , {'name' : 'Credit Card Details'
-				     , 'title' : 'Stored Credit Card'
-				    , 'textfields' : {}
-				    , 'fileselectors' : {}
-				     ,'action' : "/usr/me/tab.json"
-				     , 'method' : 'GET'
-				     ,'params' : ""}
-				  , {'name' : 'Bank Account Details'
-				     , 'title' : 'Stored Bank Account'
-				    , 'textfields' : {}
-				    , 'fileselectors' : {}
-				     , 'action' : "/usr/me/tab.json"
-				     , 'method' : 'GET'
-				     , 'params' : ""}]
-		   }
+				     , 'sections' : [{'title' : 'Stored Credit Card'
+						      , 'table' : [[{'entries' : [{'value' : "**** **** **** 8765"
+										   ,'tags' : [('h3', None)]}
+										  ,{'value' : "Expires: January, 2014 - Billing Zip/Postal Code: 01748"
+										    , 'tags' : [("p", None)]}
+										  ,{'value' : "Delete Credit Card"
+										    ,'tags' : [("p", {"class" : "remove"})
+											       ,("a", {"href" : ""})]}]}
+								    ]]}
+						     , {'title' : 'Credit Card Details'
+							, 'textfields' : {"Credit Card Number" : ""
+									  ,"Billing Address Zip/Postal Code" : ""}
+							, 'datefields' : ["Expires On"]}
+						     ]}
+				  ,{'name' : 'Bank Account Details'
+				    , 'sections' : [{'title' : 'Stored Bank Account'
+						     ,'table' : [[{'entries' : [{'value' : 'Checking Account'
+										 , 'tags' : [('h3', None)]}
+										,{'value' : "Routing Number: ******234 - Account Number: *********678"
+										  , 'tags' : [('p', None)]}
+										,{'value' : "Delete Bank Account"
+										  , 'tags' : [('p', {'class' : 'remove'})
+											      ,('a', {'href' : ""})]}]}
+								  ]]}
+						    , {'title' : 'Bank Account Details'
+						     , 'radiobuttons' : [{"value" : "Checking Account"
+									  ,"label" : "pay-checking"
+									  ,"name" : "checking"}
+									 ,{"value" : "Savings Account"
+									   ,"label" : "pay-savings"
+									   ,"name" : "savings"}]
+						       , 'textfields' : {"Routing Number" : ""
+									 ,"Account Number" : ""}}]}]}
 		   
 	html = 'new_from_designer/admin/account.html'
 	torn_html = 'user/account.html'
-        self.render(torn_html, title="Hello, World!", bag=details, user_id=user.id, current="")
+        self.render(torn_html, title="My Account: Personal Details", bag=details, user_id=user.id, current="")
 
 
 # -------------------------------------------------------------------
