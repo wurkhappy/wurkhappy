@@ -5,6 +5,8 @@ from profile import Profile
 import uuid
 from hashlib import sha1
 
+from boto.s3.key import Key
+import logging
 # -------------------------------------------------------------------
 # Users
 # -------------------------------------------------------------------
@@ -72,12 +74,16 @@ class User(MappedObj):
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
 	
-	def setProfileImage(self, data):
-		key = SHA1(uuid.uuid4().bytes).digest()
+	def setProfileImage(self, data, ext, headers=None):
+		#TODO: Move this method to a more appropriate class.
+		name = '%s%s' % (sha1(uuid.uuid4().bytes).hexdigest(), ext)
 		with AmazonS3() as (conn, bucket):
 			k = Key(bucket)
-			k.key = 'fooop'
-			k.set_contents_from_stream(data)
+			k.key = name
+			k.set_contents_from_string(data, headers)
+			k.make_public()
+		self.profileOrigURL = 'http://media.wurkhappy.com/%s' % name
+		self.save()
 	
 	
 	def getProfile(self):

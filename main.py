@@ -12,7 +12,7 @@ import tornado.web as web
 from handlers import *
 from tools.email import *
 from tools.orm import *
-
+from tools.amazonaws import *
 import os
 import os.path
 
@@ -31,25 +31,25 @@ class Application(web.Application):
 			(r'/signup', authhandlers.SignupHandler),
 			(r'/login', authhandlers.LoginHandler),
 			(r'/logout', authhandlers.LogoutHandler),
-			(r'/profiles/?(.*)', profilehandlers.ProfilesHandler),
-			(r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', profilehandlers.ProfileHandler),
+			# (r'/profiles/?(.*)', profilehandlers.ProfilesHandler),
+			# (r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', profilehandlers.ProfileHandler),
 			(r'/forgot_password', authhandlers.ForgotPasswordHandler),
 			(r'/reset_password', authhandlers.ResetPasswordHandler),
 			
-			(r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
-			(r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
+			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
+			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			(r'/user/me/contacts.json', users.ContactsJSONHandler),
 			(r'/user/me/account', accounts.AccountHandler),
 			(r'/user/me/account.json', accounts.AccountJSONHandler),
 			
-			(r'/project/([0-9]+)', projecthandlers.ProjectHandler),
-			(r'/project/?', projecthandlers.ProjectHandler),
-			(r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),
-			(r'/invoice/?', invoicehandlers.InvoiceHandler),
-			(r'/line_item.json', invoicehandlers.LineItemHandler),
-			(r'/line_item/([0-9]+)\.json', invoicehandlers.LineItemHandler),
+			# (r'/project/([0-9]+)', projecthandlers.ProjectHandler),
+			# (r'/project/?', projecthandlers.ProjectHandler),
+			# (r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),
+			# (r'/invoice/?', invoicehandlers.InvoiceHandler),
+			# (r'/line_item.json', invoicehandlers.LineItemHandler),
+			# (r'/line_item/([0-9]+)\.json', invoicehandlers.LineItemHandler),
 			
-			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementsHandler),
+			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
 			(r'/agreement/new/?', agreements.AgreementHandler),
 			
@@ -80,6 +80,7 @@ class Application(web.Application):
 			"db": config['database']['db']
 		}, None)
 		
+		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
 
 

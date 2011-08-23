@@ -57,7 +57,7 @@ class AgreementBase(object):
 # Profile (Add / Edit)
 # -------------------------------------------------------------------
 
-class AgreementsHandler(Authenticated, BaseHandler):
+class AgreementListHandler(Authenticated, BaseHandler):
 	
 	@web.authenticated
 	def get(self, withWhom):	
