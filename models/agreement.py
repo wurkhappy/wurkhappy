@@ -107,6 +107,7 @@ class AgreementSummary(MappedObj):
 		self.id = None
 		self.agreementID = None
 		self.summary = None
+		self.comments = None
 
 	@classmethod
 	def tableName(clz):

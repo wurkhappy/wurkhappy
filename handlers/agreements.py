@@ -160,7 +160,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return {
 			DraftState : {
 				"vendor": [ {
-					"id": "action-send-button",
+					"id": "action-send",
 					"name": "Send Estimate",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
@@ -170,20 +170,22 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			},
 			EstimateState : {
 				"vendor": [ {
-					"id": "action-edit-button",
+					"id": "action-edit",
 					"name": "Edit Estimate",
 					"action": "/agreement/%d.json" % agreement.id,
 					"method": "GET",
 					"params": { "edit": True }
 				} ],
 				"client": [ {
-					"id": "action-accept-button",
+					"id": "action-accept",
+					"capture-id": "comments-form",
 					"name": "Accept Estimate",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
 					"params": { "action": "accept" }
 				}, {
-					"id": "action-decline-button",
+					"id": "action-decline",
+					"capture-id": "comments-form",
 					"name": "Decline Estimate",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
@@ -192,7 +194,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			},
 			DeclinedState : {
 				"vendor": [ {
-					"id": "action-resend-button",
+					"id": "action-resend",
 					"name": "Edit and Re-send",
 					"action": "/agreement/%d.json" % agreement.id,
 					"method": "GET",
@@ -202,7 +204,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			},
 			AgreementState : {
 				"vendor": [ {
-					"id": "action-markcomplete-button",
+					"id": "action-markcomplete",
 					"name": "Mark Completed",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
@@ -213,7 +215,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			CompletedState : {
 				"vendor": [],
 				"client": [ {
-					"id": "action-verify-button",
+					"id": "action-verify",
 					"name": "Verify and Pay",
 					# The verify and pay action should redirect to payment page.
 					# But we do this for now to prove it works.
@@ -221,7 +223,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"method": "POST",
 					"params": { "action": "verify" }
 				}, {
-					"id": "action-dispute-button",
+					"id": "action-dispute",
+					"capture-id": "comments-form",
 					"name": "Dispute",
 					"action": "/agreement/%d/status.json" % agreement.id,
 					"method": "POST",
@@ -370,8 +373,11 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			"id": agreement.id,
 			"name": agreement.name,
 			"date": agreement.dateCreated.strftime('%B %d, %Y'),
-			"amount": agreement.getCostString()
+			"amount": agreement.getCostString(),
 		}
+		
+		summary = AgreementSummary.retrieveByAgreementID(agreement.id)
+		templateDict['summary'] = summary.summary if summary else None
 		
 		if agreementType == 'Client':
 			client = User.retrieveByID(agreement.clientID)
@@ -465,6 +471,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		templateDict['transactions'] = transactions
 		currentState = AgreementStates.currentState(agreement)
+		templateDict['state'] = currentState.__class__.__name__
 		templateDict['actions'] = self.generateActionList(currentState, templateDict['self'])
 		
 		logging.info(templateDict['actions'])
@@ -749,7 +756,10 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		try:
 			args = fmt.Parser(self.request.arguments,
-				optional=[],
+				optional=[
+					('summaryComments', fmt.Enforce(str)),
+					('phaseComments', fmt.List(fmt.Enforce(str)))
+				],
 				required=[
 					('action', fmt.StringInSet(AgreementStates.transitionNames))
 				]
@@ -761,11 +771,24 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			return
 		
 		role = "vendor" if agreement.vendorID == user.id else "client"
+		
 		logging.info(role)
 		logging.info(args['action'])
+		
 		currentState = AgreementStates.currentState(agreement)
 		logging.info(currentState.__class__.__name__)
 		currentState = currentState.doTransition(role, args['action'])
+		
+		if args['action'] == 'decline' and isinstance(currentState, DeclinedState) or \
+				args['action'] == 'accept' and isinstance(currentState, AgreementState):
+			
+			agreement.comments = args['summaryComments']
+			agreement.save()
+			agreement.reload()
+			
+			for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
+				phase.comments = args['phaseComments'][phase.phaseNumber]
+				phase.save()
 		
 		stateDict = {
 			"agreement": {

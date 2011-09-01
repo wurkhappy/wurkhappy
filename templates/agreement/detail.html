@@ -11,29 +11,40 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-	{% for (num, phase) in zip(range(1, len(bag['phases']) + 1), bag['phases']) %}
-		<h2><strong>Phase {{ str(num) }}</strong> ({{ phase['amount'] }})</h2>
-		
-		{% if phase['dateCompleted'] %}
-			<p style="color: green">Completed {{ phase['dateCompleted'] }}</p>
-		{% elif phase['estDateCompleted'] %}
-			<p>Estimated completion on {{ phase['estDateCompleted'] }}</p>
+		<form id="comments-form">
+		{% if bag['summary'] %}
+			<p>{{ bag['summary'] }}</p>
 		{% end %}
-		
-		<p>{{ phase['description'] }}</p>
-		{% if 'comments' in phase %}
-			<p>{{ phase['comments'] }}</p>
+		{% if bag['self'] == 'client' and (bag['state'] == 'EstimateState' or bag['state'] == 'CompletedState') %}
+			<textarea name="summaryComments">{{ bag['summaryComments'] }}</textarea>
 		{% end %}
-	{% end %}
-		<div id="history-table" class="clear">
-			<table border="0" cellspacing="0" cellpadding="0">
-				{% for transaction in bag['transactions'] %}
-					{% block transactionitem %}
-					{% end %}
+		{% for (num, phase) in zip(range(1, len(bag['phases']) + 1), bag['phases']) %}
+			<h2><strong>Phase {{ str(num) }}</strong> ({{ phase['amount'] }})</h2>
+			
+			{% if phase['dateCompleted'] %}
+				<p style="color: green">Completed {{ phase['dateCompleted'] }}</p>
+			{% elif phase['estDateCompleted'] %}
+				<p>Estimated completion on {{ phase['estDateCompleted'] }}</p>
+			{% end %}
+			
+			<p>{{ phase['description'] }}</p>
+			{% if 'comments' in phase %}
+				{% if bag['self'] == 'client' and (bag['state'] == 'EstimateState' or bag['state'] == 'CompletedState') %}
+					<textarea name="summaryComments">{{ bag['summaryComments'] }}</textarea>
 				{% end %}
-			</table>
-		</div>
-	
+				<p>{{ phase['comments'] }}</p>
+			{% end %}
+		{% end %}
+			<div id="history-table" class="clear">
+				<table border="0" cellspacing="0" cellpadding="0">
+					{% for transaction in bag['transactions'] %}
+						{% block transactionitem %}
+						{% end %}
+					{% end %}
+				</table>
+			</div>
+		
+		</form>
 	</div>
 	
 	{% block footer %}
