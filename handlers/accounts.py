@@ -11,16 +11,6 @@ except:
 from datetime import datetime
 import logging
 
-# -------------------------------------------------------------------
-# "symbol" generator - should probably go in a utils file 
-# (or just call some other lib instead)
-# -------------------------------------------------------------------
-
-def gensym():
-	a=0
-	while True:
-		yield a
-		a+=1
 
 # -------------------------------------------------------------------
 # AccountHandler
@@ -37,10 +27,8 @@ class AccountHandler(Authenticated, BaseHandler):
 		return {"name" : name, "label" : label, "value" : value}
 
 	phoneNumber = ("phoneNumber" in dir(user) and user.phoneNumber) or ""
-	g = gensym()
         details = {"userID" : user.id # just here to make the preference link work
 		   , 'actions' : [{'name' : 'Personal Details'
-				   , 'id' : 'S'+str(g.next())
 				   , 'submit-button' : "Save Personal Details"
 				   , 'sections' : [{'title' : 'Profile Preview'
 						    , 'table' : [[{'class' : 'meta'
@@ -64,7 +52,6 @@ class AccountHandler(Authenticated, BaseHandler):
 						     }]
 				   }
 				  ,{'name' : 'Change Your Password' 
-				    , 'id' : 'S'+str(g.next())
 				    , 'submit-button' : "Save New Password"
 				    , 'sections' : [{'title' : 'Change Your Password'
 						     , 'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in \
@@ -73,7 +60,6 @@ class AccountHandler(Authenticated, BaseHandler):
 										,("new_password", "Confirm New Password" , "")]]
 						     }]}
 				  , {'name' : 'Credit Card Details'
-				     , 'id' : 'S'+str(g.next())
 				     , 'submit-button' : "Save Credit Card Details"
 				     , 'sections' : [{'title' : 'Stored Credit Card'
 						      , 'table' : [[{'entries' : [{'value' : "**** **** **** 8765"
@@ -91,7 +77,6 @@ class AccountHandler(Authenticated, BaseHandler):
 							, 'datefields' : ["Expires On"]}
 						     ]}
 				  ,{'name' : 'Bank Account Details'
-				    , 'id' : 'S'+str(g.next())
 				    , 'submit-button' : "Save Bank Details"
 				    , 'sections' : [{'title' : 'Stored Bank Account'
 						     ,'table' : [[{'entries' : [{'value' : 'Checking Account'
@@ -115,6 +100,10 @@ class AccountHandler(Authenticated, BaseHandler):
 	torn_html = 'user/account.html'
         self.render(torn_html, title="My Account: Personal Details", bag=details, user_id=user.id, current="")
 
+    @web.authenticated
+    def post(self):
+	    print 'AccountHandler post'
+
 
 # -------------------------------------------------------------------
 # AccountJSONHandler
@@ -124,6 +113,7 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 
     @web.authenticated
     def post(self):
+	    print 'AccountJSONHandler post'
 	    user = self.current_user
 	    for arg, value in self.request.arguments.iteritems():
 		    if arg.startswith('_'):
@@ -137,9 +127,7 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 			    userData = User()
 		    
 		    if arg in dir(userData):
-			    print getattr(userData, arg)
 			    setattr(userData, arg, value[0])
-			    print getattr(userData, arg)
 			    userData.save()
 		
 	    self.write(json.dumps({"success": True}))

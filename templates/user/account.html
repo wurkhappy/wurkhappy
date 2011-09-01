@@ -159,7 +159,6 @@
 	{% for textfield in section['textfields'] %}
     	<label for {{ textfield['name'] }}>{{ textfield['label'] }}</label>
     	<input type="text" value="{{ textfield['value']  }}" 
-	       sectionid="{{ action['id'] }}"
 	       name="{{ textfield['name']  }}" id="" size="50"/>
 	{% end %}
       </fieldset>
