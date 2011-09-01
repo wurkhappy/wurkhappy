@@ -14,6 +14,15 @@ import logging
 
 class AgreementBase(object):
 	def parseAmountString(self, string):
+		'''
+		Parses an input string in the form $12,345.67
+		(where the dollar sign, commas, and fraction part
+		are optional) into an integer number of cents.
+		
+		@param string ---
+		@returns an integer number of cents.
+		'''
+		
 		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
 		m = r.match(string)
 		logging.warn(string)
@@ -129,16 +138,21 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return datetime(int(year), int(month), int(day))
 	
 	def generateActionList(self, agreementState, role):
-		"""Returns an action list
-			
-			"state": {
-				"role": {
-					"name": "ActionName",
-					"action": "/path/to/action.json",
-					"params": "key=value"
-				}
-			}
 		"""
+		Given an agreement state and the current user's role, returns a list
+		of button actions to be displayed for the agreement. The list has
+		zero, one, or two dictionaries which contain values for the button's
+		DOM ID, text label, action URL, HTTP method, and request parameters
+		for the API call. The Template knows what to do with this info.
+		"""
+		
+		# State: {
+		# 	"role": {
+		# 		"name": "ActionName",
+		# 		"action": "/path/to/action.json",
+		# 		"params": "key=value"
+		# 	}
+		# }
 		
 		state = agreementState.__class__
 		agreement = agreementState.agreementInstance
@@ -556,6 +570,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					('title', fmt.Enforce(str)),
 					('email', fmt.Enforce(str)),
 					('clientID', fmt.PositiveInteger()),
+					('summary', fmt.Enforce(str)),
 					('cost', fmt.List(fmt.Enforce(str))),
 					('details', fmt.List(fmt.Enforce(str))),
 					('estDateCompleted', fmt.List(fmt.Enforce(str)))
@@ -575,6 +590,12 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		agreement.save()
 		agreement.refresh()
+		
+		summary = AgreementSummary.initWithDict(dict(agreementID=agreement.id))
+		summary.summary = args['summary']
+		
+		summary.save()
+		summary.refresh()
 		
 		for (num, cost, descr) in zip(range(0, 4), args['cost'], args['details']):
 			phase = AgreementPhase()

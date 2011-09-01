@@ -1,6 +1,7 @@
 from base import *
 from helpers.verification import Verification
 from helpers.validation import Validation
+from helpers import fmt
 from models.user import User
 from models.forgotpassword import ForgotPassword
 from tools.email import *
@@ -186,3 +187,44 @@ class ResetPasswordHandler(Authenticated, BaseHandler):
 			 	self.redirect("/profile/"+self.current_user.getProfile().urlStub+"/edit?rp=true")
 			else:
 				self.redirect("/login?rp=true")
+
+
+# -------------------------------------------------------------------
+# PasswordJSONHandler
+# -------------------------------------------------------------------
+
+class PasswordJSONHandler(Authenticated, BaseHandler):
+		
+		@web.authenticated
+		def post(self):
+			user = self.current_user
+			
+			try:
+				args = fmt.Parser(self.request.arguments,
+					optional=[],
+					required=[
+						('currentPassword', fmt.Enforce(str)),
+						('newPassword', fmt.Enforce(str)),
+					]
+				)
+			except fmt.HTTPErrorBetter as e:
+				logging.warn(e.__dict__)
+				logging.warn(e.message)
+				self.set_status(e.status_code)
+				self.write(e.body_content)
+				return
+			
+			if not user or not Verification.check_password(user.password, str(args['currentPassword'])):
+				# User wasn't found, or password is wrong, display error
+				#TODO: Exponential back-off when user enters incorrect password.
+				#TODO: Flag accounds if passwords change too often.
+				error = {
+					"domain": "web.request",
+					"debug": "please validate authentication credentials"
+				}
+				self.set_status(401)
+				self.write(json.dumps(error))
+			else:
+				user.password = Verification.hash_password(str(args['newPassword']))
+				user.save()
+				self.write(json.dumps({"success": True}))

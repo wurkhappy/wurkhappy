@@ -42,6 +42,8 @@ class Application(web.Application):
 			(r'/user/me/account', accounts.AccountHandler),
 			(r'/user/me/account.json', accounts.AccountJSONHandler),
 			
+			(r'/user/me/password.json', authhandlers.PasswordJSONHandler),
+			
 			# (r'/project/([0-9]+)', projecthandlers.ProjectHandler),
 			# (r'/project/?', projecthandlers.ProjectHandler),
 			# (r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),

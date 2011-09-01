@@ -15,21 +15,21 @@
 		<form action="/agreement/{% if bag['id'] %}{{ bag['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8">
 			{% raw xsrf_form_html() %}
 			<fieldset>
+				
 				<h2>Recipient</h2>
 				<label for="">Email Address or Name of Existing Contact</label>
 				<input type="text" name="email" size="100" id="client-suggest" />
-				{% if not bag['id'] %}
-					<label for="">Personal Message in Notification Email (optional)</label>
-					<textarea name="name" rows="3" cols="100"></textarea>
-				{% end %}
-			</fieldset>
-			<fieldset>
+				
 				<h2>Estimate</h2>
 				<label for="">Title</label>
 				<input type="text" name="title" value="{{ bag['name'] }}" size="100" />
+				<label for="summary">Summary</label>
+				<textarea name="summary" rows="3" cols="100"></textarea>
 				<label for="">Date of Issue</label>
 				{% raw date_html %}
 				
+			</fieldset>
+			<fieldset>
 				<!-- write code to dynamically generate this -->
 				<h2>Phase One</h2>
 				<label for="">Deposit</label>

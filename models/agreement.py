@@ -15,7 +15,6 @@ class Agreement(MappedObj):
 		self.vendorID = None
 		self.clientID = None
 		self.name = None
-		# self.amount = None
 		self.dateCreated = None
 		self.dateSent = None
 		self.dateAccepted = None
@@ -89,6 +88,30 @@ class Agreement(MappedObj):
 			('dateVerified', self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateVerified else None),
 			('dateContested', self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateContested else None)
 		])
+
+
+
+# -------------------------------------------------------------------
+# Agreements
+# -------------------------------------------------------------------
+
+class AgreementSummary(MappedObj):
+
+	def __init__(self):
+		self.id = None
+		self.agreementID = None
+		self.summary = None
+
+	@classmethod
+	def tableName(clz):
+		return "agreementSummary"
+	
+	@classmethod
+	def retrieveByAgreementID(clz, agreementID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
 
 
 

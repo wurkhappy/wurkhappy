@@ -19,3 +19,8 @@ smtp:
     password: 
     host: smtp.gmail.com
     port: 587
+
+amazonaws:
+    key_id: 
+    key_secret: 
+    bucket_name: media.wurkhappy.com
