@@ -29,6 +29,7 @@ class AccountHandler(Authenticated, BaseHandler):
 	phoneNumber = ("phoneNumber" in dir(user) and user.phoneNumber) or ""
         details = {"userID" : user.id # just here to make the preference link work
 		   , 'actions' : [{'name' : 'Personal Details'
+				   , 'formAction' : 'personal'
 				   , 'submit-button' : "Save Personal Details"
 				   , 'sections' : [{'title' : 'Profile Preview'
 						    , 'table' : [[{'class' : 'meta'
@@ -52,6 +53,7 @@ class AccountHandler(Authenticated, BaseHandler):
 						     }]
 				   }
 				  ,{'name' : 'Change Your Password' 
+				    , 'formAction' : 'password'
 				    , 'submit-button' : "Save New Password"
 				    , 'sections' : [{'title' : 'Change Your Password'
 						     , 'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in \
@@ -61,6 +63,7 @@ class AccountHandler(Authenticated, BaseHandler):
 						     }]}
 				  , {'name' : 'Credit Card Details'
 				     , 'submit-button' : "Save Credit Card Details"
+				     , 'formAction' : 'credit'
 				     , 'sections' : [{'title' : 'Stored Credit Card'
 						      , 'table' : [[{'entries' : [{'value' : "**** **** **** 8765"
 										   ,'tags' : [('h3', None)]}
@@ -77,6 +80,7 @@ class AccountHandler(Authenticated, BaseHandler):
 							, 'datefields' : ["Expires On"]}
 						     ]}
 				  ,{'name' : 'Bank Account Details'
+				    , 'formAction' : 'bank'
 				    , 'submit-button' : "Save Bank Details"
 				    , 'sections' : [{'title' : 'Stored Bank Account'
 						     ,'table' : [[{'entries' : [{'value' : 'Checking Account'
@@ -115,19 +119,49 @@ class AccountJSONHandler(Authenticated, BaseHandler):
     def post(self):
 	    print 'AccountJSONHandler post'
 	    user = self.current_user
-	    for arg, value in self.request.arguments.iteritems():
-		    if arg.startswith('_'):
-			    continue
-		
-		    print arg, value
-		    userData = User.retrieveByUserID(user.id)
-		    
-		    if not userData:
-			    # note : may need to use a keyword to set here in 2.7+
-			    userData = User()
-		    
-		    if arg in dir(userData):
-			    setattr(userData, arg, value[0])
-			    userData.save()
-		
+	    args = self.request.arguments
+	    userData = User.retrieveByUserID(user.id)
+	    if not userData:
+		    userData = User()
+	    userData.firstName = args['firstName'][0]
+	    userData.lastName = args['lastName'][0]
+	    if '@' in args['email'][0] and '.' in args['email'][0]:
+		    userData.email = args['email'][0]
+	    else:
+		    raise RuntimeError('Insert appropriate error here')
+	    if 'phoneNumber' in dir(userData):
+		    userData.phoneNumber = args['phoneNumber'][0]
+	    userData.save()
 	    self.write(json.dumps({"success": True}))
+
+# -------------------------------------------------------------------
+# PasswordJSONHandler
+# -------------------------------------------------------------------
+
+class PasswordJSONHandler(Authenticated, BaseHandler):
+
+	@web.authenticated
+	def post(self):
+		print 'PasswordJSONHandler'
+		
+		
+
+# -------------------------------------------------------------------
+# BankJSONHandler
+# -------------------------------------------------------------------
+
+class BankJSONHandler(Authenticated, BaseHandler):
+
+	@web.authenticated
+	def post(self):
+		print 'BankJSONHandler'
+
+# -------------------------------------------------------------------
+# CreditJSONHandler
+# -------------------------------------------------------------------
+
+class CreditJSONHandler(Authenticated, BaseHandler):
+
+	@web.authenticated
+	def post(self):
+		print 'CreditJSONHandler'

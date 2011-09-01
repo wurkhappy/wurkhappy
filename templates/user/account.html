@@ -138,7 +138,7 @@
     {% end %} <!-- closes table -->
     {% end %} <!-- closes if-table -->
 
-    <form action="/user/me/account" method="post">
+    <form action="/user/me/account/{{ action['formAction'] }}" method="post">
       {% raw xsrf_form_html() %}
       
       {% if 'radiobuttons' in section %}
@@ -173,7 +173,7 @@
       </fieldset>
       {% end %}
       <fieldset class="submit-buttons">
-	<input type="submit" class="single" id="confirm-edit-button"
+	<input type="submit" class="single js_send" 
 	       value="{{ action['submit-button'] }}" />
       </fieldset>
     </form>
