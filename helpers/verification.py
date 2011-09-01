@@ -61,9 +61,9 @@ class Verification (object):
 		#   	salt = Verification.__random_bytes(8) # 64 bits
 		salt = bcrypt.gensalt() # default log_rounds is 12
 		#   	hashed_password = Verification.__pbkdf_sha256(plain_password, salt, Verification.NUM_ITERATIONS)
-		hashed_password = bcrypt.hashpw(plain_password, salt)
+		hashed_pw = bcrypt.hashpw(plain_password, salt)
 		#   	return salt.encode("base64").strip() + "," + hashed_password.encode("base64").strip()
-		return salt.encode("base64").strip() + "," + hashed_password.encode("base64").strip()
+		return salt.encode("base64").strip() + "," + hashed_pw.encode("base64").strip()
 
 	@staticmethod
 	def check_password(saved_password_entry, plain_password):

@@ -2,6 +2,8 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
+from helpers.verification import Verification
+from helpers.validation import Validation
 
 try:
 	import json
@@ -117,18 +119,16 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 
     @web.authenticated
     def post(self):
-	    print 'AccountJSONHandler post'
-	    user = self.current_user
 	    args = self.request.arguments
-	    userData = User.retrieveByUserID(user.id)
+	    userData = User.retrieveByUserID(self.current_user.id)
 	    if not userData:
 		    userData = User()
 	    userData.firstName = args['firstName'][0]
 	    userData.lastName = args['lastName'][0]
-	    if '@' in args['email'][0] and '.' in args['email'][0]:
+	    if Validation.validateEmail(args['email'][0]):
 		    userData.email = args['email'][0]
 	    else:
-		    raise RuntimeError('Insert appropriate error here')
+		    raise RuntimeError('Do something javascripty here')
 	    if 'phoneNumber' in dir(userData):
 		    userData.phoneNumber = args['phoneNumber'][0]
 	    userData.save()
@@ -142,7 +142,22 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 
 	@web.authenticated
 	def post(self):
-		print 'PasswordJSONHandler'
+		print self.get_argument('old_password'), self.get_argument('new_password')
+		if Verification.check_password(self.current_user.password, str(self.get_argument('old_password'))):
+			new_password = self.request.arguments['new_password']
+			if new_password[0] == new_password[1]:
+				print new_password[0]
+				userData = User.retrieveByUserID(self.current_user.id)
+				userData.password = Verification.hash_password(str(new_password[0]))
+				userData.save()
+				self.write(json.dumps({"success" : True}))
+			else: 
+				print 'new pws not equal'
+				raise RuntimeError("Some js to notify that pws were not the same")
+		else:
+			# not sure if below is the right thing
+			print 'logout'
+			self.redirect("/logout")
 		
 		
 
