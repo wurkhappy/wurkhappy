@@ -59,7 +59,8 @@ $(document).ready(function() {
 	
 	
 	$("#confirm-edit-button").click(function() {
-		$("form").submitAJAX(function(data, status, xhr) {
+		alert(this);
+		$(this).closest("form").submitAJAX(function(data, status, xhr) {
 			//console.log(xhr.getResponseHeader('Location'));
 			//console.log(data);
 		});

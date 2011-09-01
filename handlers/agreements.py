@@ -104,7 +104,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				"other_id": usr.id,
 				"other_name": usr.getFullName(),
 				"date": agr.dateCreated.strftime('%B %d, %Y'),
-				"amount": "$%.02f" % (agr.amount / 100) if agr.amount else "",
+				"amount": agr.getCostString()
 				#"state": AgreementState.currentState(agr),
 			})
 		
@@ -229,6 +229,10 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				} ]
 			},
 			PaidState : {
+				"vendor": [],
+				"client": []
+			},
+			InvalidState : {
 				"vendor": [],
 				"client": []
 			}
@@ -366,7 +370,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			"id": agreement.id,
 			"name": agreement.name,
 			"date": agreement.dateCreated.strftime('%B %d, %Y'),
-			"amount": "$%.02f" % (agreement.amount / 100) if agreement.amount else ""
+			"amount": agreement.getCostString()
 		}
 		
 		if agreementType == 'Client':

@@ -45,16 +45,16 @@ class Agreement(MappedObj):
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
+			cursor.execute("SELECT SUM(b.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
 			result = cursor.fetchone()
-			return result['SUM(a.amount)']
+			return result['SUM(b.amount)']
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(a.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
+			cursor.execute("SELECT SUM(b.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
 			result = cursor.fetchone()
-			return result['SUM(a.amount)']
+			return result['SUM(b.amount)']
 	
 	@classmethod
 	def iteratorWithVendorID(clz, vendorID):
@@ -73,6 +73,12 @@ class Agreement(MappedObj):
 			while result:
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
+	
+	def getCostString(self):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self.id)
+			amount = cursor.fetchone()['SUM(amount)']
+			return "$%.02f" % (amount / 100) if amount else ""
 	
 	def publicDict(self):
 		return OrderedDict([
