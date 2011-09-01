@@ -11,6 +11,16 @@ except:
 from datetime import datetime
 import logging
 
+# -------------------------------------------------------------------
+# "symbol" generator - should probably go in a utils file 
+# (or just call some other lib instead)
+# -------------------------------------------------------------------
+
+def gensym():
+	a=0
+	while True:
+		yield a
+		a+=1
 
 # -------------------------------------------------------------------
 # AccountHandler
@@ -22,9 +32,15 @@ class AccountHandler(Authenticated, BaseHandler):
     def get(self):
         # inherited from web.RequestHandler:
         user = self.current_user
+
+	def nameLabelValue(name, label, value):
+		return {"name" : name, "label" : label, "value" : value}
+
 	phoneNumber = ("phoneNumber" in dir(user) and user.phoneNumber) or ""
+	g = gensym()
         details = {"userID" : user.id # just here to make the preference link work
 		   , 'actions' : [{'name' : 'Personal Details'
+				   , 'id' : 'S'+str(g.next())
 				   , 'submit-button' : "Save Personal Details"
 				   , 'sections' : [{'title' : 'Profile Preview'
 						    , 'table' : [[{'class' : 'meta'
@@ -39,22 +55,25 @@ class AccountHandler(Authenticated, BaseHandler):
 										   ,'tags' : [('p', None)]}]}
 								  ]]}
 						   ,{'title' : 'Personal Detail'
-						     , 'textfields' : {"First Name" : user.firstName
-								       ,"Last Name" : user.lastName
-								       , "Email" : user.email
-								       , "Phone Number" : phoneNumber
-								       }
+						     , 'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in \
+									       [("firstName", "First Name", user.firstName)
+										,("lastName", "Last Name" , user.lastName)
+										,("email" , "Email", user.email)
+										,("phoneNumber", "Phone Number", phoneNumber)]]
 						     , 'fileselectors' : {"Photo" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]}
 						     }]
 				   }
 				  ,{'name' : 'Change Your Password' 
+				    , 'id' : 'S'+str(g.next())
 				    , 'submit-button' : "Save New Password"
 				    , 'sections' : [{'title' : 'Change Your Password'
-						     , 'textfields' : {"Current Password" : ""
-								       ,"New Password" : ""
-								       , "Confirm New Password" : ""}
+						     , 'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in \
+									       [("old_password", "Current Password", "")
+										,("new_password","New Password" , "")
+										,("new_password", "Confirm New Password" , "")]]
 						     }]}
 				  , {'name' : 'Credit Card Details'
+				     , 'id' : 'S'+str(g.next())
 				     , 'submit-button' : "Save Credit Card Details"
 				     , 'sections' : [{'title' : 'Stored Credit Card'
 						      , 'table' : [[{'entries' : [{'value' : "**** **** **** 8765"
@@ -66,11 +85,13 @@ class AccountHandler(Authenticated, BaseHandler):
 											       ,("a", {"href" : ""})]}]}
 								    ]]}
 						     , {'title' : 'Credit Card Details'
-							, 'textfields' : {"Credit Card Number" : ""
-									  ,"Billing Address Zip/Postal Code" : ""}
+							, 'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in \
+										  [("creditCardNumber","Credit Card Number","")
+										   ,("zipCode","Billing Address Zip/Postal Code", "")]]
 							, 'datefields' : ["Expires On"]}
 						     ]}
 				  ,{'name' : 'Bank Account Details'
+				    , 'id' : 'S'+str(g.next())
 				    , 'submit-button' : "Save Bank Details"
 				    , 'sections' : [{'title' : 'Stored Bank Account'
 						     ,'table' : [[{'entries' : [{'value' : 'Checking Account'
@@ -88,8 +109,10 @@ class AccountHandler(Authenticated, BaseHandler):
 									 ,{"value" : "Savings Account"
 									   ,"label" : "pay-savings"
 									   ,"name" : "savings"}]
-						       , 'textfields' : {"Routing Number" : ""
-									 ,"Account Number" : ""}}]}]}
+						       , 'textfields' : [nameLabelValue(name,label,value) for (name, label,value) in \
+										 [("routingNumber", "Routing Number" , "")
+										  ,("accountNumber", "Account Number" , "")]]
+						       }]}]}
 		   
 	html = 'new_from_designer/admin/account.html'
 	torn_html = 'user/account.html'
@@ -101,38 +124,25 @@ class AccountHandler(Authenticated, BaseHandler):
 # -------------------------------------------------------------------
 
 class AccountJSONHandler(Authenticated, BaseHandler):
-    @web.authenticated
-    def get(self, userID):
-        user = self.current_user
-
-        userDict = user.publicDict()
-        userDict['details'] = {"firstName" : user.firstName
-                               ,"lastName" : user.lastName
-                               , "profileURL" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]
-                               , "email" : user.email
-                               , "phoneNumber" : user.phoneNumber or ""
-                               }
-
-        self.set_header("Content-Type", "application/json")
-        self.write(json.dumps(userDict))
 
     @web.authenticated
-    def post(self, userID):
-        user = self.current_user
-
-        for arg, value in self.request.arguments.iteritems():
-            if arg.startswith('_'):
-                continue
-            
-            userPref = UserPrefs.retrieveByUserIDAndName(user.id, arg)
-            
-            if not userPref:
-                userPref = UserPrefs()
-                userPref.userID = user.id
-                userPref.name = arg
-			
-                userPref.value = value[0]
-                userPref.save()
+    def post(self):
+	    user = self.current_user
+	    for arg, value in self.request.arguments.iteritems():
+		    if arg.startswith('_'):
+			    continue
 		
-        self.write(json.dumps({"success": True}))
-
+		    print arg, value
+		    userData = User.retrieveByUserID(user.id)
+		    
+		    if not userData:
+			    # note : may need to use a keyword to set here in 2.7+
+			    userData = User()
+		    
+		    if arg in dir(userData):
+			    print getattr(userData, arg)
+			    setattr(userData, arg, value[0])
+			    print getattr(userData, arg)
+			    userData.save()
+		
+	    self.write(json.dumps({"success": True}))

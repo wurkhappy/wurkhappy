@@ -40,7 +40,7 @@ class Application(web.Application):
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			(r'/user/me/contacts.json', users.ContactsJSONHandler),
 			(r'/user/me/account', accounts.AccountHandler),
-			(r'/user/me/account.json', accounts.AccountJSONHandler),
+			(r'/user/me/account#(.*).json', accounts.AccountJSONHandler),
 			
 			(r'/user/me/password.json', authhandlers.PasswordJSONHandler),
 			
@@ -82,7 +82,7 @@ class Application(web.Application):
 			"db": config['database']['db']
 		}, None)
 		
-		AmazonS3.configure(config['amazonaws'])
+		# AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
 
 

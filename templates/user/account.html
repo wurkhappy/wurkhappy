@@ -138,28 +138,37 @@
     {% end %} <!-- closes table -->
     {% end %} <!-- closes if-table -->
 
-    <form action="" method="get">
+    <form action="/user/me/account" method="post">
+      {% raw xsrf_form_html() %}
       <fieldset>
 	{% if 'radiobuttons' in section %}
 	{% for radiobutton in section['radiobuttons'] %}
 	<label for {{ radiobutton['label'] }}>
-	  <input type="radio" name="{{ radiobutton['name'] }}" id="{{ radiobutton['label']}}" checked>
+	  <input type="radio" name="{{ radiobutton['name'] }}" 
+		 id="{{ radiobutton['label']}}"
+		 onclick="{% for radiobutton in section['radiobuttons'] %}
+			  $('{{ radiobutton['label'] }}').attr('checked', 'off');
+			  {% end %}
+			  $(' {{ radiobutton['label'] }} ').attr('checked', 'on');">
 	  {{ radiobutton['value'] }}
 	</label>
 	{% end %}{% end %}
 	{% if 'textfields' in section %}
 	{% for textfield in section['textfields'] %}
-    	<label for {{ textfield.replace(' ', '_') }}>{{ textfield }}</label>
-    	<input type="text" value="{{ section['textfields'][textfield]  }}" id="" size="50"/>
+    	<label for {{ textfield['name'] }}>{{ textfield['label'] }}</label>
+    	<input type="text" value="{{ textfield['value']  }}" 
+	       sectionid="{{ action['id'] }}"
+	       name="{{ textfield['name']  }}" id="" size="50"/>
 	{% end %}{% end %}
 	{% if 'fileselectors' in section %}
 	{% for fileselector in section['fileselectors'] %}
 	<label for "">{{ fileselector }}</label><br/>
-	<input type="file" class="upload">
+	<input type="file" class="upload" name="{{ fileselector }}">
 	{% end %}{% end %}
       </fieldset>
       <fieldset class="submit-buttons">
-	<a href="" class="single">{{ action['submit-button'] }}</a>
+	<input type="submit" class="single" id="confirm-edit-button"
+	       value="{{ action['submit-button'] }}" />
       </fieldset>
     </form>
   </div>
@@ -167,3 +176,8 @@
 </div>
 {% end %}
 
+{% block scripts-custom %}
+<!-- NOTE : etosch had problems with inner double quotations here usins Python 2.6, Tornado 2.0, and Chrome 13.0.782.112-->
+<script src="{{ static_url('scripts/application.js') }}" type="text/javascript" ></script>
+<script src="{{ static_url('scripts/libs/jquery-autosuggest-1.3.js') }}" type="text/javascript"></script>
+{% end %}
