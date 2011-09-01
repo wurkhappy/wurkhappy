@@ -59,13 +59,21 @@ $(document).ready(function() {
 	
 	
 	$(".js-replace-action").click(function() {
-		alert(this);
 		$(this).closest("form").submitAJAX(function(data, status, xhr) {
 			//console.log(xhr.getResponseHeader('Location'));
 			//console.log(data);
 		});
 		return false;
 	});
+
+	$(".js_send").click(function() {
+		$(this).closest("form").submitAJAX(function(data, status, xhr) {
+			//console.log(xhr.getResponseHeader('Location'));
+			//console.log(data);
+		});
+		return false;
+	});
+	
 	
 	for (var i = 0, len = buttonMaps.length; i < len; i++) {
 		if (buttonMaps.hasOwnProperty(i)) {
