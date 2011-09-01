@@ -140,32 +140,39 @@
 
     <form action="/user/me/account" method="post">
       {% raw xsrf_form_html() %}
+      
+      {% if 'radiobuttons' in section %}
       <fieldset>
-	{% if 'radiobuttons' in section %}
-	{% for radiobutton in section['radiobuttons'] %}
-	<label for {{ radiobutton['label'] }}>
+	{% for (i, radiobutton) in enumerate(section['radiobuttons'], 1) %}
+	<label for "{{ radiobutton['label'] }}">
 	  <input type="radio" name="{{ radiobutton['name'] }}" 
-		 id="{{ radiobutton['label']}}"
-		 onclick="{% for radiobutton in section['radiobuttons'] %}
-			  $('{{ radiobutton['label'] }}').attr('checked', 'off');
-			  {% end %}
-			  $(' {{ radiobutton['label'] }} ').attr('checked', 'on');">
+		 id="{{ radiobutton['label']}}" value="{{ i }}"
+		 {% if i==1 %} checked {% end %}>
 	  {{ radiobutton['value'] }}
 	</label>
-	{% end %}{% end %}
-	{% if 'textfields' in section %}
+	{% end %}
+      </fieldset>
+      {% end %}
+
+      {% if 'textfields' in section %}
+      <fieldset>
 	{% for textfield in section['textfields'] %}
     	<label for {{ textfield['name'] }}>{{ textfield['label'] }}</label>
     	<input type="text" value="{{ textfield['value']  }}" 
 	       sectionid="{{ action['id'] }}"
 	       name="{{ textfield['name']  }}" id="" size="50"/>
-	{% end %}{% end %}
-	{% if 'fileselectors' in section %}
+	{% end %}
+      </fieldset>
+      {% end %}
+
+      {% if 'fileselectors' in section %}
+      <fieldset>
 	{% for fileselector in section['fileselectors'] %}
 	<label for "">{{ fileselector }}</label><br/>
 	<input type="file" class="upload" name="{{ fileselector }}">
-	{% end %}{% end %}
+	{% end %}
       </fieldset>
+      {% end %}
       <fieldset class="submit-buttons">
 	<input type="submit" class="single" id="confirm-edit-button"
 	       value="{{ action['submit-button'] }}" />

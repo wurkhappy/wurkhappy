@@ -103,12 +103,9 @@ class AccountHandler(Authenticated, BaseHandler):
 											      ,('a', {'href' : ""})]}]}
 								  ]]}
 						    , {'title' : 'Bank Account Details'
-						     , 'radiobuttons' : [{"value" : "Checking Account"
-									  ,"label" : "pay-checking"
-									  ,"name" : "checking"}
-									 ,{"value" : "Savings Account"
-									   ,"label" : "pay-savings"
-									   ,"name" : "savings"}]
+						     , 'radiobuttons' : [nameLabelValue(name,label,value) for (name,label,value) in \
+										 [("checking","pay-checking", "Checking Account")
+										  , ("savings","pay-savings", "Savings Account")]]
 						       , 'textfields' : [nameLabelValue(name,label,value) for (name, label,value) in \
 										 [("routingNumber", "Routing Number" , "")
 										  ,("accountNumber", "Account Number" , "")]]

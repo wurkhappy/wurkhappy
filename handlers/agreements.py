@@ -775,3 +775,16 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		}
 		
 		self.write(json.dumps(stateDict))
+
+
+
+
+
+
+
+
+
+
+
+
+
