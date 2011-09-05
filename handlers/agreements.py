@@ -377,7 +377,13 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		}
 		
 		summary = AgreementSummary.retrieveByAgreementID(agreement.id)
-		templateDict['summary'] = summary.summary if summary else None
+		
+		if summary:
+			templateDict['summary'] = summary.summary or ''
+			templateDict['summaryComments'] = summary.comments or ''
+		else:
+			templateDict['summary'] = None
+			templateDict['summaryComments'] = ''
 		
 		if agreementType == 'Client':
 			client = User.retrieveByID(agreement.clientID)
@@ -608,7 +614,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		summary.save()
 		summary.refresh()
 		
-		for (num, cost, descr) in zip(range(0, 4), args['cost'], args['details']):
+		for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
 			phase = AgreementPhase()
 			phase.agreementID = agreement.id
 			phase.phaseNumber = num

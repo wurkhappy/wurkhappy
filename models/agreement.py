@@ -1,5 +1,4 @@
 from tools.orm import *
-from profile import Profile
 from collections import OrderedDict
 from datetime import datetime
 
@@ -31,28 +30,40 @@ class Agreement(MappedObj):
 	@classmethod
 	def countWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT COUNT(*) FROM %s WHERE vendorID = %%s" % clz.tableName(), vendorID)
+			query = "SELECT COUNT(*) FROM %s WHERE vendorID = %%s"
+			cursor.execute(query % clz.tableName(), vendorID)
 			result = cursor.fetchone()
 			return result['COUNT(*)']
 	
 	@classmethod
 	def countWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT COUNT(*) FROM %s WHERE clientID = %%s" % clz.tableName(), clientID)
+			query = "SELECT COUNT(*) FROM %s WHERE clientID = %%s"
+			cursor.execute(query % clz.tableName(), clientID)
 			result = cursor.fetchone()
 			return result['COUNT(*)']
 	
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(b.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), vendorID)
+			query = """SELECT SUM(b.amount) FROM %s AS a
+				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id
+				WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL
+				AND a.dateVerified IS NULL"""
+			
+			cursor.execute(query % clz.tableName(), vendorID)
 			result = cursor.fetchone()
 			return result['SUM(b.amount)']
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(b.amount) FROM %s AS a LEFT JOIN agreementPhase AS b ON b.agreementID = a.id WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL AND a.dateVerified IS NULL" % clz.tableName(), clientID)
+			query = """SELECT SUM(b.amount) FROM %s AS a
+				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id
+				WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL
+				AND a.dateVerified IS NULL
+			"""
+			cursor.execute(query % clz.tableName(), clientID)
 			result = cursor.fetchone()
 			return result['SUM(b.amount)']
 	

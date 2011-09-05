@@ -3,6 +3,7 @@ from tools.amazonaws import *
 from profile import Profile
 
 import uuid
+import bcrypt
 from hashlib import sha1
 
 from boto.s3.key import Key
@@ -91,6 +92,12 @@ class User(MappedObj):
 	
 	def getFullName(self):
 		return self.firstName + " " + self.lastName
+	
+	def setPasswordHash(self, password):
+		self.password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+	
+	def passwordIsValid(self, password):
+		return self.password == bcrypt.hashpw(str(password), self.password)
 	
 	def publicDict(self):
 		return {

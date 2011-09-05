@@ -18,7 +18,7 @@
 		{% if bag['self'] == 'client' and (bag['state'] == 'EstimateState' or bag['state'] == 'CompletedState') %}
 			<textarea name="summaryComments">{{ bag['summaryComments'] }}</textarea>
 		{% end %}
-		{% for (num, phase) in zip(range(1, len(bag['phases']) + 1), bag['phases']) %}
+		{% for (num, phase) in enumerate(bag['phases'], 1) %}
 			<h2><strong>Phase {{ str(num) }}</strong> ({{ phase['amount'] }})</h2>
 			
 			{% if phase['dateCompleted'] %}

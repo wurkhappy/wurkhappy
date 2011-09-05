@@ -10,9 +10,9 @@ import tornado.options as options
 import tornado.web as web
 
 from handlers import *
-from tools.email import *
-from tools.orm import *
-from tools.amazonaws import *
+from tools.email import Email
+from tools.orm import Database
+from tools.amazonaws import AmazonS3
 import os
 import os.path
 
@@ -40,10 +40,7 @@ class Application(web.Application):
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			(r'/user/me/contacts.json', users.ContactsJSONHandler),
 			(r'/user/me/account', accounts.AccountHandler),
-			(r'/user/me/account/password.json', accounts.PasswordJSONHandler),
-			(r'/user/me/account/personal.json', accounts.AccountJSONHandler),
-			(r'/user/me/account/bank.json', accounts.BankJSONHandler),
-			(r'/user/me/account/credit.json', accounts.CreditJSONHandler),
+			(r'/user/me/account/#?(.*).json', accounts.AccountJSONHandler),
 			
 			(r'/user/me/password.json', authhandlers.PasswordJSONHandler),
 			

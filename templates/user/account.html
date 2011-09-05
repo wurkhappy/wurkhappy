@@ -138,7 +138,7 @@
     {% end %} <!-- closes table -->
     {% end %} <!-- closes if-table -->
 
-    <form action="/user/me/account/{{ action['formAction'] }}" method="post">
+    <form action="{{ action['formAction'] }}" method="post">
       {% raw xsrf_form_html() %}
       
       {% if 'radiobuttons' in section %}

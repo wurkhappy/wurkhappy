@@ -203,8 +203,8 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 				args = fmt.Parser(self.request.arguments,
 					optional=[],
 					required=[
-						('currentPassword', fmt.Enforce(str)),
-						('newPassword', fmt.Enforce(str)),
+						('old_password', fmt.Enforce(str)),
+						('new_password', fmt.Enforce(str)),
 					]
 				)
 			except fmt.HTTPErrorBetter as e:
@@ -214,7 +214,7 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 				self.write(e.body_content)
 				return
 			
-			if not user or not Verification.check_password(user.password, str(args['currentPassword'])):
+			if not (user and user.passwordIsValid(args['old_password'])):
 				# User wasn't found, or password is wrong, display error
 				#TODO: Exponential back-off when user enters incorrect password.
 				#TODO: Flag accounds if passwords change too often.
@@ -225,6 +225,6 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 				self.set_status(401)
 				self.write(json.dumps(error))
 			else:
-				user.password = Verification.hash_password(str(args['newPassword']))
+				user.setPasswordHash(args['new_password'])# = Verification.hash_password(str(args['new_password']))
 				user.save()
 				self.write(json.dumps({"success": True}))
