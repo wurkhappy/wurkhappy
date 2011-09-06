@@ -10,6 +10,20 @@ import MySQLdb
 import json
 
 
+
+# -------------------------------------------------------------------
+# Custom JSON encoder to add support for datetime objects
+# -------------------------------------------------------------------
+
+class ORMJSONEncoder(json.JSONEncoder):
+	def default(self, obj):
+		if hasattr(obj, 'strftime'):
+			return obj.strftime("%Y-%m-%d %H:%M:%SZ")
+		else:
+			return json.JSONEncoder.default(self, obj)
+
+
+
 # -------------------------------------------------------------------
 # Database Wrappers & Somesuch
 # -------------------------------------------------------------------
@@ -128,5 +142,5 @@ class MappedObj(object):
 		return {}
 	
 	def __repr__(self):
-		return json.encode(self.__dict__)
+		return json.dumps(self.__dict__, cls=ORMJSONEncoder)
 	

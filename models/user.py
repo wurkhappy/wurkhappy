@@ -8,6 +8,9 @@ from hashlib import sha1
 
 from boto.s3.key import Key
 import logging
+
+
+
 # -------------------------------------------------------------------
 # Users
 # -------------------------------------------------------------------
@@ -20,6 +23,7 @@ class User(MappedObj):
 		self.confirmationCode = None
 		self.confirmationHash = None
 		self.confirmed = None
+		self.subscriberStatus = None
 		self.firstName = None
 		self.lastName = None
 		self.password = None

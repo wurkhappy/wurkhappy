@@ -31,9 +31,15 @@ class Email (object):
 			server.ehlo()
 			server.login(clz.settings['user'], clz.settings['password'])
 			
-			header = 'To:' + to_e + '\n' + 'From:' + from_u + '\n' + 'Subject:' + subject + '\n'
-			message = header + '\n\n' + body
-
+			headers = {
+				'To': to_e,
+				'From': from_u,
+				'Subject': subject
+			}
+			
+			headerString = '\n'.join(["%s:%s" % (k, v) for k, v in headers.iteritems()])
+			message = headerString + '\n\n' + body
+			
 			server.sendmail(from_e, to_e, message)
 			server.quit()
 	
