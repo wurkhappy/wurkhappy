@@ -11,50 +11,82 @@ function addressIsValid(addr) {
 }
 
 $(document).ready(function () {
-	$('#signup_form').submit(function (event) {
-		var emailAddress = $('input[name=email]').val();
-		var xsrfToken = $('input[name=_xsrf]').val();
+	$('.tab').click(function () {
+		// Get current elt's class, find corresponding container class
+		// and adjust visibility. Set current class to current.
+		var $button = $(this);
 		
-		$('#form_email').blur();
-		$('#signup_form').hide();
+		if (!$button.hasClass('current')) {
+			var id = $button.attr('id').match(/(\w+)-button/);
+			
+			if (id && id[1]) {
+				$('.tab.current').toggleClass('current');
+				$button.toggleClass('current');
+				$('#content .tab-content').hide();
+				$('#' + id[1] + '-container').show();
+			}
+		}
 		
-		if (addressIsValid(emailAddress)) {
+		return false;
+	});
+	
+	$('.submit-button').click(function (event) {
+		var self = this;
+		var $form = $(this).closest('form');
+		var $email = $form.find('input[name=email]');
+		var $token = $form.find('input[name=_xsrf]');
+		
+		//TODO: Hide the signup form
+		$email.blur();
+		$(self).hide();
+		$email.hide();
+		$form.find('#email-label').hide();
+		
+		if (addressIsValid($email.val())) {
+			var $header = $form.find('#form-header');
+			var previousText = $header.text();
+			
+			$header.text('Sending...');
+			
 			$.ajax({
 				url: '/signup.json',
 				type: 'POST',
 				data: {
-					"email": emailAddress,
-					"_xsrf": xsrfToken
+					'email': $email.val(),
+					'_xsrf': $token.val()
 				},
 				dataType: 'json',
 				success: function (data, status, xhr) {
+					console.log(data);
 					if (data['success']) {
-						$('#form_email').val('');
-						$('#signup_form').remove();
-						$('#header_text').text('Thank you!');
-						$('#tagline_text').text('We will contact you soon with more information.');
+						console.log('success');
+						$email.val('');
+						$(self).remove();
+						$form.find('#form-header').text('Thank you!');
+						$form.append('<p>We will contact you soon with more information.</p>');
 					} else {
-						console.log('AJAX error: ' + data['message']);
 						alert(data['message']);
 					}
 				},
 				error: function (xhr, status, error) {
 					var data = $.parseJSON(xhr.responseText);
-					console.log('AJAX error: ' + data['message']);
+					$form.find('#form-header').text(previousText);
+					$(self).show();
+					$email.show();
+					$form.find('#email-label').show();
+					$email.select();
+					$email.focus();
 					alert(data['message']);
-					$('#signup_form').show();
-					$('#form_email').select();
-					$('#form_email').focus();
 				}
 			});
 		} else {
-			console.log('JavaScript email validation error');
+			$(self).show();
+			$email.show();
+			$form.find('#email-label').show();
+			$email.select();
+			$email.focus();
 			alert('I\'m sorry, that didn\'t look like a proper email address. Could you please enter a valid email address?');
-			$('#signup_form').show();
-			$('#form_email').select();
-			$('#form_email').focus();
 		}
-		
 		return false;
 	});
 });

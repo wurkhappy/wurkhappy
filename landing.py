@@ -70,7 +70,9 @@ if __name__ == "__main__":
 	options.define("address", default=None, help="listen address", type=str)
 	options.parse_command_line()
 	
-	os.chdir(os.path.dirname(__file__))
+	workingDir = os.path.dirname(__file__)
+	if workingDir:
+		os.chdir(workingDir)
 	
 	conf = json.load(open(options.options.config, 'r'))
 	server = HTTPServer(Application(conf))
