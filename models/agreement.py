@@ -97,13 +97,13 @@ class Agreement(MappedObj):
 			('vendorID', self.vendorID),
 			('clientID', self.clientID),
 			('name', self.name),
-			('dateCreated', self.dateCreated.strftime("%Y-%m-%dT%H:%M:%SZ")),
-			('dateSent', self.dateSent.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateSent else None),
-			('dateAccepted', self.dateAccepted.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateAccepted else None),
-			('dateModified', self.dateModified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateModified else None),
-			('dateDeclined', self.dateDeclined.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateDeclined else None),
-			('dateVerified', self.dateVerified.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateVerified else None),
-			('dateContested', self.dateContested.strftime("%Y-%m-%dT%H:%M:%SZ") if self.dateContested else None)
+			('dateCreated', self.dateCreated),
+			('dateSent', self.dateSent),
+			('dateAccepted', self.dateAccepted),
+			('dateModified', self.dateModified),
+			('dateDeclined', self.dateDeclined),
+			('dateVerified', self.dateVerified),
+			('dateContested', self.dateContested)
 		])
 
 

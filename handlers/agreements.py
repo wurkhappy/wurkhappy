@@ -6,6 +6,7 @@ from models.user import User
 from models.agreement import *
 from models.profile import Profile
 from helpers import fmt
+from tools.orm import ORMJSONEncoder
 
 from datetime import datetime
 import logging
@@ -488,10 +489,10 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			templateDict['uri'] = self.request.uri
 			logging.info(templateDict)
 			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agreement.name)
-			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=templateDict, date_html=self.constructDateForm(agreement.dateCreated), json=json.dumps)
+			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=templateDict, date_html=self.constructDateForm(agreement.dateCreated), json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
 			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name) 
-			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=templateDict, json=json.dumps)
+			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 	
 	
 	@web.authenticated

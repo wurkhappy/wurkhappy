@@ -82,7 +82,7 @@ class Application(web.Application):
 			"db": config['database']['db']
 		}, None)
 		
-		# AmazonS3.configure(config['amazonaws'])
+		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
 
 

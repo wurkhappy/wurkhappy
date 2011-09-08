@@ -267,9 +267,6 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			user.setPasswordHash(args['new_password'])# = Verification.hash_password(str(args['new_password']))
 			user.save()
 			self.write(json.dumps({"success": True}))
-		
-		print self.get_argument('old_password'), self.get_argument('new_password')
-		user = self.current_user
 
 
 

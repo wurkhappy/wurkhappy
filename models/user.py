@@ -1,5 +1,6 @@
 from tools.orm import *
 from tools.amazonaws import *
+from tools.base import Base16, Base58
 from profile import Profile
 
 import uuid
@@ -81,7 +82,8 @@ class User(MappedObj):
 	
 	def setProfileImage(self, data, ext, headers=None):
 		#TODO: Move this method to a more appropriate class.
-		name = '%s%s' % (sha1(uuid.uuid4().bytes).hexdigest(), ext)
+		hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
+		name = '%s%s' % (hashString, ext)
 		with AmazonS3() as (conn, bucket):
 			k = Key(bucket)
 			k.key = name
@@ -108,7 +110,7 @@ class User(MappedObj):
 			"id": self.id,
 			"email": self.email,
 			"name": self.getFullName(),
-			"dateCreated": self.dateCreated.strftime("%Y-%m-%d %H:%M:%SZ")
+			"dateCreated": self.dateCreated
 		}
 
 

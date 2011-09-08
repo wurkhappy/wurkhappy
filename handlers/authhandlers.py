@@ -195,36 +195,36 @@ class ResetPasswordHandler(Authenticated, BaseHandler):
 
 class PasswordJSONHandler(Authenticated, BaseHandler):
 		
-		@web.authenticated
-		def post(self):
-			user = self.current_user
-			
-			try:
-				args = fmt.Parser(self.request.arguments,
-					optional=[],
-					required=[
-						('old_password', fmt.Enforce(str)),
-						('new_password', fmt.Enforce(str)),
-					]
-				)
-			except fmt.HTTPErrorBetter as e:
-				logging.warn(e.__dict__)
-				logging.warn(e.message)
-				self.set_status(e.status_code)
-				self.write(e.body_content)
-				return
-			
-			if not (user and user.passwordIsValid(args['old_password'])):
-				# User wasn't found, or password is wrong, display error
-				#TODO: Exponential back-off when user enters incorrect password.
-				#TODO: Flag accounds if passwords change too often.
-				error = {
-					"domain": "web.request",
-					"debug": "please validate authentication credentials"
-				}
-				self.set_status(401)
-				self.write(json.dumps(error))
-			else:
-				user.setPasswordHash(args['new_password'])# = Verification.hash_password(str(args['new_password']))
-				user.save()
-				self.write(json.dumps({"success": True}))
+	@web.authenticated
+	def post(self):
+		user = self.current_user
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					('old_password', fmt.Enforce(str)),
+					('new_password', fmt.Enforce(str)),
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		if not (user and user.passwordIsValid(args['old_password'])):
+			# User wasn't found, or password is wrong, display error
+			#TODO: Exponential back-off when user enters incorrect password.
+			#TODO: Flag accounds if passwords change too often.
+			error = {
+				"domain": "web.request",
+				"debug": "please validate authentication credentials"
+			}
+			self.set_status(401)
+			self.write(json.dumps(error))
+		else:
+			user.setPasswordHash(args['new_password'])# = Verification.hash_password(str(args['new_password']))
+			user.save()
+			self.write(json.dumps({"success": True}))

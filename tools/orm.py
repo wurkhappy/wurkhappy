@@ -18,7 +18,7 @@ import json
 class ORMJSONEncoder(json.JSONEncoder):
 	def default(self, obj):
 		if hasattr(obj, 'strftime'):
-			return obj.strftime("%Y-%m-%d %H:%M:%SZ")
+			return obj.strftime("%Y-%m-%dT%H:%M:%SZ")
 		else:
 			return json.JSONEncoder.default(self, obj)
 
