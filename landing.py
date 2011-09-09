@@ -39,7 +39,8 @@ class Application(web.Application):
 			"cookie_secret": str(config['tornado']['cookie_secret']), 
 			"login_url": "/login",
 			"template_path": "templates",
-			"static_path": "static"
+			"static_path": "static",
+			"debug": config['debug']
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -68,6 +69,7 @@ if __name__ == "__main__":
 	options.define("config", default="config.json", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)
+	options.define("debug", default=False, help="debug mode", type=bool)
 	options.parse_command_line()
 	
 	workingDir = os.path.dirname(__file__)
@@ -75,6 +77,7 @@ if __name__ == "__main__":
 		os.chdir(workingDir)
 	
 	conf = json.load(open(options.options.config, 'r'))
+	conf['debug'] = options.options.debug
 	server = HTTPServer(Application(conf))
 	
 	port = options.options.port
