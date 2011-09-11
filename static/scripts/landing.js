@@ -57,9 +57,7 @@ $(document).ready(function () {
 				},
 				dataType: 'json',
 				success: function (data, status, xhr) {
-					console.log(data);
 					if (data['success']) {
-						console.log('success');
 						$email.val('');
 						$(self).remove();
 						$form.find('#form-header').text('Thank you!');
