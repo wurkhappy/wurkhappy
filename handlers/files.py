@@ -64,3 +64,5 @@ class FileHandler(BaseHandler, Authenticated):
 				k.make_public()
 		
 		# user.setProfileImage(fileDict['body'], ext, {'Content-Type': fileDict['content_type']})
+	
+	
