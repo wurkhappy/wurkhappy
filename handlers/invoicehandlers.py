@@ -7,7 +7,6 @@ from models.invoice import Invoice
 from models.lineitem import LineItem
 from helpers.verification import Verification
 from helpers.validation import Validation
-from tools.orm import ORMJSONEncoder
 
 # ----------------------------------------------------------------------
 # Invoice Handler
@@ -109,7 +108,7 @@ class LineItemHandler(Authenticated, BaseHandler):
 		lineItem.save()
 		
 		self.set_status(201)
-		self.write(json.dumps(lineItem.getPublicDictionary(), cls=ORMJSONEncoder))
+		self.renderJSON(lineItem.getPublicDictionary())
 		return
 	
 	@web.authenticated

@@ -2,17 +2,19 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
-from helpers.verification import Verification
-from helpers.validation import Validation
 
-try:
-	import json
-except:
-	import simplejson as json
+from helpers import fmt
 
-from datetime import datetime
+import json
 import logging
-
+import os
+import uuid
+from hashlib import sha1
+import Image, ImageOps
+from StringIO import StringIO
+from tools.base import Base16, Base58
+from tools.amazonaws import AmazonS3
+from boto.s3.key import Key
 
 # -------------------------------------------------------------------
 # AccountHandler
@@ -25,181 +27,48 @@ class AccountHandler(Authenticated, BaseHandler):
 		# inherited from web.RequestHandler:
 		user = self.current_user
 		
-		def nameLabelValue(name, label, value):
-			return {"name" : name, "label" : label, "value" : value}
-			
-		phoneNumber = ("phoneNumber" in dir(user) and user.phoneNumber) or ""
-		details = {
-			"userID" : user.id,# just here to make the preference link work
-			'actions' : [
-				{
-					'name' : 'Personal Details',
-					'formAction' : '/user/me/account/personal',
-					'submit-button' : "Save Personal Details",
-					'sections' : [
-						{
-							'title' : 'Profile Preview',
-							'table' : [
-								[
-									{
-										'class' : 'meta',
-										'entries' : [
-											{
-												'value' : '',
-												'tags' : [
-													('span' ,None),
-													('img' , {
-														'src' : user.profileSmallURL,
-														'width' : '50'
-													})
-												]
-											}
-										]
-									},{
-										'entries' : [
-											{
-												'value' : " ".join([user.firstName,user.lastName]),
-												'tags' : [
-													('h3',None),
-													('a',{'href' : '/detail.html'})
-												]
-											},{
-												'value' : " ".join([user.email,'-',phoneNumber]),
-												'tags' : [('p',None)]
-											}
-										]
-									}
-								]
-							]
-						},{
-							'title' : 'Personal Detail',
-							'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in [
-								("firstName","First Name",user.firstName),
-								("lastName","Last Name" ,user.lastName),
-								("email" ,"Email",user.email),
-								("phoneNumber","Phone Number",phoneNumber)
-							]],
-							'fileselectors' : {
-								"Photo" : [user.profileOrigURL, user.profileSmallURL, user.profileLargeURL]
-							}
-						}
-					]
-				},{
-					'name' : 'Change Your Password',
-					'formAction' : '/user/me/password',
-					'submit-button' : "Save New Password",
-					'sections' : [
-						{
-							'title' : 'Change Your Password',
-							'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in [
-								("old_password","Current Password",""),
-								("new_password","New Password" ,""),
-								("confirm_new_password","Confirm New Password" ,"")
-							]]
-						}
-					]
-				},{
-					'name' : 'Credit Card Details',
-					'submit-button' : "Save Credit Card Details",
-					'formAction' : '/user/me/account/credit',
-					'sections' : [
-						{
-							'title' : 'Stored Credit Card',
-							'table' : [
-								[
-									{
-										'entries' : [
-											{
-												'value' : "**** **** **** 8765",
-												'tags' : [('h3',None)]
-											},{
-												'value' : "Expires: January,2014 - Billing Zip/Postal Code: 01748",
-												'tags' : [("p",None)]
-											},{
-												'value' : "Delete Credit Card",
-												'tags' : [
-													("p", {"class" : "remove"}),
-													("a",{"href" : ""})
-												]
-											}
-										]
-									}
-								]
-							]
-						},{
-							'title' : 'Credit Card Details',
-							'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in [
-								("creditCardNumber","Credit Card Number",""),
-								("zipCode","Billing Address Zip/Postal Code","")
-							]],
-							'datefields' : ["Expires On"]
-						}
-					]
-				},{
-					'name' : 'Bank Account Details',
-					'formAction' : '/user/me/account/bank',
-					'submit-button' : "Save Bank Details",
-					'sections' : [
-						{
-							'title' : 'Stored Bank Account',
-							'table' : [
-								[
-									{
-										'entries' : [
-											{
-												'value' : 'Checking Account',
-												'tags' : [('h3',None)]
-											},{
-												'value' : "Routing Number: ******234 - Account Number: *********678",
-												'tags' : [('p',None)]
-											},{
-												'value' : "Delete Bank Account",
-												'tags' : [
-													('p', {'class' : 'remove'}),
-													('a', {'href' : ""})
-												]
-											}
-										]
-									}
-								]
-							]
-						},{
-							'title' : 'Bank Account Details',
-							'radiobuttons' : [nameLabelValue(name,label,value) for (name,label,value) in [
-								("checking","pay-checking","Checking Account"),
-								("savings","pay-savings","Savings Account")
-							]],
-							'textfields' : [nameLabelValue(name,label,value) for (name,label,value) in [
-								("routingNumber","Routing Number" ,""),
-								("accountNumber","Account Number" ,"")
-							]]
-						}
-					]
-				}
-			]
-		}
-		
 		# userProfile = user.getProfile()
 		
 		userDict = {
 			'id': user.id,
 			'firstName': user.firstName,
 			'lastName': user.lastName,
+			'fullName': user.getFullName(),
 			'email': user.email,
-			'phoneNumber': '', # userProfile.phoneNumber,
+			'telephone': user.telephone or '',
 			'profileURL': [
 				user.profileSmallURL,
 				user.profileLargeURL
 			]
 		}
 		
-		html = 'new_from_designer/admin/account.html'
-		torn_html = 'user/account.html'
-		self.render(torn_html, title="My Account: Personal Details", bag=details, user_id=user.id, current="")
+		self.render('user/account.html', 
+			title="Wurk Happy &ndash; My Account", data=userDict
+		)
 	
 	@web.authenticated
 	def post(self):
-		print 'AccountHandler post'
+		user = self.current_user
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				#TODO: Enforce email and telephone formats
+				optional=[
+					('firstName', fmt.Enforce(str)),
+					('lastName', fmt.Enforce(str)),
+					('email', fmt.Email()),
+					('telephone', fmt.PhoneNumber())
+				],
+				required=[]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		#TODO: this should probably be handled in a better way. We'll
+		# worry about that when we do cleanup and robustification.
 
 
 
@@ -209,22 +78,103 @@ class AccountHandler(Authenticated, BaseHandler):
 
 class AccountJSONHandler(Authenticated, BaseHandler):
 
-    @web.authenticated
-    def post(self):
-	    args = self.request.arguments
-	    userData = User.retrieveByUserID(self.current_user.id)
-	    if not userData:
-		    userData = User()
-	    userData.firstName = args['firstName'][0]
-	    userData.lastName = args['lastName'][0]
-	    if Validation.validateEmail(args['email'][0]):
-		    userData.email = args['email'][0]
-	    else:
-		    raise RuntimeError('Do something javascripty here')
-	    if 'phoneNumber' in dir(userData):
-		    userData.phoneNumber = args['phoneNumber'][0]
-	    userData.save()
-	    self.write(json.dumps({"success": True}))
+	@web.authenticated
+	def post(self):
+		user = self.current_user
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				#TODO: Enforce email and telephone formats
+				optional=[
+					('firstName', fmt.Enforce(str)),
+					('lastName', fmt.Enforce(str)),
+					('email', fmt.Email()),
+					('telephone', fmt.PhoneNumber())
+				],
+				required=[]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		#TODO
+		# The HTTPErrorBetter raised by fmt.Parser could be, uhh, better.
+		# Errors that are responses to AJAX calls include a display message
+		# that is intended to be helpful to the user, in addition to 
+		# machine-parseable error identifiers.
+		#  
+		# error = {
+		# 	'domain': 'web.request',
+		# 	'display': (
+		# 		"I'm sorry, that didn't look like a proper email "
+		# 		"address. Could you please enter a valid email address?"
+		# 	),
+		# 	'debug': "'email' parameter value must be well-formed"
+		# }
+		
+		user.email = args['email'] or user.email
+		user.firstName = args['firstName'] or user.firstName
+		user.lastName = args['lastName'] or user.lastName
+		user.telephone = args['telephone'] or user.telephone
+		
+		#TODO: This needs refactoring
+		if 'profilePhoto' in self.request.files:
+			logging.warn('Got profile photo!')
+			fileDict = self.request.files['profilePhoto'][0]
+			base, ext = os.path.splitext(fileDict['filename'])
+			
+			imgs = {
+				'o': None,
+				's': None,
+				'l': None
+			}
+			
+			params = {
+				'o': 'profileOrigURL',
+				's': 'profileSmallURL',
+				'l': 'profileLargeURL'
+			}
+			
+			headers = {'Content-Type': fileDict['content_type']}
+			
+			try:
+				imgs['o'] = Image.open(StringIO(fileDict['body']))
+			except IOError as e:
+				error = {
+					'domain': 'web.request',
+					'display': (
+						"I'm sorry, that image was either damaged or "
+						"unrecognized. Could you please try to upload "
+						"it again?"
+					),
+					'debug': 'cannot identify image file'
+				}
+				
+				raise HTTPErrorBetter(400, "Failed to read image", 
+					json.dumps(error))
+			
+			imgs['s'] = ImageOps.fit(imgs['o'], (50, 50))
+			imgs['l'] = ImageOps.fit(imgs['o'], (150, 150))
+			
+			hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
+			nameFormat = '%s_%%s%s' % (hashString, ext)
+			
+			with AmazonS3() as (conn, bucket):
+				for t, v in imgs.iteritems():
+					imgData = StringIO()
+					v.save(imgData, 'JPEG')
+					
+					k = Key(bucket)
+					k.key = nameFormat % t
+					k.set_contents_from_string(imgData.getvalue(), headers)
+					k.make_public()
+					
+					user.__dict__[params[t]] = 'http://media.wurkhappy.com/' + nameFormat % t
+		
+		user.save()
+		self.write(json.dumps({"success": True}))
 
 
 
@@ -247,7 +197,6 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.__dict__)
 			logging.warn(e.message)
 			self.set_status(e.status_code)
 			self.write(e.body_content)
@@ -262,9 +211,9 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 				"debug": "please validate authentication credentials"
 			}
 			self.set_status(401)
-			self.write(json.dumps(error))
+			self.renderJSON(error)
 		else:
-			user.setPasswordHash(args['new_password'])# = Verification.hash_password(str(args['new_password']))
+			user.setPasswordHash(args['new_password'])
 			user.save()
 			self.write(json.dumps({"success": True}))
 

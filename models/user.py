@@ -27,6 +27,7 @@ class User(MappedObj):
 		self.subscriberStatus = None
 		self.firstName = None
 		self.lastName = None
+		self.telephone = None
 		self.password = None
 		self.accessToken = None
 		self.accessTokenSecret = None

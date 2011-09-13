@@ -6,7 +6,7 @@ from models.user import User
 from models.forgotpassword import ForgotPassword
 from tools.email import *
 from datetime import datetime, timedelta
-
+import logging
 
 # -------------------------------------------------------------------
 # Signup
@@ -203,8 +203,8 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			args = fmt.Parser(self.request.arguments,
 				optional=[],
 				required=[
-					('old_password', fmt.Enforce(str)),
-					('new_password', fmt.Enforce(str)),
+					('currentPassword', fmt.Enforce(str)),
+					('newPassword', fmt.Enforce(str)),
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
@@ -214,7 +214,7 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		if not (user and user.passwordIsValid(args['old_password'])):
+		if not (user and user.passwordIsValid(args['currentPassword'])):
 			# User wasn't found, or password is wrong, display error
 			#TODO: Exponential back-off when user enters incorrect password.
 			#TODO: Flag accounds if passwords change too often.
@@ -223,8 +223,8 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 				"debug": "please validate authentication credentials"
 			}
 			self.set_status(401)
-			self.write(json.dumps(error))
+			self.renderJSON(error)
 		else:
-			user.setPasswordHash(args['new_password'])# = Verification.hash_password(str(args['new_password']))
+			user.setPasswordHash(args['newPassword'])# = Verification.hash_password(str(args['new_password']))
 			user.save()
 			self.write(json.dumps({"success": True}))

@@ -14,14 +14,15 @@ import logging
 
 
 class AgreementBase(object):
+	##
+	# @param(str) dollar amount with optional dollar sign and fraction part
+	# @return an integer number of cents
+	
 	def parseAmountString(self, string):
 		'''
 		Parses an input string in the form $12,345.67
 		(where the dollar sign, commas, and fraction part
 		are optional) into an integer number of cents.
-		
-		@param string ---
-		@returns an integer number of cents.
 		'''
 		
 		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
@@ -625,7 +626,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		self.set_status(201)
 		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement.id))
-		self.write(json.dumps(self.assembleDictionary(agreement)))
+		self.renderJSON(self.assembleDictionary(agreement))
 
 
 
@@ -647,7 +648,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write('{"success": false}')
 			return
 		
-		self.write(json.dumps(self.assembleDictionary(agreement)))
+		self.renderJSON(self.assembleDictionary(agreement))
 	
 	@web.authenticated
 	def post(self, agreementID):
@@ -714,7 +715,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		if agreementText:
 			agreementText.save()
 		
-		self.write(json.dumps(self.assembleDictionary(agreement)))
+		self.renderJSON(self.assembleDictionary(agreement))
 		
 class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 	
@@ -741,7 +742,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			"state": AgreementState.currentState(agreement)
 		}
 		
-		self.write(json.dumps(stateDict))
+		self.renderJSON(stateDict)
 	
 	@web.authenticated
 	def post(self, agreementID):
@@ -804,7 +805,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			"state": currentState.__class__.__name__
 		}
 		
-		self.write(json.dumps(stateDict))
+		self.renderJSON(stateDict)
 
 
 

@@ -1,7 +1,7 @@
 /*
-         ()    ()     _      _                             
-__      ___    _ _ __| | __ | |__   __ _ _ __  _ __  _   _ 
-\ \ /\ / / |  | | '__| |/ / | '_ \ / _` | '_ \| '_ \| | | |
+                      _      _                             
+__      _()    ()_ __| | __ | |__   __ _ _ __  _ __  _   _ 
+\ \ /\ / /-    -| '__| |/ / | '_ \ / _` | '_ \| '_ \| | | |
  \ V  V /| \__/ | |  |   <  | | | | (_| | |_) | |_) | |_| |
   \_/\_/  \____/|_|  |_|\_\ |_| |_|\__,_| .__/| .__/ \__, |
                                        |_|   |_|    |___/ 
@@ -12,24 +12,53 @@ function getCookie(name) {
 	return c ? c[1] : undefined;
 }
 
-jQuery.postJSON = function(url, data, callback) {
-	data._xsrf = getCookie("_xsrf");
-	$.ajax({
-		url: url,
-		data: $.param(data),
-		dataType: "text",
-		type: "POST",
-		success: callback
-	});
-};
-
-
-$.fn.submitAJAX = function(callback) {
-	var $form = this, params = $form.serializeArray();
-	$.postJSON($form.attr('action') + '.json', params, callback);
-};
+// jQuery.postJSON = function(url, data, callback) {
+// 	data._xsrf = getCookie("_xsrf");
+// 	console.log(data);
+// 	$.ajax({
+// 		url: url,
+// 		data: $.param(data),
+// 		contentType: false,
+// 		processData: false,
+// 		//dataType: "text",
+// 		type: "POST",
+// 		success: callback,
+// 		beforeSend: function (jqXHR, settings) {
+// 			console.log(jqXHR);
+// 			return false;
+// 		}
+// 	});
+// };
+// 
+// 
+// $.fn.submitAJAX = function(callback) {
+// 	var $form = this, params = $form.serializeArray();
+// 	//TODO: look into FormData object.
+// 	// Can use jQuery.each($('input[type=file]')[0].files, function (i, file) { data.append('photo', file); });
+// 	$.postJSON($form.attr('action') + '.json', params, callback);
+// };
 
 $(document).ready(function() {
+	// Find tab classes and activate flippers
+	$('.tab').click(function () {
+		// Get current elt's class, find corresponding container class
+		// and adjust visibility. Set current class to current.
+		var $button = $(this);
+		
+		if (!$button.hasClass('current')) {
+			var id = $button.attr('id').match(/(\w+)-button/);
+			
+			if (id && id[1]) {
+				$('.tab.current').toggleClass('current');
+				$button.toggleClass('current');
+				$('#content .tab-content').hide();
+				$('#' + id[1] + '-container').show();
+			}
+		}
+		
+		return false;
+	});
+	
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
 		selectedItemProp: "name",
 		selectedValuesProp: "id",
@@ -57,46 +86,36 @@ $(document).ready(function() {
 		}
 	});
 	
-	
-	$(".js-replace-action").click(function() {
-		$(this).closest("form").submitAJAX(function(data, status, xhr) {
-			//console.log(xhr.getResponseHeader('Location'));
-			//console.log(data);
-		});
-		return false;
-	});
-
-	$(".js_send").click(function() {
-		$(this).closest("form").submitAJAX(function(data, status, xhr) {
-			//console.log(xhr.getResponseHeader('Location'));
-			//console.log(data);
-		});
-		return false;
+	$(".js-replace-action").ajaxForm({
+		beforeSubmit: function (arr, $form, options) {
+			options.url = $form.attr('action') + '.json';
+		}
 	});
 	
-	
-	for (var i = 0, len = buttonMaps.length; i < len; i++) {
-		if (buttonMaps.hasOwnProperty(i)) {
-			var map = buttonMaps[i];
-			$("#" + map['id']).click(function(m) {
-				return function() {
-					var data = m['params'];
-					if (m['capture-id']) {
-						data.append($("#" + m['capture-id']).serializeArray());
-					}
-					data._xsrf = getCookie("_xsrf");
-					$.ajax({
-						url: m['action'],
-						data: $.param(data),
-						dataType: "text",
-						type: m['method'],
-						success: function(data, status, xhr) {
-							console.log(data);
+	if (buttonMaps) {
+		for (var i = 0, len = buttonMaps.length; i < len; i++) {
+			if (buttonMaps.hasOwnProperty(i)) {
+				var map = buttonMaps[i];
+				$("#" + map['id']).click(function(m) {
+					return function() {
+						var data = m['params'];
+						if (m['capture-id']) {
+							data.append($("#" + m['capture-id']).serializeArray());
 						}
-					});
-					return false;
-				}
-			}(map));
+						data._xsrf = getCookie("_xsrf");
+						$.ajax({
+							url: m['action'],
+							data: $.param(data),
+							dataType: "text",
+							type: m['method'],
+							success: function(data, status, xhr) {
+								console.log(data);
+							}
+						});
+						return false;
+					}
+				}(map));
+			}
 		}
 	}
 });

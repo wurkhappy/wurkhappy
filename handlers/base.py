@@ -1,10 +1,8 @@
 import tornado.web as web
 from models.user import User
 
-try:
-	import json
-except:
-	import simplejson as json
+from tools.orm import ORMJSONEncoder
+import json
 
 
 
@@ -25,7 +23,7 @@ class BaseHandler(web.RequestHandler):
 	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
-		self.write(json.dumps(obj))
+		self.write(json.dumps(obj, cls=ORMJSONEncoder))
 
 
 

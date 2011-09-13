@@ -5,7 +5,6 @@ from base import *
 from models.user import User, UserPrefs
 from models.agreement import *
 from models.profile import Profile
-from tools.orm import ORMJSONEncoder
 import json
 
 from datetime import datetime
@@ -63,7 +62,7 @@ class PreferencesJSONHandler(Authenticated, BaseHandler):
 			userDict['prefs'][pref.name] = pref.value
 		
 		self.set_header("Content-Type", "application/json")
-		self.write(json.dumps(userDict, cls=ORMJSONEncoder))
+		self.renderJSON(userDict)
 	
 	@web.authenticated
 	def post(self, userID):

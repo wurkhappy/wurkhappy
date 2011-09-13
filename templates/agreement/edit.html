@@ -12,7 +12,7 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="/agreement/{% if bag['id'] %}{{ bag['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8">
+		<form action="/agreement/{% if bag['id'] %}{{ bag['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action">
 			{% raw xsrf_form_html() %}
 			<fieldset>
 				
@@ -65,7 +65,7 @@
 				
 			</fieldset>
 			<fieldset class="submit-buttons">
-				<input type="submit" id="confirm-edit-button" value="Save Changes &amp; Resend Client Agreement" /><!-- populate from agreement state info -->
+				<input type="submit" value="Save Changes &amp; Resend Client Agreement" /><!-- populate from agreement state info -->
 			</fieldset>
 		</form>
 	</div>

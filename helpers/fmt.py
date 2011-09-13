@@ -1,10 +1,9 @@
 from tornado.web import HTTPError
 
 from collections import defaultdict
-try:
-	import json
-except:
-	import simplejson as json
+import json
+import re
+import logging
 
 class HTTPErrorBetter(HTTPError):
 	def __init__(self, status_code, log_message, body_content, *args):
@@ -119,7 +118,7 @@ class List(Enforce):
 		val = []
 		
 		for item in value:
-			val.append(self.protocol << [item])
+			val.append(self.protocol << item)
 		
 		return val
 
@@ -154,6 +153,55 @@ class StringInSet(Enforce):
 	def test(self, value):
 		if value not in self.set:
 			raise Exception("value must be one of %s" % ", ".join(["'%s'" % x for x in self.set]))
+
+
+
+class Email(Enforce):
+	def __init__(self, default=None):
+		Enforce.__init__(self, str, default)
+	
+	def test(self, value):
+		if not re.match(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', value):
+			raise Exception("value must be well-formed")
+
+
+
+class URL(Enforce):
+	def __init__(self, default=None):
+		Enforce.__init__(self, str, default)
+	
+	#TODO: unit test this
+	def test(self, value):
+		if not re.match(r'^(http(?:s)?://[a-zA-Z0-9\-]+(?:\.[a-zA-Z0-9\-]+)*\.[a-zA-Z]{2,6}(?:/?|(?:/[\w\-]+)*)(?:/?|/\w+\.[a-zA-Z]{2,4}(?:\?[\w]+\=[\w\-]+)?)?(?:\&[\w]+\=[\w\-]+)*)$', value):
+			raise Exception("value must be well-formed")
+
+
+
+class PhoneNumber(Enforce):
+	def __init__(self, default=None):
+		Enforce.__init__(self, str, default)
+	
+	def filter(self, value):
+		for ch in "() -.":
+			value = value.replace(ch, '')
+		
+		match = re.match(r'^(?:\+1 ?)?([0-9]{10})$', value)
+		if not match:
+			raise Exception("value must be well-formed")
+		
+		val = match.groups()[0]
+		return '(%s) %s-%s' % (val[0:3], val[3:6], val[6:10])
+	
+	def __lshift__(self, value):
+		if value == None or str(value[0]) == '':
+			return self.default
+
+		try:
+			val = self.type(value[0])
+		except TypeError as e:
+			raise Exception("value cannot be converted to type '%s'" % self.type.__name__)
+
+		return self.filter(val)
 
 
 
