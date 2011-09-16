@@ -2,6 +2,7 @@ from __future__ import division
 import re
 
 from base import *
+from helpers import fmt
 from models.user import User, UserPrefs
 from models.agreement import *
 from models.profile import Profile
@@ -19,10 +20,30 @@ class ContactsJSONHandler(Authenticated, BaseHandler):
 	def get(self):
 		user = self.current_user
 		
-		contacts = []
+		try:
+			args = fmt.Parser(self.request.arguments,
+				required=[
+					('q', fmt.Enforce(str))
+				],
+				optional=[]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
 		
-		for user in User.iteratorWithContactsForID(user.id):
-			contacts.append(user.publicDict())
+		query = args['q'].lower()
+		
+		iterator = User.iteratorWithContactsForID(user.id)
+		condition = lambda x: x.getFullName().lower().find(query) > -1
+		
+		contacts = [user.publicDict() for user in iterator if condition(user)]
+		
+		# for user in User.iteratorWithContactsForID(user.id):
+		# 	if user.getFullName().lower().find(query) > -1:
+		# 		contacts.append(user.publicDict())
 		
 		self.renderJSON({"contacts": contacts})
 

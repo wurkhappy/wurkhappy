@@ -53,8 +53,6 @@ class Parser(object):
 				self.args[name] = protocol << args.get(name, None)
 			except Exception as e:
 				err.append("'%s' parameter %s" % (name, e))
-			
-		req = []
 		
 		if len(err):
 			error = {
@@ -93,7 +91,7 @@ class Enforce(object):
 		self.default = default
 	
 	def __lshift__(self, value):
-		if value == None:
+		if value is None:
 			return self.default
 		
 		try:
@@ -112,13 +110,15 @@ class List(Enforce):
 		self.protocol = protocol
 	
 	def __lshift__(self, value):
-		if value == None:
+		if value is None:
 			return self.default
 		
 		val = []
 		
 		for item in value:
-			val.append(self.protocol << item)
+			# The enforcer class expects a list, so we make one.
+			# Otherwise we end up with a truncated string.
+			val.append(self.protocol << [item])
 		
 		return val
 
@@ -193,7 +193,8 @@ class PhoneNumber(Enforce):
 		return '(%s) %s-%s' % (val[0:3], val[3:6], val[6:10])
 	
 	def __lshift__(self, value):
-		if value == None or str(value[0]) == '':
+		logging.warn(value)
+		if value is None or str(value[0]) is '':
 			return self.default
 
 		try:

@@ -25,9 +25,9 @@ class AgreementBase(object):
 		are optional) into an integer number of cents.
 		'''
 		
+		logging.warn(string)
 		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
 		m = r.match(string)
-		logging.warn(string)
 		if not m or len(m.groups()) != 2:
 			return None
 		logging.warn(m.groups())
@@ -106,7 +106,8 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				"other_id": usr.id,
 				"other_name": usr.getFullName(),
 				"date": agr.dateCreated.strftime('%B %d, %Y'),
-				"amount": agr.getCostString()
+				"amount": agr.getCostString(),
+				"profileURL": usr.profileSmallURL or '#', # Default profile photo? Set during signup?
 				#"state": AgreementState.currentState(agr),
 			})
 		
@@ -124,11 +125,15 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				appendAgreement(actionItems, agreement, User.retrieveByID(agreement.vendorID))
 		
 		templateDict['agreementType'] = agreementType
-		templateDict['agreementGroups'] = [
+		templateDict['agreementGroups'] = []
+		
+		for (name, lst) in [
 			("Requires Attention", actionItems),
 			("Waiting for Client", awaitingReply),
-			("In Progress", inProgress)
-		]
+			("In Progress", inProgress)]:
+			
+			if len(lst):
+				templateDict['agreementGroups'].append((name, lst))
 		
 		#agreements = [("In Progress", agreementList)]
 		title = "%s Agreements &ndash; Wurk Happy" % agreementType
@@ -242,45 +247,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"client": []
 			}
 		}[state][role]
-		
-	@staticmethod
-	def constructDateForm(datestamp):
-		# Should probably be somewhere else
-		months = [
-			('January', 1),
-			('February', 2),
-			('March', 3),
-			('April', 4),
-			('May', 5),
-			('June', 6),
-			('July', 7),
-			('August', 8),
-			('September', 9),
-			('October', 10),
-			('November', 11),
-			('December', 12)
-		]
-		
-		html = '<select name="month" id="">'
-		
-		for month, num in months:
-			selected = ' selected="true"' if datestamp.month == num else ''
-			html += '\t<option value="%d"%s>%s</option>' % (num, selected, month)
-		
-		html += '</select>\n<select name="day" id="">'
-		
-		for day in range(1, 32):
-			selected = ' selected="true"' if datestamp.day == day else ''
-			html += '\t<option value="%d"%s>%s</option>' % (day, selected, day)
-			
-		html += '</select>\n<select name="year" id="">'
-		
-		for year in range(2011, 2013):
-			selected = ' selected="true"' if datestamp.year == year else ''
-			html += '\t<option value="%d"%s>%s</option>' % (year, selected, year)
-		
-		html += '</select>'
-		return html
+	
 	
 	@web.authenticated
 	def get(self, agreementID=None):
@@ -295,13 +262,15 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"name": "",
 				"date": "",
 				"amount": "",
+				"summary": "",
 				"client": None,
 				"vendor": None,
 				"phases": [],
-				"actions": []
+				"actions": [],
+				"self": "vendor"
 			}
 				
-			self.render("agreement/edit.html", title=title, agreement_with='Client', bag=empty, date_html=self.constructDateForm(datetime.now()))
+			self.render("agreement/edit.html", title=title, data=empty, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 			return
 		
 		agreement = Agreement.retrieveByID(agreementID)
@@ -333,10 +302,14 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		#     "amount": "$1,300.52",
 		#     "client": {
 		#         "id": 1,
-		#         "name": "Cindy Jones" },
+		#         "fullName": "Cindy Jones",
+		#         "profileURL": "http://media.wurkhappy.com/eW5no...s.png"
+		#     },
 		#     "vendor": {
 		#         "id": 17,
-		#         "name": "Greg Smith" },
+		#         "fullName": "Greg Smith",
+		#         "profileURL": "http://media.wurkhappy.com/EKveW...s.png"
+		#     },
 		#     "self": "client",
 		#     "other": "vendor",
 		#     "transactions": [{
@@ -389,26 +362,14 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		if agreementType == 'Client':
 			client = User.retrieveByID(agreement.clientID)
-			templateDict["client"] = {
-				"id": client.id,
-				"name": client.getFullName()
-			}
-			templateDict["vendor"] = {
-				"id": user.id,
-				"name": user.getFullName()
-			}
+			templateDict["client"] = client.publicDict()
+			templateDict["vendor"] = user.publicDict()
 			templateDict["self"] = "vendor"
 			templateDict["other"] = "client"
 		else:
 			vendor = User.retrieveByID(agreement.vendorID)
-			templateDict["client"] = {
-				"id": user.id,
-				"name": user.getFullName()
-			}
-			templateDict["vendor"] = {
-				"id": vendor.id,
-				"name": vendor.getFullName()
-			}
+			templateDict["client"] = user.publicDict()
+			templateDict["vendor"] = vendor.publicDict()
 			templateDict["self"] = "client"
 			templateDict["other"] = "vendor"
 		
@@ -422,15 +383,17 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		for phase in phases:
 			totalAmount += phase.amount if phase.amount else 0
 			
-			templateDict["phases"].append({
+			phaseDict = {
 				"amount": "$%.02f" % (phase.amount / 100) if phase.amount else "",
 				"description": phase.description,
 				"estDateCompleted": phase.estDateCompleted.strftime('%B %d, %Y') if phase.estDateCompleted else None,
 				"dateCompleted": phase.dateCompleted.strftime('%B %d, %Y') if phase.dateCompleted else None
-			})
+			}
 			
 			if phase.comments:
-				templateDict["phases"]["comments"] = phase.comments
+				phaseDict["comments"] = phase.comments
+			
+			templateDict["phases"].append(phaseDict)
 		
 		templateDict["amount"] = "$%.02f" % (totalAmount / 100)
 		
@@ -490,10 +453,10 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			templateDict['uri'] = self.request.uri
 			logging.info(templateDict)
 			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agreement.name)
-			self.render("agreement/edit.html", title=title, agreement_with=agreementType, bag=templateDict, date_html=self.constructDateForm(agreement.dateCreated), json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
+			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
 			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name) 
-			self.render("agreement/detail.html", title=title, agreement_with=agreementType, bag=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
+			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 	
 	
 	@web.authenticated
@@ -605,7 +568,12 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			return
 		
 		agreement.name = args['title']
-		agreement.clientID = args['clientID']
+		
+		if not args['clientID']:
+			client = User.retrieveByEmail(args['email'])
+			agreement.clientID = client.id
+		else:
+			agreement.clientID = args['clientID']
 		
 		agreement.save()
 		agreement.refresh()
@@ -806,16 +774,4 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		}
 		
 		self.renderJSON(stateDict)
-
-
-
-
-
-
-
-
-
-
-
-
 

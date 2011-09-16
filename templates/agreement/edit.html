@@ -2,7 +2,10 @@
 
 ### Redefine the main block
 
+
 {% block main %}
+
+{% module Slug({"_xsrf": "foo"}) %}
 
 <div class="container">
 	{% block navigation %}
@@ -12,56 +15,59 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="/agreement/{% if bag['id'] %}{{ bag['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action">
+		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action">
 			{% raw xsrf_form_html() %}
-			<fieldset>
 				
-				<h2>Recipient</h2>
+			<h2>Recipient</h2>
+			<fieldset>
 				<label for="">Email Address or Name of Existing Contact</label>
 				<input type="text" name="email" size="100" id="client-suggest" />
-				
-				<h2>Estimate</h2>
+			</fieldset>
+			
+			<h2>Title and Summary</h2>
+			<fieldset>
 				<label for="">Title</label>
-				<input type="text" name="title" value="{{ bag['name'] }}" size="100" />
+				<input type="text" name="title" value="{{ data['name'] }}" size="100" />
 				<label for="summary">Summary</label>
 				<textarea name="summary" rows="3" cols="100"></textarea>
 				<label for="">Date of Issue</label>
-				{% raw date_html %}
-				
+				{% module DatePicker() %}
 			</fieldset>
+			
+			
 			<fieldset>
 				<!-- write code to dynamically generate this -->
 				<h2>Phase One</h2>
 				<label for="">Deposit</label>
-				<input type="text" name="cost" value="{% if len(bag["phases"]) > 0 %}{{ bag["phases"][0]["amount"] }}{% end %}" size="100" />
+				<input type="text" name="cost" value="{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% raw date_html %}
+				{% module DatePicker() %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase one.</label>
-				<textarea name="details" rows="5" cols="100">{% if len(bag["phases"]) > 0 %}{{ bag["phases"][0]["description"] }}{% end %}</textarea>
+				<textarea name="details" rows="5" cols="100">{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["description"] }}{% end %}</textarea>
 				
 				<h2>Phase Two</h2>
 				<label for="">Amount Due on Completion</label>
-				<input type="text" name="cost" value="{% if len(bag["phases"]) > 1 %}{{ bag["phases"][1]["amount"] }}{% end %}" size="100" />
+				<input type="text" name="cost" value="{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% raw date_html %}
+				{% module DatePicker() %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase two.</label>
-				<textarea name="details" rows="5" cols="100" value="" >{% if len(bag["phases"]) > 1 %}{{ bag["phases"][1]["description"] }}{% end %}</textarea>
+				<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["description"] }}{% end %}</textarea>
 				
 				<h2>Phase Three</h2>
 				<label for="">Amount Due on Completion</label>
-				<input type="text" name="cost" value="{% if len(bag["phases"]) > 2 %}{{ bag["phases"][2]["amount"] }}{% end %}" size="100" />
+				<input type="text" name="cost" value="{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% raw date_html %}
+				{% module DatePicker() %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase three.</label>
-				<textarea name="details" rows="5" cols="100" value="" >{% if len(bag["phases"]) > 2 %}{{ bag["phases"][2]["description"] }}{% end %}</textarea>
+				<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["description"] }}{% end %}</textarea>
 				
 				<h2>Phase Four</h2>
 				<label for="">Amount Due on completion</label>
-				<input type="text" name="cost" value="{% if len(bag["phases"]) > 3 %}{{ bag["phases"][3]["amount"] }}{% end %}" size="100" />
+				<input type="text" name="cost" value="{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% raw date_html %}
+				{% module DatePicker() %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase four.</label>
-				<textarea name="details" rows="5" cols="100" value="" >{% if len(bag["phases"]) > 3 %}{{ bag["phases"][3]["description"] }}{% end %}</textarea>
+				<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["description"] }}{% end %}</textarea>
 				
 			</fieldset>
 			<fieldset class="submit-buttons">
@@ -102,8 +108,8 @@
 		<div class="column-one-half">
 
 			<ul class="clear">
-				<li{% if agreement_with == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li{% if agreement_with == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+				<li{% if data['self'] == 'vendor' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+				<li{% if data['self'] == 'client' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
 				<li><a href="/people"><strong>People</strong></a></li>
 			</ul>
 
@@ -129,7 +135,7 @@
 	
 		<div class="column-three-fourth">
 		
-			{% if not bag['id'] %}
+			{% if not data['id'] %}
 				<h1>New Estimate</h1>
 			{% else %}
 				<h1>Edit Client Agreement</h1>
@@ -139,9 +145,11 @@
 	
 		<div class="column-one-fourth">
 		
-			<div class="action-button">
-				<a href="/agreement/{{ bag['id'] }}" class="single cancel">Cancel Changes</a>
-			</div>
+			<ul class="action-button">
+			{% for action in data['actions'] %}
+				<li><a href="#" id="{{ action['id'] }}" class="top"><span>{{ action['name'] }}</span></a></li>
+			{% end %}
+			</ul>
 		
 		</div>
 	

@@ -24,7 +24,7 @@ class User(MappedObj):
 		self.confirmationCode = None
 		self.confirmationHash = None
 		self.confirmed = None
-		self.subscriberStatus = None
+		self.subscriberStatus = 0
 		self.firstName = None
 		self.lastName = None
 		self.telephone = None
@@ -70,8 +70,8 @@ class User(MappedObj):
 		with Database() as (conn, cursor):
 			query = """SELECT %s.* FROM %s 
 				LEFT JOIN agreement AS a ON user.id = a.clientID
-				LEFT JOIN agreement AS b ON user.id = b.vendorID 
-				WHERE b.clientID = %%s OR a.vendorID = %%s 
+				LEFT JOIN agreement AS b ON user.id = b.vendorID
+				WHERE b.clientID = %%s OR a.vendorID = %%s
 				GROUP BY user.id""" % (clz.tableName(), clz.tableName())
 			
 			cursor.execute(query, (userID, userID))
@@ -98,7 +98,7 @@ class User(MappedObj):
 		return Profile.retrieveByUserID(self.id)
 	
 	def getFullName(self):
-		return self.firstName + " " + self.lastName
+		return " ".join([str(self.firstName or ""), str(self.lastName or "")]).strip()
 	
 	def setPasswordHash(self, password):
 		self.password = bcrypt.hashpw(str(password), bcrypt.gensalt())
@@ -108,10 +108,15 @@ class User(MappedObj):
 	
 	def publicDict(self):
 		return {
-			"id": self.id,
-			"email": self.email,
-			"name": self.getFullName(),
-			"dateCreated": self.dateCreated
+			'id': self.id,
+			'fullName': self.getFullName(),
+			'email': self.email,
+			'telephone': self.telephone,
+			'profileURL': [
+				self.profileSmallURL or '#',
+				self.profileLargeURL or '#'
+			],
+			'dateCreated': self.dateCreated
 		}
 
 

@@ -60,7 +60,7 @@ $(document).ready(function() {
 	});
 	
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
-		selectedItemProp: "name",
+		selectedItemProp: "fullName",
 		selectedValuesProp: "id",
 		inputName: "clientID",
 		searchObjProps: "name,email",

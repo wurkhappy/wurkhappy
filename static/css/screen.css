@@ -2,8 +2,8 @@
 ================================================================================ */
 
 /* http://meyerweb.com/eric/tools/css/reset/ 
-   v2.0 | 20110126
-   License: none (public domain)
+v2.0 | 20110126
+License: none (public domain)
 */
 
 html, body, div, span, applet, object, iframe,
@@ -24,6 +24,26 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 	outline: 0;
 }
 
+body {
+	line-height: 1.5em;
+	background: rgb(255,255,255);
+}
+
+blockquote, q {
+	quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
 
 /* COMMON
 ================================================================================ */
@@ -32,142 +52,620 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 body {
 	text-align: center;
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	background: rgb(244,244,244) url(../images/bg.png);
-	line-height: 1.5em;
-	color: rgb(102,102,102);
+	background: rgb(220,224,228) url(/static/images/bg.png) fixed;
+	color: rgb(100,100,100);
 }
 
 a:link,
 a:visited {
 	text-decoration: none;
-	color: rgb(205,0,0);
+	color: rgb(0,153,221);
 }
 
 a:hover,
 a:active {
 	text-decoration: underline;
-	color: rgb(125,0,0);
+	color: rgb(0,137,198);
 }
 
-p {
+p, ul, ol, dl {
 	padding: 0 20px;
 	margin-bottom: 20px;
+}
+
+ul, ol {
+	margin-left: 30px;
 }
 
 strong {
 	font-weight: bold;
 }
 
-h1 {
-	font-family: "museo-sans-1", "museo-sans-2";
-	font-size: 2em;
-	line-height: 1.25em;
-	font-weight: bold;
-	font-weight: 900;
-	padding: 0 20px;
-	margin: 20px 0;
+h1, h2, h3 {
 	color: rgb(0,0,0);
+	padding: 0 20px;
+	font-family: Museo;
+}
+
+h1 strong, h2 strong {
+	font-weight: 500;
+}
+
+h1 { 
+	font-size: 32px;
+	line-height: 40px;
+	font-weight: 100;
+	margin: 20px 0 10px 0;
+}
+
+h2 { 
+	font-size: 24px;
+	line-height: 30px;
+	margin: 20px 0 10px 0;
+	font-weight: 100;
+}
+
+h3 { 
+	font-size: 16px;
+	line-height: 20px;
+	margin: 20px 0 10px 0;
+	font-weight: 500;
+}
+
+.preview p {
+	background: rgb(255,247,204) url(/static/images/icons/note-32x32.png) no-repeat 20px 20px;
+	color: rgb(127,106,0);
+	padding: 20px 20px 20px 72px;
+	margin: 0 20px 20px 20px;
+	font-style: italic;
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	        border-radius: 5px;
 }
 
 
-/* Structure
+/* STRUCTURE
 ================================================================================ */
 
 
 .container {
 	margin: 0 auto;
 	width: 960px;
+	text-align: left;
 }
 
-.column-full {
+.clear {
 	float: left;
 	width: 100%;
 	clear: both;
 }
 
+.column-three-fourth { width: 720px; }
+.column-two-third { width: 640px; }
+.column-one-half { width: 480px; }
+.column-one-third { width: 320px; }
+.column-one-fourth { width: 240px; }
 
-/* Style
+.column-one-fourth, .column-one-third, .column-one-half,
+.column-two-third,.column-three-fourth {
+	float: left;
+}
+
+
+/* FORMS
 ================================================================================ */
 
 
-#header {
-	padding: 20px 0 0 0;
-	background-color: rgb(255,255,255);
-	border-bottom: 1px solid rgb(217,217,217);
-	color: rgb(153,153,153);
-	font-family: "museo-1", "museo-2";
-	font-weight: normal;
-	font-weight: 300;
+#content form.invisible {
+	padding: 0;
+	margin: 0;
 }
+
+#content form {
+	padding: 20px 0 5px 20px;
+}
+
+#content form h2 {
+	padding: 20px 0 5px 0;
+	margin: 0;
+}
+
+#content form p.add-more {
+	margin: 20px 0 0 0;
+	padding: 0 0 0 20px;
+	background: url(/static/images/icons/add-16x16.png) no-repeat left;
+}
+
+#content form fieldset label,
+#content form fieldset p.faux-label {
+	display: block;
+	padding: 20px 0 5px 0;
+	margin: 0;
+}
+
+#content form fieldset label span,
+#content form fieldset p.faux-label span {
+	display: block;
+	font-size: .75em;
+	color: rgb(150,150,150);
+}
+
+#content form fieldset label.checkbox {
+	border: none;
+	margin: 0;
+	padding: 5px 0;
+}
+
+#content form fieldset input,
+#content form fieldset textarea {
+	border: 1px solid rgb(150,150,150);
+	padding: 3px;
+	margin: 0;
+	font-size: 100%;
+	font: inherit;
+	display: block;
+}
+
+#content form fieldset input[disabled] {
+	color: rgb(100,100,100);
+	border: 1px solid rgb(200,200,200);
+	background-color: rgb(245,245,245);
+}
+
+#content form fieldset input[type=checkbox],
+#content form fieldset input[type=radio] {
+	display: inline-block;
+	margin-right: 5px;
+}
+
+#content form fieldset input.upload {
+	border: none;
+}
+
+#content form fieldset select {
+	margin: 0 10px 0 0;
+}
+
+#content form fieldset p.action {
+	margin: 5px 0 0 0;
+	padding: 0;
+	font-size: .75em;
+}
+
+#content form fieldset p.security-detail {
+	margin: 10px 0 0 0;
+	padding: 10px 10px 10px 30px;
+	font-size: .875em;
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	        border-radius: 5px;
+	background: rgb(245,245,245) url(/static/images/lock.png) no-repeat 1% 50%;
+}
+
+#content form fieldset {
+	border-top: 1px solid rgb(245,245,245);
+	padding: 0 0 20px 0;
+}
+
+#content form fieldset.submit-buttons {
+	padding: 20px 0 0 0;
+}
+
+#content form fieldset.submit-buttons input[type=submit] {
+	display: block;
+	float: left;
+	text-align: center;
+	padding: 0 20px;
+	font-weight: bold;
+	color: rgb(255,255,255);
+	text-decoration: none;
+	line-height: 40px;
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	        border-radius: 5px;
+	text-shadow: 0 -1px 0 rgb(113,31,52);
+	-webkit-box-shadow: 0 1px 2px rgb(100,100,100);
+	   -moz-box-shadow: 0 1px 2px rgb(100,100,100);
+	        box-shadow: 0 1px 2px rgb(100,100,100);
+	background-image: url(/static/images/shade-button.png);
+	background-repeat: repeat-x;
+	background-position: center;
+}
+
+#content form fieldset.submit-buttons input[type=submit] {
+	background-color: rgb(190,53,87);
+}
+
+#content form fieldset.submit-buttons input[type=submit]:hover,
+#content form fieldset.submit-buttons input[type=submit]:active {
+	background-color: rgb(151,42,69);
+}
+
+
+/* NAVIGATION
+================================================================================ */
+
+
+#navigation {
+
+}
+
+#navigation ul {
+	margin: 0;
+	padding: 0;
+}
+
+#navigation ul li {
+	display: block;
+	float: left;
+}
+
+#navigation ul li a {
+	display: block;
+	float: left;
+	padding: 20px;
+}
+
+#navigation ul#admin li {
+	float: right;
+}
+
+#navigation ul li.current a {
+	color: rgb(84,90,96);
+}
+
+#navigation p {
+  font-family: Museo;
+  font-size: 24px;
+  font-weight: 100;
+  line-height: 24px;
+  padding: 0;
+  margin: 0;
+  background: transparent url(/static/images/logo.png) no-repeat left;
+  float: left;
+}
+
+#navigation p a:link,
+#navigation p a:visited {
+  color: rgb(0,0,0);
+  display: block;
+  padding: 18px 20px 22px 70px;
+  text-decoration: none;
+}
+
+#navigation p a:hover,
+#navigation p a:active {
+  color: rgb(100,100,100);
+}
+
+
+/* INTRO
+================================================================================ */
+
 
 #intro {
-	padding: 20px 0;
+	background: rgb(0,122,177) url(/static/images/shade-intro.png) repeat-x top;
+	color: rgb(191,229,246);
+	-webkit-border-top-right-radius: 10px;
+	 -webkit-border-top-left-radius: 10px;
+	    -moz-border-radius-topright: 10px;
+	     -moz-border-radius-topleft: 10px;
+	        border-top-right-radius: 10px;
+	         border-top-left-radius: 10px;
+	border-bottom: 1px solid rgb(0,122,177);
+	padding: 0 0 10px 0;
 }
 
-#form-area {
+#intro h1 {
+	color: rgb(255,255,255);
+	text-shadow: 0 1px 0 rgba(0,0,0,.5);
+}
+
+#intro p {
+	line-height: 40px;
+	margin-bottom: 10px;
+}
+
+#intro p span {
+	color: rgb(255,255,255);
+}
+
+#intro ul.action-button {
+	margin: 10px 20px 10px 20px;
+	padding: 0;
+}
+
+#intro ul.action-button li {
+	list-style: none;
+	padding: 10px 0 0 0;
+	margin: 0;
+}
+
+#intro ul.action-button li a {
+	display: block;
+	font-weight: bold;
+	text-align: center;
+	padding: 0 10px;
+	color: rgb(255,255,255);
+	text-decoration: none;
+	line-height: 40px;
+	-webkit-box-shadow: 0 0 3px rgba(0,0,0,.5);
+	   -moz-box-shadow: 0 0 3px rgba(0,0,0,.5);
+	        box-shadow: 0 0 3px rgba(0,0,0,.5);
+	text-shadow: 0 -1px 0 rgba(0,0,0,.5);
+	background-image: url(/static/images/shade-button.png);
+	background-repeat: repeat-x;
+	background-position: center;
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	border-radius: 5px;
+}
+
+#intro ul.action-button a:link,
+#intro ul.action-button a:visited {
+  background-color: rgb(136,204,85);
+}
+
+#intro ul.action-button a:hover,
+#intro ul.action-button a:active {
+  background-color: rgb(122,183,76);
+}
+
+#intro ul.action-button a.cancel:link,
+#intro ul.action-button a.cancel:visited {
+  background-color: rgb(190,53,87);
+}
+
+#intro ul.action-button a.cancel:hover,
+#intro ul.action-button a.cancel:active {
+  background-color: rgb(151,42,69);
+}
+
+
+/* INTERNAL
+================================================================================ */
+
+
+#internal {
+	background-color: rgb(223,245,255);
+}
+
+#internal ul {
+	padding: 0;
+	margin: 0;
+}
+
+#internal ul li {
+	list-style: none;
+	display: block;
+	float: left;
+}
+
+#internal ul li a {
+	display: block;
+	float: left;
+	padding: 20px;
+}
+
+#internal ul li.current a {
+	background-color: rgb(255,255,255);
+}
+
+
+/* CONTENT
+================================================================================ */
+
+
+#content {
+	background-color: rgb(255,255,255);
+}
+
+h2.steps span {
+	background-color: rgb(238,240,242);
+	color: rgb(100,100,100);
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	        border-radius: 5px;
+	font-size: .65em;
+	display: block;
+	float: right;
+	padding: 0 10px;
+}
+
+#content p.meta {
+	border-bottom: 1px solid rgb(240,240,240);
+	padding-bottom: 20px;
+}
+
+#content #agreement-profile {
+	border-bottom: 1px solid rgb(225,225,225);
+}
+
+#content #agreement-profile.data-table {
+	padding: 10px 20px 0 20px;
+}
+
+#content #payment-schedule {
+	border-bottom: 1px solid rgb(225,225,225);
+}
+
+#content #payment-schedule ul {
+	margin: 0 20px 10px 20px;
+	padding: 0;
+}
+
+#content #payment-schedule ul li {
+	border-top: 1px solid rgb(245,245,245);
+	padding: 10px 0;
+	list-style: none;
+}
+
+#content #payment-schedule ul li a,
+#content #payment-schedule ul li span {
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	        border-radius: 5px;
+	font-size: .875em;
+	display: block;
+	float: right;
+	padding: 0 10px;
+	text-decoration: none;
+}
+
+#content #payment-schedule ul li span {
+	background-color: rgb(238,240,242);
+	color: rgb(100,100,100);
+}
+
+#content #payment-schedule ul li a:link,
+#content #payment-schedule ul li a:visited {
+	background-color: rgb(136,204,85);
+	color: rgb(255,255,255);
+}
+
+#content #payment-schedule ul li a:hover,
+#content #payment-schedule ul li a:active {
+	background-color: rgb(122,183,76);
+	color: rgb(255,255,255);
+}
+
+#content #agreement-profile.data-table table tr td {
+	border-top: none;
+	padding-bottom: 20px;
+}
+
+#content #agreement-history {
+	background-color: rgb(249,250,251);
+	border-top: 1px solid rgb(225,225,225);
+}
+
+#content #agreement-history ul {
+	margin: 0 20px 0 20px;
+	padding: 0;
+}
+
+#content #agreement-history ul li {
+	border-bottom: 1px solid rgb(225,225,225);
+	padding: 10px 0;
+	list-style: none;
+}
+
+#content #agreement-history p {
+	margin: 0 20px 20px 20px;
+	padding: 10px;
+	background-color: rgb(238,240,242);
+	text-align: center;
+	-webkit-border-bottom-right-radius: 3px;
+	 -webkit-border-bottom-left-radius: 3px;
+	    -moz-border-radius-bottomright: 3px;
+	     -moz-border-radius-bottomleft: 3px;
+	        border-bottom-right-radius: 3px;
+	         border-bottom-left-radius: 3px;
+}
+
+#content .data-table {
+	padding: 0 20px 10px 20px;
+}
+
+#content .data-table table {
+	width: 100%;
+}
+
+#content .data-table table tr td {
+	border-top: 1px solid rgb(245,245,245);
+	padding: 10px 20px 10px 0;
+	vertical-align: top;
+}
+
+#content .data-table table tr td h3 {
+	margin: 10px 0 0 0;
+	padding: 0;
+}
+
+#content .data-table table tr td h3.less {
+	margin-top: 0;
+}
+
+#content .data-table table tr td p {
+	margin: 0;
+	padding: 0;
+	font-size: .875em;
+	color: rgb(150,150,150);
+}
+
+#content .data-table table tr td p.remove {
+	background: url(/static/images/icons/cross-16x16.png) no-repeat left;
+	padding-left: 20px;
+}
+
+#content .data-table table tr td.meta {
+	width: 80px;
+	padding: 10px 0;
+}
+
+#content .data-table table tr td.action {
+	width: 150px;
+	padding: 10px 0;
+	text-align: right;
+}
+
+#content .data-table table tr td.meta span {
+	display: block;
+	border: 1px solid rgb(225,225,225);
+	background-color: rgb(249,250,251);
+	padding: 4px;
+	margin: 0 20px 0 0px;
+	-webkit-border-radius: 3px;
+	   -moz-border-radius: 3px;
+	        border-radius: 3px;
+}
+
+#content .data-table table tr td.meta span img {
+	display: block;
+}
+
+
+/* FOOTER
+================================================================================ */
+
+
+#footer {
+	background: rgb(140,150,160) url(/static/images/shade-footer.png) repeat-x bottom;
+	-webkit-border-bottom-right-radius: 10px;
+	 -webkit-border-bottom-left-radius: 10px;
+	    -moz-border-radius-bottomright: 10px;
+	     -moz-border-radius-bottomleft: 10px;
+	        border-bottom-right-radius: 10px;
+	         border-bottom-left-radius: 10px;
+	border-top: 1px solid rgb(125,125,125);
+}
+
+#footer h3 {
+	color: rgb(220,225,230);
+	text-shadow: 0 1px 0 rgba(0,0,0,.5);
+}
+
+#footer a {
+	color: rgb(255,255,255);
+}
+
+#footer ul {
 	margin-left: 0;
 }
 
-#form-area form {
-  padding: 0 210px 0 230px;
-}
-
-#form-area form fieldset {
-  float: left;
-  text-align: left;
-}
-
-#form-area form fieldset#asking {
-  width: 380px;
-}
-
-#form-area form fieldset#asking input {
-  padding: 10px;
-  font-size: 1em;
-  width: 340px;
-  border: 1px solid rgb(153,153,153);
-}
-
-#form-area form fieldset#submitting {
-  width: 140px;
-}
-
-#form-area form fieldset#submitting input {
-  padding: 10px 20px;
-  font-size: 1em;
-  font-weight: bold;
-  border: 1px solid rgb(136,204,85);
-  background-color: rgb(136,204,85);
-  color: rgb(255,255,255);
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-  -webkit-box-shadow: 0 1px 2px rgb(102,102,102);
-  -moz-box-shadow: 0 1px 2px rgb(102,102,102);
-  box-shadow: 0 1px 2px rgb(102,102,102);
-  text-shadow: 0 -1px 0 rgb(153,153,153);
-  cursor: pointer;
-}
-
-#form-area form fieldset p {
-  padding: 0;
-  font-size: .75em;
-  color: rgb(153,153,153);
-}
-
-#form-area form fieldset label {
-  display: block;
-}
-
-#footer p {
-  font-size: .75em;
-  color: rgb(153,153,153);
+#footer ul li {
+	list-style: none;
 }
 
 
+/* COPYRIGHT
+================================================================================ */
 
 
-
-
-
-
+#copyright p {
+	margin: 0;
+	padding: 20px;
+	font-size: .75em;
+	color: rgb(84,90,96);
+	text-align: center;
+}

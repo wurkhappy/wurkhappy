@@ -3,7 +3,7 @@
 ### Redefine the main block
 
 {% block main %}
-<div class ="container">
+<div class="container">
 	<!-- adds background -->
 	{% block navigation %}
 	{% end %}
@@ -19,30 +19,38 @@
 			<li class="tab" id="card-button"><a href="#" class="">Credit Card Details</a></li>
 		</ul>
 	</div>
-	<div id="content">
+	<div id="content" class="clear">
 		<div id="details-container" class="tab-content">
 			<h2>Profile Preview</h2>
-			<img src="{{ data['profileURL'][0] }}" alt="Profile photo" />
-			<h3>{{ data['fullName'] }}</h3>
-			<p>{{ data['email'] }}</p>
-			<p>{{ data['telephone'] }}</p>
+			<div class="data-table">
+				<table border="0" cellspacing="0" cellpadding="0">
+					<tr>
+						<td class="meta">
+							<span><img src="{{ data['profileURL'][0] }}" alt="Profile photo" width="50" height="50" /></span>
+						</td>
+						<td>
+							<h3><a href="/user/me/profile">{{ data['fullName'] }}</a></h3>
+							<p>{{ data['email'] }}</p>
+							<p>{{ data['telephone'] }}</p>
+						</td>
+					</tr>
+				</table>
+			</div>
 			
 			<h2>Personal Details</h2>
 			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action">
 				{% raw xsrf_form_html() %}
 				<fieldset>
 					<label for="firstName">First Name</label>
-					<input type="text" name="firstName" value="{{ data['firstName'] }}" size="100" />
+					<input type="text" name="firstName" value="{{ data['firstName'] or '' }}" size="100" />
 					<label for="lastName">Last Name</label>
-					<input type="text" name="lastName" value="{{ data['firstName'] }}" size="100" />
-				</fieldset>
-				<fieldset>
+					<input type="text" name="lastName" value="{{ data['lastName'] or '' }}" size="100" />
+					<label for="profilePhoto">Photo</label>
+					<input type="file" class="upload" name="profilePhoto" />
 					<label for="email">Email</label>
 					<input type="text" name="email" value="{{ data['email'] }}" size="100" />
 					<label for="telephone">Phone Number</label>
 					<input type="text" name="telephone" value="{{ data['telephone'] }}" size="100" />
-					<label for="profilePhoto">Profile Photo</label>
-					<input type="file" class="upload" name="profilePhoto" />
 				</fieldset>
 				<fieldset class="submit-buttons">
 					<input type="submit" value="Save Personal Details" />
@@ -122,6 +130,39 @@
 </div>
 {% end %}
 
+
+
+### Component blocks included from above
+
+{% block navigation %}
+<div id="navigation" class="clear">
+	<div class="column-one-half">
+		<ul class="clear">
+			<li><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+			<li><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+			<li><a href="/people"><strong>People</strong></a></li>
+		</ul>
+	</div>
+	<div class="column-one-half">
+		<ul id="admin" class="clear">
+			<li><a href="/logout">Log Out</a></li>
+			<li class="current"><a href="/user/me/account">Account</a></li>
+			<li><a href="/user/{{ data['id'] }}/preferences">Preferences</a></li>
+		</ul>
+	</div>
+</div>
+{% end %}
+
+
+{% block header %}
+<div id="intro" class="clear">
+	<div class="column-three-fourth">
+		<h1>Account</h1>
+	</div>	  
+</div>
+{% end %}
+
+
 {% block footer %}
 <div id="footer" class="clear">
 	<div class="column-one-fourth">
@@ -158,37 +199,12 @@
 	</div>
 </div>
 
+
 <div id="copyright" class="clear">
 	<p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
 </div>
 {% end %}
 
-{% block navigation %}
-<div id="navigation" class="clear">
-	<div class="column-one-half">
-		<ul class="clear">
-			<li><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-			<li><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
-			<li><a href="/people"><strong>People</strong></a></li>
-		</ul>
-	</div>
-	<div class="column-one-half">
-		<ul id="admin" class="clear">
-			<li><a href="/logout">Log Out</a></li>
-			<li class="current"><a href="/user/me/account">Account</a></li>
-			<li><a href="/user/{{ data['id'] }}/preferences">Preferences</a></li>
-		</ul>
-	</div>
-</div>
-{% end %}
-
-{% block header %}
-<div id="intro" class="clear">
-	<div class="column-three-fourth">
-		<h1>Account</h1>
-	</div>	  
-</div>
-{% end %}
 
 {% block scripts-custom %}
 <!-- NOTE : etosch had problems with inner double quotations here usins Python 2.6, Tornado 2.0, and Chrome 13.0.782.112-->

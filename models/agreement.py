@@ -70,7 +70,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def iteratorWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE vendorID = %%s" % clz.tableName(), vendorID)
+			cursor.execute("SELECT * FROM %s WHERE vendorID = %%s ORDER BY dateCreated DESC" % clz.tableName(), vendorID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -79,7 +79,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def iteratorWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE clientID = %%s" % clz.tableName(), clientID)
+			cursor.execute("SELECT * FROM %s WHERE clientID = %%s ORDER BY dateCreated DESC" % clz.tableName(), clientID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)

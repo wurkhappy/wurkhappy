@@ -1,6 +1,5 @@
 from base import *
 from helpers.verification import Verification
-from helpers.validation import Validation
 from helpers import fmt
 from models.user import User
 from models.forgotpassword import ForgotPassword
@@ -23,59 +22,104 @@ class SignupHandler(BaseHandler):
 		self.render("user/signup.html", title="Sign Up", flash=flash, logged_in_user=self.current_user)
 
 	def post(self):
-		email = self.get_argument("email")
-
-		# Validate format of email address
-		if not Validation.validateEmail(email):
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					('email', fmt.Email()),
+					('password', fmt.Enforce(str))
+					#TODO: Should have a password plaintext formatter to
+					# enforce well-formed passwords.
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
 			self.redirect("/signup?err=email_invalid")
-
+			# self.set_status(e.status_code)
+			# self.write(e.body_content)
+			return
+		
 		# Check whether user exists already
-		user = User.retrieveByEmail(email)
-
+		user = User.retrieveByEmail(args['email'])
+		
 		# User wasn't found, so begin sign up process
 		if not user:
 			user = User()
-			user.email = email
+			user.email = args['email']
 			user.confirmed = 0
 			user.dateCreated = datetime.now()
 			verifier = Verification()
 			user.confirmationCode = verifier.code
 			user.confirmationHash = verifier.hashDigest
+			user.setPasswordHash(args['password'])
 			user.save()
 			self.set_secure_cookie("user_id", str(user.id))
-			self.redirect('/profiles/new')
+			self.redirect('/user/me/account')
 		else:
 			# User exists, redirect with error
 			self.redirect("/signup?err=email_exists")
+
+
 
 # -------------------------------------------------------------------
 # Login
 # -------------------------------------------------------------------
 
 class LoginHandler(BaseHandler):
-	ERR = 	{	
-			"auth_invalid":"That email / password combination is incorrect. Please try again or click \"Forgot Password\"."
-			}
 	def get(self):
-		flash = {"error": self.parseErrors()}
-		from_reset_password = self.get_argument("rp", None)
-		if from_reset_password:
-			flash["error"] = ["Your password was reset successfully."]
-		self.render("user/login.html", title="Sign In", flash=flash, logged_in_user=self.current_user)
-
+		self.render("user/login.html", title="Sign In to Wurk Happy", error=None)
+	
+	
 	def post(self):
-		email = self.get_argument("email")
-		password = self.get_argument("password")
-		user = User.retrieveByEmail(email)
-		
-		if not user or not Verification.check_password(user.password, str(password)):
-			# User wasn't found, or password is wrong, redirect to login with error
-			self.redirect("/login?err=auth_invalid")
-		else:
- 			profile = user.getProfile()
-			self.set_secure_cookie("user_id", str(user.id))
-			self.redirect('/profile/'+profile.urlStub)
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					('email', fmt.Email()),
+					('password', fmt.Enforce(str))
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
 			
+			error = {
+				"domain": "authentication",
+				"display": (
+					"I'm sorry, that didn't look like a proper email "
+					"address. Could you please enter a valid email address?"
+				),
+				"debug": "'email' parameter must be well-formed"
+			}
+			
+			self.set_status(400)
+			self.render("user/login.html", title="Sign In to Wurk Happy", error=error)
+			return
+		
+		user = User.retrieveByEmail(args['email'])
+		
+		if not user or not user.passwordIsValid(args['password']):
+			# User wasn't found, or password is wrong, render login with error
+			error = {
+				"domain": "authentication",
+				"display": (
+					"I'm sorry, the email and password combination you "
+					"entered doesn't match any of our records. Please check "
+					"for typos and make sure caps lock is turned off when "
+					"entering your password."
+				),
+				"debug": "incorrect email or password"
+			}
+			
+			self.set_status(401)
+			self.render("user/login.html", title="Sign In to Wurk Happy", error=error)
+		else:
+			self.set_secure_cookie("user_id", str(user.id))
+			self.redirect('/user/me/account') #TODO: Should go to dashboard...
+
+
+
 # -------------------------------------------------------------------
 # Logout 
 # -------------------------------------------------------------------

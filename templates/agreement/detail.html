@@ -11,38 +11,88 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form id="comments-form">
-		{% if bag['summary'] %}
-			<p>{{ bag['summary'] }}</p>
-		{% end %}
-		{% if bag['self'] == 'client' and (bag['state'] == 'EstimateState' or bag['state'] == 'CompletedState') %}
-			<textarea name="summaryComments">{{ bag['summaryComments'] }}</textarea>
-		{% end %}
-		{% for (num, phase) in enumerate(bag['phases'], 1) %}
-			<h2><strong>Phase {{ str(num) }}</strong> ({{ phase['amount'] }})</h2>
-			
-			{% if phase['dateCompleted'] %}
-				<p style="color: green">Completed {{ phase['dateCompleted'] }}</p>
-			{% elif phase['estDateCompleted'] %}
-				<p>Estimated completion on {{ phase['estDateCompleted'] }}</p>
-			{% end %}
-			
-			<p>{{ phase['description'] }}</p>
-			{% if 'comments' in phase %}
-				{% if bag['self'] == 'client' and (bag['state'] == 'EstimateState' or bag['state'] == 'CompletedState') %}
-					<textarea name="summaryComments">{{ bag['summaryComments'] }}</textarea>
+		{% set otherUser = data[data['other']] %}
+		
+		<div id="agreement-profile" class="data-table">
+			<table border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td class="meta">
+						<span><img src="{% raw otherUser['profileURL'][0] %}" width="50"></span>
+					</td>
+					<td>
+						<h3><a href="detail.html">{{ otherUser['fullName'] }}</a></h3>
+						<p>{{ otherUser['email'] }} {% if otherUser['telephone'] %} &mdash; {{ otherUser['telephone'] }}{% end %}</p>
+					</td>
+				</tr>
+			</table>
+		</div>
+		
+		<div id="payment-schedule" class="clear">
+			<h2>Payment Schedule for {{ data['amount'] }}</h2>
+			<ul>
+				{% for num, phase in enumerate(data['phases'], 1) %}
+					<li>
+						{% if phase['dateCompleted'] %}<span>Completed {{ phase['dateCompleted'] }}</span>{% end %}
+						<strong>{{ phase['amount'] }}</strong> &mdash; Phase {{ str(num) }}{% if phase['estDateCompleted'] %} on {{ phase['estDateCompleted'] }}{% end %}
+					</li>
 				{% end %}
-				<p>{{ phase['comments'] }}</p>
+			</ul>
+		</div>
+		
+		<form id="comments-form" class="invisible">
+		<div class="column-three-fourth">
+			<h2>Summary</h2>
+			{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or data['state'] == 'CompletedState') %}
+				<div class="preview">
+					<p><textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea></p>
+				</div>
+			{% elif data['summaryComments'] %}
+				<div class="preview">
+					<p>{{ data['summaryComments'] }}</p>
+				</div>
 			{% end %}
-		{% end %}
-			<div id="history-table" class="clear">
-				<table border="0" cellspacing="0" cellpadding="0">
-					{% for transaction in bag['transactions'] %}
-						{% block transactionitem %}
-						{% end %}
+			
+			{% if data['summary'] %}
+				<p>{{ data['summary'] }}</p>
+			{% else %}
+				<p>&mdash;</p>
+			{% end %}
+		</div>
+		
+		<!-- Listing of agreement's phases -->
+		
+		{% for num, phase in enumerate(data['phases'], 1) %}
+			<div class="clear">
+				<h2 class="steps">
+					Phase {{ str(num) }} ({{ phase['amount'] }})
+					{% if phase['dateCompleted'] %}
+						<span style="color: green">Completed {{ phase['dateCompleted'] }}</span>
+					{% elif phase['estDateCompleted'] %}
+						<span>Estimated completion on {{ phase['estDateCompleted'] }}</span>
 					{% end %}
-				</table>
+				</h2>
+		
+				<p>{{ phase['description'] }}</p>
+			
+				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or data['state'] == 'CompletedState') %}
+					<div class="preview column-three-fourth">
+						<p><textarea name="comments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea></p>
+					</div>
+				{% elif 'comments' in phase %}
+					<p>{{ phase['comments'] }}</p>
+				{% end %}
 			</div>
+		{% end %}
+		
+		<div id="agreement-history" class="clear">
+			<h2>Agreement History</h2>
+			<ul>
+				{% for transaction in data['transactions'] %}
+					{% block transactionitem %}
+					{% end %}
+				{% end %}
+			</ul>
+		</div>
 		
 		</form>
 	</div>
@@ -62,8 +112,8 @@
 		<div class="column-one-half">
 
 			<ul class="clear">
-				<li{% if agreement_with == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li{% if agreement_with == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+				<li{% if data['self'] == 'vendor' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+				<li{% if data['self'] == 'client' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
 				<li><a href="/people"><strong>People</strong></a></li>
 			</ul>
 
@@ -89,19 +139,23 @@
 		
 		<div class="column-three-fourth">
 			
-			<h1>{{ bag['name'] }}</h1>
-			<p><strong>{{ bag['amount'] }}</strong> - 
-				Sent to <a href="/people/{{ bag[bag['other']]['id'] }}">{{ bag[bag['other']]['name'] }}</a> on {{ bag['date'] }}
+			<h1>{{ data['name'] }}</h1>
+			<p>{% if len(data['transactions']) %}
+				{% set transaction = data['transactions'][-1] %}
+				<span>Latest Activity:</span> {{ transaction['type'] }} {{ data[transaction['user']]['fullName'] }} on {{ transaction['date'] }}
+			{% else %}
+				<span>This draft has not been sent.</span>
+			{% end %}
 			</p>
 			
 		</div>
 		<div class="column-one-fourth">
 		
-			<div class="action-button">
-			{% for action in bag['actions'] %}
-				<a href="#" id="{{ action['id'] }}" class="top"><span>{{ action['name'] }}</span></a>
+			<ul class="action-button">
+			{% for action in data['actions'] %}
+				<li><a href="#" id="{{ action['id'] }}" class="top"><span>{{ action['name'] }}</span></a></li>
 			{% end %}
-			</div>
+			</ul>
 		
 		</div>
 	
@@ -111,7 +165,7 @@
 {% block scripts-custom %}
 	<script language="javascript">
 		var buttonMaps = [
-{% for action in bag['actions'] %}
+{% for action in data['actions'] %}
 			{% raw json(action) %},
 {% end %}];
 	</script>
@@ -120,73 +174,53 @@
 {% end %}
 
 
+
 {% block transactionitem %}
-				<tr>
-					<td>
-						{{ transaction['type'] }} <a href="/people/{{ bag[transaction['user']]['id'] }}">{{ bag[transaction['user']]['name'] }}</a> on {{ transaction['date'] }}
-					</td>
-				</tr>
+				<li>{{ transaction['type'] }} <a href="/people/{{ data[transaction['user']]['id'] }}">{{ data[transaction['user']]['fullName'] }}</a> on {{ transaction['date'] }}</li>
 {% end %}
 
 
 
 {% block footer %}
 	<div id="footer" class="clear">
-
 		<div class="column-one-fourth">
-
 			<h3>Archives</h3>
-
 			<ul>
 				<li><a href="">All Client Agreements</a></li>
 				<li><a href="">All Vendor Agreements</a></li>
 				<li><a href="">All People</a></li>
 			</ul>
-
 		</div>
 
 		<div class="column-one-fourth">
-
 			<h3>Section 2</h3>
-
 			<ul>
 				<li><a href="#">Links</a></li>
 				<li><a href="#">Links</a></li>
 				<li><a href="#">Links</a></li>
 			</ul>
-
 		</div>
 
 		<div class="column-one-fourth">
-
 			<h3>Section 3</h3>
-
 			<ul>
 				<li><a href="#">Links</a></li>
 				<li><a href="#">Links</a></li>
 				<li><a href="#">Links</a></li>
 			</ul>
-
 		</div>
 
 		<div class="column-one-fourth">
-
 			<h3>Section 4</h3>
-
 			<ul>
 				<li><a href="#">Links</a></li>
 				<li><a href="#">Links</a></li>
 				<li><a href="#">Links</a></li>
 			</ul>
-
 		</div>
-
 	</div>
 
-
 	<div id="copyright" class="clear">
-
 		<p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
-
 	</div>
 {% end %}

@@ -12,9 +12,14 @@
 	
 	<div id="content" class="clear">
 		<div class="clear">
-			{% for name, agreements in bag['agreementGroups'] %}
-				{% block listgroup %}
+			{% if len(bag['agreementGroups']) %}
+				{% for name, agreements in bag['agreementGroups'] %}
+					{% block listgroup %}
+					{% end %}
 				{% end %}
+			{% else %}
+				<h2>You Don't Have Any Current Agreements</h2>
+				<p>Wurk Happy can help you organize and negotiate agreements with your {% if agreement_with == 'Client' %}clients {% elif agreement_with == 'Vendor' %}vendors {% end %}. Click the "Create New Agreement" button to get started! [In the future, we'll have a better tutorial here.]</p>
 			{% end %}
 		</div>
 	</div>
@@ -60,22 +65,24 @@
 	<div id="intro" class="clear">
 
 		<div class="column-three-fourth">
-			{% if bag['agreementCount'] == 1 %}
-				<h1>1 {{ escape(bag['agreementType']) }} Agreement ({{ bag['agreementCount'] }})</h1>
+			{% if bag['agreementCount'] == 0 %}
+				<h1>No {{ escape(bag['agreementType']) }} Agreements</h1>
+			{% elif bag['agreementCount'] == 1 %}
+				<h1><strong>1</strong> {{ bag['agreementType'] }} Agreement ({{ bag['aggregateCost'] }})</h1>
 			{% else %}
-				<h1>{{ bag['agreementCount'] }} {{ escape(bag['agreementType']) }} Agreements ({{ bag['aggregateCost'] }})</h1>
+				<h1><strong>{{ bag['agreementCount'] }}</strong> {{ bag['agreementType'] }} Agreements ({{ bag['aggregateCost'] }})</h1>
 			{% end %}
 
 		</div>
 		<div class="column-one-fourth">
 
-			<div class="action-button">
+			<ul class="action-button">
 				{% if agreement_with == 'Client' %}
-					<a href="/agreement/new" class="single">Create New Agreement</a>
+					<li><a href="/agreement/new" class="single">Create New Agreement</a></li>
 				{% elif agreement_with == 'Vendor' %}
-					<a href="/message/new" class="single">Request Agreement</a>
+					<li><a href="/message/new" class="single">Request Agreement</a></li>
 				{% end %}
-			</div>
+			</ul>
 
 		</div>
 
@@ -85,7 +92,7 @@
 
 
 {% block listgroup %}
-			<h2>{{ escape(name) }}</h2>
+			<h2>{{ name }}</h2>
 			<div class="data-table">
 				{% for agreement in agreements %}
 					{% block listitem %}
@@ -100,13 +107,16 @@
 				<table border="0" cellspacing="0" cellpadding="0">
 					<tr>
 						<td class="meta">
-							<span><img src="{{ static_url("images/dan-face.png") }}" width="50"></span>
+							<span><img src="{{ agreement['profileURL'] }}" width="50"></span>
 						</td>
 						<td>
-							<h3><a href="/agreement/{{ agreement['id'] }}">{{ escape(agreement['name']) }}</a></h3>
-							<p>{% if agreement_with == 'Client' %}Sent to {% elif agreement_with == 'Vendor' %}Received from {% end %}
-								<a href="/people/{{ agreement['other_id'] }}">{{ escape(agreement['other_name']) }}</a> 
-								for {{ agreement['amount'] }} on {{ escape(agreement['date']) }}</p>
+							<h3><a href="/agreement/{{ agreement['id'] }}">{{ agreement['name'] }}</a></h3>
+							<p>
+								{% if 'amount' in agreement and agreement['amount'] %}<strong>Cost:</strong> {{ agreement['amount'] }} &mdash; {% end %}
+								{% if 'paid' in agreement and agreement['paid'] %}<strong>Deposit:</strong> {{ agreement['paid'] }} &mdash; {% end %}
+								{% if agreement_with == 'Client' %}Sent to {% elif agreement_with == 'Vendor' %}Received from {% end %}
+								<strong><a href="/people/{{ agreement['other_id'] }}">{{ agreement['other_name'] }}</a></strong>
+								on {{ agreement['date'] }}</p>
 						</td>
 					</tr>
 				</table>

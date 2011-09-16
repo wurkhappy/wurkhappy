@@ -37,8 +37,8 @@ class AccountHandler(Authenticated, BaseHandler):
 			'email': user.email,
 			'telephone': user.telephone or '',
 			'profileURL': [
-				user.profileSmallURL,
-				user.profileLargeURL
+				user.profileSmallURL or '#',
+				user.profileLargeURL or '#'
 			]
 		}
 		
@@ -132,9 +132,9 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 			}
 			
 			params = {
-				'o': 'profileOrigURL',
-				's': 'profileSmallURL',
-				'l': 'profileLargeURL'
+				'o': ('profileOrigURL', 75),
+				's': ('profileSmallURL', 95),
+				'l': ('profileLargeURL', 85)
 			}
 			
 			headers = {'Content-Type': fileDict['content_type']}
@@ -155,23 +155,23 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 				raise HTTPErrorBetter(400, "Failed to read image", 
 					json.dumps(error))
 			
-			imgs['s'] = ImageOps.fit(imgs['o'], (50, 50))
-			imgs['l'] = ImageOps.fit(imgs['o'], (150, 150))
+			imgs['s'] = ImageOps.fit(imgs['o'], (50, 50), Image.ANTIALIAS)
+			imgs['l'] = ImageOps.fit(imgs['o'], (150, 150), Image.ANTIALIAS)
 			
 			hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
-			nameFormat = '%s_%%s%s' % (hashString, ext)
+			nameFormat = '%s_%%s.jpg' % hashString
 			
 			with AmazonS3() as (conn, bucket):
 				for t, v in imgs.iteritems():
 					imgData = StringIO()
-					v.save(imgData, 'JPEG')
+					v.save(imgData, 'JPEG', quality=params[t][1])
 					
 					k = Key(bucket)
 					k.key = nameFormat % t
 					k.set_contents_from_string(imgData.getvalue(), headers)
 					k.make_public()
 					
-					user.__dict__[params[t]] = 'http://media.wurkhappy.com/' + nameFormat % t
+					user.__dict__[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
 		
 		user.save()
 		self.write(json.dumps({"success": True}))

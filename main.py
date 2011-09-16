@@ -16,7 +16,7 @@ from tools.amazonaws import AmazonS3
 import os
 import os.path
 
-
+from modules import modules
 
 # -------------------------------------------------------------------
 # Application main
@@ -70,6 +70,7 @@ class Application(web.Application):
 			"login_url": "/login",
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
+			"ui_modules": modules,
 			"debug": config['tornado']['debug']
 		}
 		

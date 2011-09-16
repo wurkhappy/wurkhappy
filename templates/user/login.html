@@ -1,32 +1,75 @@
 {% extends "../base.html" %}
+
 {% block main %}
-	<h1>{{ title }}</h1>
-	{% if flash.get("error") != None %}
-		{% for e in flash["error"] %}
+<div class="container">
+	{% block navigation %}
+	{% end %}
+
+	{% block header %}
+	{% end %}
+
+	<div id="content" class="clear">
+		{% if error and error.get("display") %}
 			<p class="error">
-				{{ e }}
+				{{ error['display'] }}
 			</p>
 		{% end %}
+	</div>
+	
+	<div id="content" class="clear">
+		<form action="/login" method="POST" accept-charset="utf-8">
+			{% raw xsrf_form_html() %}
+			<fieldset>
+				<label for="email">Email</label>
+				<input type="text" name="email" value="" size="60" />
+				<label for="email">Password</label>
+				<input type="password" name="password" value="" size="60" />
+				<p class="faux-label"><span><a href="/forgot_password">Forgot your password?</a></span></p>
+			</fieldset>
+			<fieldset class="submit-buttons">
+				<input type="submit" value="Sign In" /><!-- populate from agreement state info -->
+			</fieldset>
+		</form>
+	</div>
+	
+	{% block footer %}
 	{% end %}
-	<form action="/login" method="post">
-		{% raw xsrf_form_html() %}
-		<table id="login-form">
-			<tr>
-				<td class="login-form"><label for "email">Email: </label></td>
-				<td class="login-form"><input type="text" name="email" /></td>
-			</tr>
-			<tr>
-				<td class="login-form"><label for "password">Password: </label></td>
-				<td class="login-form"><input type="password" name="password"/></td>
-			</tr>
-			<tr>
-				<td class="login-form"></td>
-				<td class="login-form"><input type="submit" value="Go" /></td>
-			</tr>
-		</table>
-	</form>
+</div>
+{% end %}
 
-	<p>
-       	<a href="/forgot_password">Forgot Password?</a> | <a href="/signup">Not yet Registered?</a>
-	</p>
+
+
+
+### Component blocks included from above
+
+{% block navigation %}
+	<div id="navigation" class="clear">
+		<div class="column-one-half">
+			<p class="logo"><a href="/">Wurk Happy</a></p>
+		</div>
+		<div class="column-one-half">
+			<ul id="admin" class="clear">
+				<li><a href="/signup"><strong>New to Wurk Happy?</strong> Join Today!</a></li>
+			</ul>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block header %}
+	<div id="intro" class="clear">
+		<div class="column-three-fourth">
+			<h1>{{ title }}</h1>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block footer %}
+	<div id="footer" class="clear">&nbsp;</div>
+	<div id="copyright" class="clear">
+		<p>Copyright &#169; Wurk Happy. All rights reserved.</p>
+	</div>
 {% end %}
