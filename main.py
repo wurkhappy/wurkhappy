@@ -39,18 +39,10 @@ class Application(web.Application):
 			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			(r'/user/me/contacts.json', users.ContactsJSONHandler),
-			(r'/user/me/account', accounts.AccountHandler),
+			(r'/user/me/account/?', accounts.AccountHandler),
 			(r'/user/me/account.json', accounts.AccountJSONHandler),
-			#(r'/user/me/account/#?(.*).json', accounts.AccountJSONHandler),
 			
 			(r'/user/me/password.json', authhandlers.PasswordJSONHandler),
-			
-			# (r'/project/([0-9]+)', projecthandlers.ProjectHandler),
-			# (r'/project/?', projecthandlers.ProjectHandler),
-			# (r'/invoice/([0-9]+)', invoicehandlers.InvoiceHandler),
-			# (r'/invoice/?', invoicehandlers.InvoiceHandler),
-			# (r'/line_item.json', invoicehandlers.LineItemHandler),
-			# (r'/line_item/([0-9]+)\.json', invoicehandlers.LineItemHandler),
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
