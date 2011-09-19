@@ -31,7 +31,7 @@
 				<label for="summary">Summary</label>
 				<textarea name="summary" rows="3" cols="100"></textarea>
 				<label for="">Date of Issue</label>
-				{% module DatePicker() %}
+				{% module DatePicker('agreement') %}
 			</fieldset>
 			
 			
@@ -41,7 +41,7 @@
 				<label for="">Deposit</label>
 				<input type="text" name="cost" value="{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% module DatePicker() %}
+				{% module DatePicker('phase-one') %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase one.</label>
 				<textarea name="details" rows="5" cols="100">{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["description"] }}{% end %}</textarea>
 				
@@ -49,7 +49,7 @@
 				<label for="">Amount Due on Completion</label>
 				<input type="text" name="cost" value="{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% module DatePicker() %}
+				{% module DatePicker('phase-two') %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase two.</label>
 				<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["description"] }}{% end %}</textarea>
 				
@@ -57,7 +57,7 @@
 				<label for="">Amount Due on Completion</label>
 				<input type="text" name="cost" value="{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% module DatePicker() %}
+				{% module DatePicker('phase-three') %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase three.</label>
 				<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["description"] }}{% end %}</textarea>
 				
@@ -65,7 +65,7 @@
 				<label for="">Amount Due on completion</label>
 				<input type="text" name="cost" value="{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["amount"] }}{% end %}" size="100" />
 				<label for="">Estimated Date of Completion</label>
-				{% module DatePicker() %}
+				{% module DatePicker('phase-four') %}
 				<label for="">Describe timeframe, services performed, and deliverables for phase four.</label>
 				<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["description"] }}{% end %}</textarea>
 				

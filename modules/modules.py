@@ -14,8 +14,6 @@ class Slug(UIModule):
 		return ''
 
 class DatePicker(UIModule):
-	pickerID = 0
 	
-	def render(self, datestamp=datetime.now()):
-		self.pickerID += 1
-		return self.render_string("modules/datepicker.html", pickerID=self.pickerID, datestamp=datestamp)
+	def render(self, pickerID, datestamp=datetime.now()):
+		return self.render_string("modules/datepicker.html", pickerID=pickerID, datestamp=datestamp)

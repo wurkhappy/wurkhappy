@@ -59,6 +59,19 @@ $(document).ready(function() {
 		return false;
 	});
 	
+	$('.observed').change(function() {
+		var $this = $(this);
+		console.log($this.attr('id'));
+		var id = $this.attr('id').match(/^([^\-]+).*$/);
+		
+		if (id.hasOwnProperty(1)) {
+			// ugh.
+		}
+		
+		console.log(id);
+		//$($this.attr('id')
+	});
+	
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
 		selectedItemProp: "fullName",
 		selectedValuesProp: "id",

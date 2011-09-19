@@ -18,6 +18,8 @@ class AgreementBase(object):
 	# @param(str) dollar amount with optional dollar sign and fraction part
 	# @return an integer number of cents
 	
+	# @todo: throw this in fmt.
+	
 	def parseAmountString(self, string):
 		'''
 		Parses an input string in the form $12,345.67
@@ -112,17 +114,31 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			})
 		
 		for agreement in agreements:
+			stateName = AgreementStates.currentState(agreement).__class__.__name__
+			
+			if stateName is 'InvalidState':
+				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
+						agreement.id, agreement.vendorID, agreement.clientID
+					)
+				)
 			if agreementType == 'Client':
 				other = User.retrieveByID(agreement.clientID)
-				#TODO: use agreement states here
-				if agreement.dateDeclined or agreement.dateContested:
+				
+				if stateName in ['DraftState', 'DeclinedState', 'ContestedState']:
 					appendAgreement(actionItems, agreement, other)
-				elif not agreement.dateAccepted:
+				elif stateName in ['EstimateState', 'CompletedState']:
 					appendAgreement(awaitingReply, agreement, other)
-				else:
+				elif stateName in ['AgreementState']:
 					appendAgreement(inProgress, agreement, other)
 			else:
-				appendAgreement(actionItems, agreement, User.retrieveByID(agreement.vendorID))
+				other = User.retrieveByID(agreement.vendorID)
+				
+				if stateName in ['EstimateState', 'CompletedState']:
+					appendAgreement(actionItems, agreement, other)
+				elif stateName in ['DeclinedState', 'ContestedState']:
+					appendAgreement(awaitingReply, agreement, other)
+				elif stateName in ['AgreementState']:
+					appendAgreement(inProgress, agreement, other)
 		
 		templateDict['agreementType'] = agreementType
 		templateDict['agreementGroups'] = []
@@ -283,6 +299,16 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if agreement.vendorID == user.id:
 			agreementType = 'Client'
 		elif agreement.clientID == user.id:
+			stateName = AgreementStates.currentState(agreement).__class__.__name__
+			
+			if stateName in ['DraftState', 'InvalidState']:
+				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
+						agreement.id, agreement.vendorID, agreement.clientID
+					)
+				)
+				self.set_status(404)
+				self.write("Not found")
+				return
 			agreementType = 'Vendor'
 		else:
 			self.set_status(403)
@@ -448,14 +474,13 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
 		
-		#TODO: display edit interface depending on agreement state
-		if 'edit' in self.request.arguments and self.request.arguments['edit'] == ['true']:
+		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name)
+		
+		if agreement.vendorID == user.id and templateDict['state'] in ['DraftState', 'EstimateState', 'DeclinedState']:
 			templateDict['uri'] = self.request.uri
 			logging.info(templateDict)
-			title = "Edit Agreement: %s &ndash; Wurk Happy" % (agreement.name)
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
-			title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name) 
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 	
 	
