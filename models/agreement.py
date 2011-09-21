@@ -133,9 +133,9 @@ class AgreementSummary(MappedObj):
 
 
 
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Agreement Phase
-# -------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 class AgreementPhase (MappedObj):
 	
@@ -156,12 +156,22 @@ class AgreementPhase (MappedObj):
 	@classmethod
 	def iteratorWithAgreementID(clz, agreementID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s ORDER BY phaseNumber" % clz.tableName(), agreementID)
+			query = """SELECT * FROM %s WHERE agreementID = %%s
+				ORDER BY phaseNumber"""
+			cursor.execute(query % clz.tableName(), agreementID)
 			result = cursor.fetchone()
 			
 			while result:
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
+	
+	@classmethod
+	def retrieveByAgreementIDAndPhaseNumber(clz, agreementID, phaseNumber):
+		with Database() as (conn, cursor):
+			query = """SELECT * FROM %s WHERE agreementID = %%s
+				AND phaseNumber = %%s LIMIT 1"""
+			cursor.execute(query % clz.tableName(), (agreementID, phaseNumber))
+			return clz.initWithDict(cursor.fetchone())
 	
 	def publicDict(self):
 		return OrderedDict([
@@ -199,21 +209,26 @@ class AgreementPhase (MappedObj):
 class AgreementStates(object):
 	""" AgreementState """
 	
-	transitionNames = ["send","edit","accept","decline","mark_completed","dispute","verify"]
+	transitionNames = ["send", "edit", "accept", "decline", "mark_completed", "dispute", "verify"]
 	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
 	actionMap = dict(zip(transitionNames, fieldNames))
 	
 	def __init__(self, agreementInstance):
 		assert type(agreementInstance) == Agreement
 		self.agreementInstance=agreementInstance
-		self.buttons = {"vendor": {}, "client" : {}}
+		self.actions = {"vendor": {}, "client" : {}}
 	
-	def addButton(self, role, button_name):
-		self.buttons[role][button_name] = self.actionMap[button_name]
+	def addButton(self, role, actionName):
+		self.actions[role][actionName] = self.actionMap[actionName]
 	
-	def doTransition(self, role, button):
-		self.agreementInstance.__dict__[self.buttons[role][button]] = datetime.now()
-		self.agreementInstance.save()
+	def doTransition(self, role, action):
+		if role in self.actions and action in self.actions[role]:
+			self.agreementInstance.__dict__[self.actions[role][action]] = datetime.now()
+			self.agreementInstance.save()
+		else:
+			fmat = 'Invalid transition for agreement %d (role: %s, action: %s)'
+			logging.error(fmat % (self.agreementInstance.id, role, action))
+		
 		return self.currentState(self.agreementInstance)
 	
 	@classmethod

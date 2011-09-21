@@ -43,6 +43,12 @@
 		
 		<div class="column-three-fourth">
 			<h2>Summary</h2>
+			{% if data['summary'] %}
+				<p>{{ data['summary'] }}</p>
+			{% else %}
+				<p>&mdash;</p>
+			{% end %}
+			
 			{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or data['state'] == 'CompletedState') %}
 				<div class="preview">
 					<p><textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea></p>
@@ -51,12 +57,6 @@
 				<div class="preview">
 					<p>{{ data['summaryComments'] }}</p>
 				</div>
-			{% end %}
-			
-			{% if data['summary'] %}
-				<p>{{ data['summary'] }}</p>
-			{% else %}
-				<p>&mdash;</p>
 			{% end %}
 		</div>
 		
@@ -77,10 +77,12 @@
 			
 				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or data['state'] == 'CompletedState') %}
 					<div class="preview column-three-fourth">
-						<p><textarea name="comments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea></p>
+						<p><textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea></p>
 					</div>
 				{% elif 'comments' in phase %}
-					<p>{{ phase['comments'] }}</p>
+					<div class="preview column-three-fourth">
+						<p>{{ phase['comments'] }}</p>
+					</div>
 				{% end %}
 			</div>
 		{% end %}

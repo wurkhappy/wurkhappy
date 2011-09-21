@@ -114,9 +114,9 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			})
 		
 		for agreement in agreements:
-			stateName = AgreementStates.currentState(agreement).__class__.__name__
+			stateClass = AgreementStates.currentState(agreement).__class__
 			
-			if stateName is 'InvalidState':
+			if stateClass is 'InvalidState':
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement.id, agreement.vendorID, agreement.clientID
 					)
@@ -124,20 +124,20 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			if agreementType == 'Client':
 				other = User.retrieveByID(agreement.clientID)
 				
-				if stateName in ['DraftState', 'DeclinedState', 'ContestedState']:
+				if stateClass in [DraftState, DeclinedState, ContestedState]:
 					appendAgreement(actionItems, agreement, other)
-				elif stateName in ['EstimateState', 'CompletedState']:
+				elif stateClass in [EstimateState, CompletedState]:
 					appendAgreement(awaitingReply, agreement, other)
-				elif stateName in ['AgreementState']:
+				elif stateClass in [AgreementState]:
 					appendAgreement(inProgress, agreement, other)
 			else:
 				other = User.retrieveByID(agreement.vendorID)
 				
-				if stateName in ['EstimateState', 'CompletedState']:
+				if stateClass in [EstimateState, CompletedState]:
 					appendAgreement(actionItems, agreement, other)
-				elif stateName in ['DeclinedState', 'ContestedState']:
+				elif stateClass in [DeclinedState, ContestedState]:
 					appendAgreement(awaitingReply, agreement, other)
-				elif stateName in ['AgreementState']:
+				elif stateClass in [AgreementState]:
 					appendAgreement(inProgress, agreement, other)
 		
 		templateDict['agreementType'] = agreementType
@@ -193,6 +193,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			},
 			EstimateState : {
 				"vendor": [ {
+					# @todo: This would be an edit view anyway; should just be
+					# 'send' action with an 'update' label.
 					"id": "action-edit",
 					"name": "Edit Estimate",
 					"action": "/agreement/%d.json" % agreement.id,
@@ -217,6 +219,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			},
 			DeclinedState : {
 				"vendor": [ {
+					# @todo: This would be an edit view anyway; should just be a 'send' action.
 					"id": "action-resend",
 					"name": "Edit and Re-send",
 					"action": "/agreement/%d.json" % agreement.id,
@@ -299,9 +302,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if agreement.vendorID == user.id:
 			agreementType = 'Client'
 		elif agreement.clientID == user.id:
-			stateName = AgreementStates.currentState(agreement).__class__.__name__
+			stateClass = AgreementStates.currentState(agreement).__class__
 			
-			if stateName in ['DraftState', 'InvalidState']:
+			if stateClass in [DraftState, InvalidState]:
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement.id, agreement.vendorID, agreement.clientID
 					)
@@ -594,6 +597,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		agreement.name = args['title']
 		
+		# @todo: Catch error if no email was supplied
 		if not args['clientID']:
 			client = User.retrieveByEmail(args['email'])
 			agreement.clientID = client.id
@@ -665,10 +669,12 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			args = fmt.Parser(self.request.arguments,
 				optional=[
 					('title', fmt.Enforce(str)),
-					('cost', fmt.Enforce(str)),
-					('details', fmt.Enforce(str)),
-					('refund', fmt.Enforce(str)),
-					('clientID', fmt.PositiveInteger())
+					('email', fmt.Enforce(str)),
+					('clientID', fmt.PositiveInteger()),
+					('summary', fmt.Enforce(str)),
+					('cost', fmt.List(fmt.Enforce(str))),
+					('details', fmt.List(fmt.Enforce(str))),
+					('estDateCompleted', fmt.List(fmt.Enforce(str)))
 				],
 				required=[]
 			)
@@ -678,38 +684,48 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write(e.body_content)
 			return
 		
-		if args['title']:
-			agreement.name = args['title']
+		agreement.name = args['title'] and agreement.name
 		
-		if args['cost']:
-			agreement.cost = self.parseAmountString(args['cost'])
-		
-		if agreement.id:
-			agreement.dateModified = datetime.now()
+		if args['clientID']:
+			agreement.clientID = args['clientID']
+		elif args['email']:
+			client = User.retrieveByEmail(args['email'])
+			agreement.clientID = client.id
 		
 		agreement.save()
+		agreement.refresh()
 		
-		if args['details']:
-			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
+		summary = AgreementSummary.retrieveByAgreementID(agreement.id)
 		
-			if not agreementText:
-				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+		if not summary:
+			summary = AgreementSummary.initWithDict(
+				dict(agreementID=agreement.id)
+			)
 		
-			agreementText.agreement = args['details']
+		summary.summary = args['summary'] and summary.summary
 		
-		if args['refund']:
-			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
+		summary.save()
+		summary.refresh()
+		
+		for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
+			phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement.id, num)
 			
-			if not agreementText:
-				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+			if not phase:
+				phase = AgreementPhase.initWithDict(
+					dict(agreementID=agreement.id, phaseNumber=num)
+				)
 			
-			agreementText.refund = args['refund']
-		
-		if agreementText:
-			agreementText.save()
+			if cost:
+				phase.amount = self.parseAmountString(cost)
+			
+			if descr:
+				phase.description = descr
+			phase.save()
 		
 		self.renderJSON(self.assembleDictionary(agreement))
-		
+
+
+
 class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 	
 	@web.authenticated
@@ -780,12 +796,22 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(currentState.__class__.__name__)
 		currentState = currentState.doTransition(role, args['action'])
 		
+		# @todo: Should all the saves be at the end, so errors can't put things in an inconsistent state?
+		agreement.save()
+		agreement.refresh()
+		
 		if args['action'] == 'decline' and isinstance(currentState, DeclinedState) or \
 				args['action'] == 'accept' and isinstance(currentState, AgreementState):
 			
-			agreement.comments = args['summaryComments']
-			agreement.save()
-			agreement.reload()
+			agreementSummary = AgreementSummary.retrieveByAgreementID(agreement.id)
+			
+			if not agreementSummary:
+				agreementSummary = AgreementSummary.initWithDict(
+					dict(agreementID=agreement.id)
+				)
+			
+			agreementSummary.comments = args['summaryComments']
+			agreementSummary.save()
 			
 			for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
 				phase.comments = args['phaseComments'][phase.phaseNumber]

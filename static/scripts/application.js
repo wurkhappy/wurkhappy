@@ -111,14 +111,17 @@ $(document).ready(function() {
 				var map = buttonMaps[i];
 				$("#" + map['id']).click(function(m) {
 					return function() {
-						var data = m['params'];
-						if (m['capture-id']) {
-							data.append($("#" + m['capture-id']).serializeArray());
-						}
+						var data = m['params'], capture = '';
 						data._xsrf = getCookie("_xsrf");
+						var string = jQuery.param(data);
+						
+						if (m['capture-id']) {
+							capture = $('#' + m['capture-id']).serialize(data);
+						}
+						
 						$.ajax({
 							url: m['action'],
-							data: $.param(data),
+							data: [jQuery.param(data), capture].join('&'),
 							dataType: "text",
 							type: m['method'],
 							success: function(data, status, xhr) {
@@ -132,4 +135,28 @@ $(document).ready(function() {
 		}
 	}
 });
+
+successActions = {
+	'action-send': function (data, status, xhr) {
+		
+	},
+	'action-edit': function (data, status, xhr) {
+		
+	},
+	'action-accept': function (data, status, xhr) {
+		
+	},
+	'action-decline': function (data, status, xhr) {
+		
+	},
+	'action-markcomplete': function (data, status, xhr) {
+		
+	},
+	'action-dispute': function (data, status, xhr) {
+		
+	},
+	'action-verify': function (data, status, xhr) {
+		
+	}
+}
 
