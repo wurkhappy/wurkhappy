@@ -242,14 +242,17 @@ class AgreementStates(object):
 		dateDeclined = agreementInstance.dateDeclined
 		dateCompleted = agreementInstance.dateCompleted
 		
-		states = [('PaidState', dateVerified)
-			  ,('CompletedState', (not dateContested) and dateAccepted and dateCompleted)
-			  ,('DraftState', not dateSent)
-			  ,('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateSent and dateDeclined < dateSent))
-			  ,('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent)
-			  ,('AgreementState', (not dateContested and dateAccepted and dateSent and dateAccepted > dateSent) \
- 				    or (dateContested and dateAccepted and dateSent and dateContested > dateSent and dateAccepted < dateSent))
-			  ,('InvalidState', True)]
+		states = [
+			('PaidState', dateVerified),
+			('ContestedState', dateContested and dateAccepted and dateCompleted),
+			('CompletedState', (not dateContested) and dateAccepted and dateCompleted),
+			('DraftState', not dateSent),
+			('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateSent and dateDeclined < dateSent)),
+			('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent),
+			('AgreementState', (not dateContested and dateAccepted and dateSent and dateAccepted > dateSent) \
+ 				    or (dateContested and dateAccepted and dateSent and dateContested > dateSent and dateAccepted < dateSent)),
+			('InvalidState', True)
+		]
 		
 		# like find-first
 		logging.info([s[0] for s in states if s[1]])
@@ -307,6 +310,11 @@ class CompletedState(AgreementStates):
 		self.addButton('client', 'verify')
 		self.addButton('client', 'dispute')
 
+class ContestedState(AgreementStates):
+	def __init__(self, agreement):
+		super(ContestedState, self).__init__(agreement)
+		self.addButton('vendor', 'send')
+	
 class PaidState(AgreementStates):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)

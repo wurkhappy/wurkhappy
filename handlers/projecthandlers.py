@@ -3,7 +3,6 @@ import re
 from base import *
 from models.user import User
 from models.project import Project
-from models.invoice import Invoice
 from helpers.verification import Verification
 from helpers.validation import Validation
 

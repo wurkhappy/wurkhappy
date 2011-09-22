@@ -124,9 +124,7 @@ $(document).ready(function() {
 							data: [jQuery.param(data), capture].join('&'),
 							dataType: "text",
 							type: m['method'],
-							success: function(data, status, xhr) {
-								console.log(data);
-							}
+							success: successActions[m['id']]
 						});
 						return false;
 					}
@@ -138,25 +136,32 @@ $(document).ready(function() {
 
 successActions = {
 	'action-send': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully sent estimate');
 	},
 	'action-edit': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully edited estimate');
 	},
 	'action-accept': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully accepted estimate');
 	},
 	'action-decline': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully declined estimate');
 	},
 	'action-markcomplete': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully marked the work outlined in this agreement as complete');
 	},
 	'action-dispute': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully disputed the work completed');
 	},
 	'action-verify': function (data, status, xhr) {
-		
+		$('.action-button').hide();
+		alert('Successfully verified the work completed');
 	}
 }
 

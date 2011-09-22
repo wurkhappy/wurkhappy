@@ -4,8 +4,6 @@ __all__ = [
 	"authhandlers",
 	"agreements",
 	"profilehandlers",
-	"projecthandlers",
-	"invoicehandlers",
 	"users",
 	"accounts",
 	"files"
