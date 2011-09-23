@@ -84,7 +84,7 @@ strong {
 h1, h2 {
   color: rgb(0,0,0);
   padding: 0 20px;
-  font-family: Museo;
+  font-family: "museo-1", "museo-1", Museo;
 }
 
 h1 { 
@@ -168,7 +168,7 @@ h3 {
 }
 
 #navigation p {
-  font-family: Museo;
+  font-family: "museo-1", "museo-1", Museo;
   font-size: 24px;
   font-weight: 100;
   line-height: 24px;
@@ -316,8 +316,8 @@ h3 {
   line-height: 30px;
   margin: 0;
   padding: 0;
-  font-weight: 100;
-  font-family: Museo;
+  font-weight: normal;
+  font-family: "museo-1", "museo-1", Museo;
   color: rgb(0,0,0);
 }
 
