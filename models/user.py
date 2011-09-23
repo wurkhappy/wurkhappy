@@ -23,8 +23,9 @@ class User(MappedObj):
 		self.email = None
 		self.confirmationCode = None
 		self.confirmationHash = None
-		self.confirmed = None
-		self.subscriberStatus = 0
+		self.invitedBy = None
+		self.confirmed = None # @todo: Delete for next deploy
+		self.subscriberStatus = 0 # @todo: Delete for next deploy
 		self.firstName = None
 		self.lastName = None
 		self.telephone = None
@@ -36,6 +37,7 @@ class User(MappedObj):
 		self.profileSmallURL = None
 		self.profileLargeURL = None
 		self.dateCreated = None
+		self.dateVerified = None
 	
 	@classmethod
 	def tableName(clz):
