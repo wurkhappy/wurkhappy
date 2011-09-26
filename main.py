@@ -46,7 +46,7 @@ class Application(web.Application):
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
-			#(r'/agreement/new/?', agreements.AgreementHandler),
+			(r'/agreement/new/?', agreements.AgreementHandler),
 			
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
 			(r'/agreement/([0-9]+)/status\.json', agreements.AgreementStatusJSONHandler),
