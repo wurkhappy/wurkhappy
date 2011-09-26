@@ -209,7 +209,7 @@ class AgreementPhase (MappedObj):
 class AgreementStates(object):
 	""" AgreementState """
 	
-	transitionNames = ["send", "edit", "accept", "decline", "mark_completed", "dispute", "verify"]
+	transitionNames = ["send", "edit", "accept", "decline", "mark_complete", "dispute", "verify"]
 	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
 	actionMap = dict(zip(transitionNames, fieldNames))
 	
@@ -302,7 +302,7 @@ class DeclinedState(AgreementStates):
 class AgreementState(AgreementStates):
 	def __init__(self, agreement):
 		super(AgreementState, self).__init__(agreement)
-		self.addButton('vendor', 'mark_completed')
+		self.addButton('vendor', 'mark_complete')
 
 class CompletedState(AgreementStates):
 	def __init__(self, agreement):

@@ -177,6 +177,33 @@ class URL(Enforce):
 
 
 
+class Currency(Enforce):
+	def __init__(self, default=None):
+		Enforce.__init__(self, int, default)
+	
+	def filter(self, value):
+		logging.warn(value)
+		
+		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
+		m = r.match(value)
+		if not m or len(m.groups()) != 2:
+			raise Exception("value must be well-formed")
+		
+		logging.warn(m.groups())
+		
+		d = int(m.groups()[0].replace(',', '')) * 100
+		
+		if m.groups()[1]:
+			d += int(m.groups()[1])
+		
+		return d
+	
+	def __lshift__(self, value):
+		if value is None or str(value[0]) is '':
+			return self.default
+		
+		return self.filter(val)
+		
 class PhoneNumber(Enforce):
 	def __init__(self, default=None):
 		Enforce.__init__(self, str, default)

@@ -151,7 +151,6 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			if len(lst):
 				templateDict['agreementGroups'].append((name, lst))
 		
-		#agreements = [("In Progress", agreementList)]
 		title = "%s Agreements &ndash; Wurk Happy" % agreementType
 		self.render("agreement/list.html", title=title, bag=templateDict, agreement_with=agreementType)
 
@@ -183,11 +182,17 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		return {
 			DraftState : {
 				"vendor": [ {
+					"id": "action-save",
+					"name": "Save as Draft",
+					"action": "/agreement/new.json",
+					"method": "POST",
+					"params": { }
+				}, {
 					"id": "action-send",
 					"name": "Send Estimate",
-					"action": "/agreement/%d/status.json" % agreement.id,
+					"action": "/agreement/send.json",
 					"method": "POST",
-					"params": { "action": "send" }
+					"params": { }
 				} ],
 				"client": []
 			},
@@ -195,36 +200,42 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"vendor": [ {
 					# @todo: This would be an edit view anyway; should just be
 					# 'send' action with an 'update' label.
-					"id": "action-edit",
-					"name": "Edit Estimate",
-					"action": "/agreement/%d.json" % agreement.id,
-					"method": "GET",
-					"params": { "edit": True }
+					"id": "action-save",
+					"name": "Save Changes",
+					"action": "/agreement/%d/update.json" % agreement.id,
+					"method": "POST",
+					"params": { }
 				} ],
 				"client": [ {
 					"id": "action-accept",
 					"capture-id": "comments-form",
 					"name": "Accept Estimate",
-					"action": "/agreement/%d/status.json" % agreement.id,
+					"action": "/agreement/%d/accept.json" % agreement.id,
 					"method": "POST",
-					"params": { "action": "accept" }
+					"params": { }
 				}, {
 					"id": "action-decline",
 					"capture-id": "comments-form",
 					"name": "Decline Estimate",
-					"action": "/agreement/%d/status.json" % agreement.id,
+					"action": "/agreement/%d/decline.json" % agreement.id,
 					"method": "POST",
-					"params": { "action": "decline" }
+					"params": { }
 				} ]
 			},
 			DeclinedState : {
 				"vendor": [ {
+					"id": "action-save",
+					"name": "Save as Draft",
+					"action": "/agreement/%d/update.json" % agreement.id,
+					"method": "POST",
+					"params": { }
+				}, {
 					# @todo: This would be an edit view anyway; should just be a 'send' action.
 					"id": "action-resend",
-					"name": "Edit and Re-send",
-					"action": "/agreement/%d.json" % agreement.id,
+					"name": "Save and Re-submit",
+					"action": "/agreement/%d/send.json" % agreement.id,
 					"method": "GET",
-					"params": { "edit": True }
+					"params": { }
 				} ],
 				"client": []
 			},
@@ -232,9 +243,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"vendor": [ {
 					"id": "action-markcomplete",
 					"name": "Mark Completed",
-					"action": "/agreement/%d/status.json" % agreement.id,
+					"action": "/agreement/%d/mark_complete.json" % agreement.id,
 					"method": "POST",
-					"params": { "action": "mark_completed" }
+					"params": { }
 				} ],
 				"client": []
 			},
@@ -245,16 +256,16 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"name": "Verify and Pay",
 					# The verify and pay action should redirect to payment page.
 					# But we do this for now to prove it works.
-					"action": "/agreement/%d/status.json" % agreement.id,
+					"action": "/agreement/%d/verify.json" % agreement.id,
 					"method": "POST",
-					"params": { "action": "verify" }
+					"params": { }
 				}, {
 					"id": "action-dispute",
 					"capture-id": "comments-form",
 					"name": "Dispute",
-					"action": "/agreement/%d/status.json" % agreement.id,
+					"action": "/agreement/%d/dispute.json" % agreement.id,
 					"method": "POST",
-					"params": { "action": "dispute" }
+					"params": { }
 				} ]
 			},
 			PaidState : {
@@ -487,85 +498,85 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 	
 	
-	@web.authenticated
-	def post(self, agreementID=None):
-		user = self.current_user
-		
-		logging.warn(self.request.arguments)
-		
-		agreement = Agreement.retrieveByID(agreementID) if agreementID else Agreement()
-		
-		if not agreement:
-			# Should we serve a 404 page?
-			self.redirect(self.request.uri)
-			return
-		
-		if not agreement.id:
-			agreement.vendorID = user.id
-			agreement.clientID = 2
-		
-		if agreement.vendorID != user.id:
-			# Likewise, should we serve a "beat it, jerk" page?
-			self.redirect(self.request.uri)
-			return
-		
-		agreementText = None
-		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[
-					('title', fmt.Enforce(str)),
-					('cost', fmt.PositiveInteger(0)),
-					('details', fmt.Enforce(str)),
-					('refund', fmt.Enforce(str))
-				],
-				required=[]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.__dict__)
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
-		if args['title']:
-			agreement.name = args['title']
-		
-		if args['cost']:
-			agreement.cost = args['cost']
-		
-		if agreement.id:
-			agreement.dateModified = datetime.now()
-		
-		logging.warn(agreement.__dict__)
-		agreement.save()
-		
-		if args['details']:
-			agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
-		
-			if not agreementText:
-				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-		
-			agreementText.agreement = args['details']
-		
-		if args['refund']:
-			agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
-			
-			if not agreementText:
-				agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-			
-			agreementText.refund = args['refund']
-		
-		if agreementText:
-			agreementText.save()
-		
-		self.redirect('/agreement/%d' % agreement.id)
+	# @web.authenticated
+	# def post(self, agreementID=None):
+	# 	user = self.current_user
+	# 	
+	# 	logging.warn(self.request.arguments)
+	# 	
+	# 	agreement = Agreement.retrieveByID(agreementID) if agreementID else Agreement()
+	# 	
+	# 	if not agreement:
+	# 		# Should we serve a 404 page?
+	# 		self.redirect(self.request.uri)
+	# 		return
+	# 	
+	# 	if not agreement.id:
+	# 		agreement.vendorID = user.id
+	# 		agreement.clientID = 2
+	# 	
+	# 	if agreement.vendorID != user.id:
+	# 		# Likewise, should we serve a "beat it, jerk" page?
+	# 		self.redirect(self.request.uri)
+	# 		return
+	# 	
+	# 	agreementText = None
+	# 	
+	# 	try:
+	# 		args = fmt.Parser(self.request.arguments,
+	# 			optional=[
+	# 				('title', fmt.Enforce(str)),
+	# 				('cost', fmt.PositiveInteger(0)),
+	# 				('details', fmt.Enforce(str)),
+	# 				('refund', fmt.Enforce(str))
+	# 			],
+	# 			required=[]
+	# 		)
+	# 	except fmt.HTTPErrorBetter as e:
+	# 		logging.warn(e.__dict__)
+	# 		logging.warn(e.message)
+	# 		self.set_status(e.status_code)
+	# 		self.write(e.body_content)
+	# 		return
+	# 	
+	# 	if args['title']:
+	# 		agreement.name = args['title']
+	# 	
+	# 	if args['cost']:
+	# 		agreement.cost = args['cost']
+	# 	
+	# 	if agreement.id:
+	# 		agreement.dateModified = datetime.now()
+	# 	
+	# 	logging.warn(agreement.__dict__)
+	# 	agreement.save()
+	# 	
+	# 	if args['details']:
+	# 		agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
+	# 	
+	# 		if not agreementText:
+	# 			agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+	# 	
+	# 		agreementText.agreement = args['details']
+	# 	
+	# 	if args['refund']:
+	# 		agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
+	# 		
+	# 		if not agreementText:
+	# 			agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
+	# 		
+	# 		agreementText.refund = args['refund']
+	# 	
+	# 	if agreementText:
+	# 		agreementText.save()
+	# 	
+	# 	self.redirect('/agreement/%d' % agreement.id)
 
 
 
 class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 	@web.authenticated
-	def post(self):
+	def post(self, action):
 		user = self.current_user
 		
 		logging.warn(self.request.arguments)
@@ -581,13 +592,11 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					('email', fmt.Enforce(str)),
 					('clientID', fmt.PositiveInteger()),
 					('summary', fmt.Enforce(str)),
-					('cost', fmt.List(fmt.Enforce(str))),
+					('cost', fmt.List(fmt.Currency(None))),
 					('details', fmt.List(fmt.Enforce(str))),
 					('estDateCompleted', fmt.List(fmt.Enforce(str)))
+					# @todo: actually do something with the dates
 				]
-				# required=[
-				# 	('clientID', fmt.PositiveInteger())
-				# ]
 			)
 		except fmt.HTTPErrorBetter as e:
 			logging.warn(e.__dict__)
@@ -598,9 +607,29 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		agreement.name = args['title']
 		
 		if args['clientID']:
+			if args['clientID'] == user.id:
+				error = {
+					"domain": "application.conflict",
+					"display": "You can't send estimates to yourself. Please choose a different client.",
+					"debug": "'clientID' parameter has forbidden value"
+				}
+				self.set_status(409)
+				self.renderJSON(error)
+				return
+			
 			agreement.clientID = args['clientID']
 		elif args['email']:
 			client = User.retreiveByEmail(args['email'])
+			
+			if client.id == user.id:
+				error = {
+					"domain": "application.conflict",
+					"display": "You can't send estimates to yourself. Please choose a different client.",
+					"debug": "'clientID' parameter has forbidden value"
+				}
+				self.set_status(409)
+				self.renderJSON(error)
+				return
 			
 			if not client:
 				client = Client.initWithDict(
@@ -612,6 +641,11 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		agreement.save()
 		agreement.refresh()
 		
+		if action == "send":
+			agreement.dateSent = datetime.now()
+			agreement.save()
+			agreement.refresh()
+		
 		summary = AgreementSummary.initWithDict(dict(agreementID=agreement.id))
 		summary.summary = args['summary']
 		
@@ -622,12 +656,12 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			phase = AgreementPhase()
 			phase.agreementID = agreement.id
 			phase.phaseNumber = num
-			phase.amount = self.parseAmountString(cost)
+			phase.amount = cost #self.parseAmountString(cost)
 			phase.description = descr
 			phase.save()
 		
 		self.set_status(201)
-		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement.id))
+		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement.id) + '.json')
 		self.renderJSON(self.assembleDictionary(agreement))
 
 
@@ -649,83 +683,6 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.set_status(403)
 			self.write('{"success": false}')
 			return
-		
-		self.renderJSON(self.assembleDictionary(agreement))
-	
-	@web.authenticated
-	def post(self, agreementID):
-		user = self.current_user
-		
-		agreement = Agreement.retrieveByID(agreementID)
-		
-		if not agreement:
-			self.set_status(404)
-			self.write('{"success": false}')
-			return
-		
-		if agreement.vendorID != user.id:
-			self.set_status(403)
-			self.write('{"success": false}')
-			return
-		
-		agreementText = None
-		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[
-					('title', fmt.Enforce(str)),
-					('email', fmt.Enforce(str)),
-					('clientID', fmt.PositiveInteger()),
-					('summary', fmt.Enforce(str)),
-					('cost', fmt.List(fmt.Enforce(str))),
-					('details', fmt.List(fmt.Enforce(str))),
-					('estDateCompleted', fmt.List(fmt.Enforce(str)))
-				],
-				required=[]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.__dict__)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
-		agreement.name = args['title'] and agreement.name
-		
-		if args['clientID']:
-			agreement.clientID = args['clientID']
-		elif args['email']:
-			client = User.retrieveByEmail(args['email'])
-			agreement.clientID = client.id
-		
-		agreement.save()
-		agreement.refresh()
-		
-		summary = AgreementSummary.retrieveByAgreementID(agreement.id)
-		
-		if not summary:
-			summary = AgreementSummary.initWithDict(
-				dict(agreementID=agreement.id)
-			)
-		
-		summary.summary = args['summary'] and summary.summary
-		
-		summary.save()
-		summary.refresh()
-		
-		for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
-			phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement.id, num)
-			
-			if not phase:
-				phase = AgreementPhase.initWithDict(
-					dict(agreementID=agreement.id, phaseNumber=num)
-				)
-			
-			if cost:
-				phase.amount = self.parseAmountString(cost)
-			
-			if descr:
-				phase.description = descr
-			phase.save()
 		
 		self.renderJSON(self.assembleDictionary(agreement))
 
@@ -757,9 +714,13 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		}
 		
 		self.renderJSON(stateDict)
+
+
+
+class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 	
 	@web.authenticated
-	def post(self, agreementID):
+	def post(self, agreementID, action):
 		user = self.current_user
 		
 		agreement = Agreement.retrieveByID(agreementID)
@@ -776,58 +737,142 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		agreementText = None
 		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[
-					('summaryComments', fmt.Enforce(str)),
-					('phaseComments', fmt.List(fmt.Enforce(str)))
-				],
-				required=[
-					('action', fmt.StringInSet(AgreementStates.transitionNames))
-				]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.__dict__)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
 		role = "vendor" if agreement.vendorID == user.id else "client"
 		
 		logging.info(role)
-		logging.info(args['action'])
+		logging.info(action)
 		
 		currentState = AgreementStates.currentState(agreement)
 		logging.info(currentState.__class__.__name__)
-		currentState = currentState.doTransition(role, args['action'])
 		
-		# @todo: Should all the saves be at the end, so errors can't put things in an inconsistent state?
-		agreement.save()
-		agreement.refresh()
+		# In order to make sure records are not put in inconsistent states, a
+		# list of unsaved records is maintained so records can be saved
+		# en masse after a successful state transition. Otherwise, no change
+		# occurs.
 		
-		if args['action'] == 'decline' and isinstance(currentState, DeclinedState) or \
-				args['action'] == 'accept' and isinstance(currentState, AgreementState):
-			
-			agreementSummary = AgreementSummary.retrieveByAgreementID(agreement.id)
-			
-			if not agreementSummary:
-				agreementSummary = AgreementSummary.initWithDict(
-					dict(agreementID=agreement.id)
+		unsavedRecords = []
+		
+		# If role is vendor, make changes to the agreement before modifying
+		# the agreement's state. That way, if the state transition is invalid
+		# the changes to the agreement record won't be saved.
+		
+		if role is "vendor":
+			try:
+				args = fmt.Parser(self.request.arguments,
+					optional= [
+						('title', fmt.Enforce(str)),
+						('email', fmt.Enforce(str)),
+						('clientID', fmt.PositiveInteger()),
+						('summary', fmt.Enforce(str)),
+						('cost', fmt.List(fmt.Currency(None))),
+						('details', fmt.List(fmt.Enforce(str))),
+						('estDateCompleted', fmt.List(fmt.Enforce(str)))
+					]
 				)
+			except fmt.HTTPErrorBetter as e:
+				logging.warn(e.__dict__)
+				self.set_status(e.status_code)
+				self.write(e.body_content)
+				return
 			
-			agreementSummary.comments = args['summaryComments']
-			agreementSummary.save()
+			if isinstance(currentState, DraftState):
+				if args['clientID']:
+					agreement.clientID = args['clientID']
+				elif args['email']:
+					client = User.retrieveByEmail(args['email'])
+					
+					if not client:
+						client = User.initWithDict(
+							dict(email=args['email'],invitedBy=user.id)
+						)
+					
+					agreement.clientID = client.id
+			elif agreement.clientID is None and action is "send":
+				# @todo: this should be handled in the doTransition method...
+				error = {
+					"domain": "application.consistency",
+					"display": (
+						"To send an estimate, you must specify a client. "
+						"Please enter a recipient's name or email address."
+					),
+					"debug": "'clientID' value required to send estimate"
+				}
+				self.set_status(400)
+				self.renderJSON(error)
+				return
 			
-			for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
-				phase.comments = args['phaseComments'][phase.phaseNumber]
-				phase.save()
+			if isinstance(currentState, DraftState) or isinstance(currentState, DeclinedState):
+				agreement.name = args['title'] and agreement.name
+				
+				summary = AgreementSummary.retrieveByAgreementID(agreement.id)
+				
+				if not summary:
+					summary = AgreementSummary.initWithDict(
+						dict(agreementID=agreement.id)
+					)
+				
+				summary.summary = args['summary'] and summary.summary
+				
+				# @todo: Defer phase saves until state transition is complete
+				for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
+					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement.id, num)
+					
+					if not phase:
+						phase = AgreementPhase.initWithDict(
+							dict(agreementID=agreement.id, phaseNumber=num)
+						)
+					
+					if cost:
+						phase.amount = cost #self.parseAmountString(cost)
+					
+					if descr:
+						phase.description = descr
+					phase.save()
+				
+				summary.save()
+				agreement.save()
 		
-		stateDict = {
-			"agreement": {
-				"id": agreement.id
-			},
-			"state": currentState.__class__.__name__
-		}
 		
-		self.renderJSON(stateDict)
+		# Clients can accept or decline an estimate, in which case the comment
+		# fields in the agreement summary and agreement phase records get 
+		# updated; or they can dispute or verify a completed agreement, in
+		# which case the dispute fields in the agreement summary and agreement
+		# phase records get updated.
+		
+		elif role is "client":
+			try:
+				args = fmt.Parser(self.request.arguments,
+					optional=[
+						('summaryComments', fmt.Enforce(str)),
+						('phaseComments', fmt.List(fmt.Enforce(str)))
+					]
+				)
+			except fmt.HTTPErrorBetter as e:
+				logging.warn(e.__dict__)
+				self.set_status(e.status_code)
+				self.write(e.body_content)
+				return
+			
+			if isinstance(currentState, EstimateState) and action in ["accept", "decline"]:
+				agreementSummary = AgreementSummary.retrieveByAgreementID(agreement.id)
+				
+				if not agreementSummary:
+					agreementSummary = AgreementSummary.initWithDict(
+						dict(agreementID=agreement.id)
+					)
+				
+				agreementSummary.comments = args['summaryComments']
+				agreementSummary.save()
+				
+				for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
+					phase.comments = args['phaseComments'][phase.phaseNumber]
+					phase.save()
+			elif isinstance(currentState, CompletedState) and action in ["dispute", "verify"]:
+				pass
+		
+		currentState = currentState.doTransition(role, action)
+		# @todo: Return 409 here if state transition fails.
+		# @todo: Save records.
+		
+		self.renderJSON(self.assembleDictionary(agreement))
 

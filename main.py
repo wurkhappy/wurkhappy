@@ -38,19 +38,20 @@ class Application(web.Application):
 			
 			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
-			(r'/user/me/contacts.json', users.ContactsJSONHandler),
+			(r'/user/me/contacts\.json', users.ContactsJSONHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),
-			(r'/user/me/account.json', accounts.AccountJSONHandler),
+			(r'/user/me/account\.json', accounts.AccountJSONHandler),
 			
-			(r'/user/me/password.json', authhandlers.PasswordJSONHandler),
+			(r'/user/me/password\.json', authhandlers.PasswordJSONHandler),
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
-			(r'/agreement/new/?', agreements.AgreementHandler),
+			#(r'/agreement/new/?', agreements.AgreementHandler),
 			
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
-			(r'/agreement/([0-9]+)/status.json', agreements.AgreementStatusJSONHandler),
-			(r'/agreement/new\.json', agreements.NewAgreementJSONHandler),
+			(r'/agreement/([0-9]+)/status\.json', agreements.AgreementStatusJSONHandler),
+			(r'/agreement/([0-9]+)/(update|send|accept|decline|mark_complete|verify|dispute)\.json', agreements.AgreementActionJSONHandler),
+			(r'/agreement/(new|send)\.json', agreements.NewAgreementJSONHandler),
 			
 			(r'/file', files.FileHandler)
 		]
