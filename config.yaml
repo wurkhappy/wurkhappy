@@ -9,7 +9,7 @@ tornado:
 database:
     host: localhost
     db: wurkhappy
-    user: emma
+    user: www
     passwd: ""
 
 smtp:
