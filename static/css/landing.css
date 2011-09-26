@@ -1,0 +1,398 @@
+/* RESET
+================================================================================ */
+
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  outline: 0;
+}
+
+body {
+  line-height: 1.5em;
+  background: rgb(255,255,255);
+}
+
+blockquote, q {
+  quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+
+/* COMMON
+================================================================================ */
+
+
+body {
+  text-align: center;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: rgb(220,224,228) url(/static/images/bg.png);
+  color: rgb(100,100,100);
+}
+
+a:link,
+a:visited {
+  text-decoration: none;
+  color: rgb(0,153,221);
+}
+
+a:hover,
+a:active {
+  text-decoration: underline;
+  color: rgb(0,137,198);
+}
+
+p, ul, ol, dl {
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
+ul, ol {
+  margin-left: 30px;
+}
+
+strong {
+  font-weight: bold;
+}
+
+h1, h2 {
+  color: rgb(0,0,0);
+  padding: 0 20px;
+  font-family: "museo-1", "museo-1", Museo;
+}
+
+h1 { 
+  font-size: 40px;
+  line-height: 40px;
+  font-weight: 500;
+  margin: 20px 0;
+}
+
+h2 { 
+  font-size: 24px;
+  line-height: 30px;
+  margin: 20px 0 10px 0;
+  font-weight: 100;
+}
+
+h3 {
+  font-weight: bold;
+  font-size: 1em;
+  padding: 0 20px;
+  margin: 20px 0 10px 0;
+}
+
+
+/* STRUCTURE
+================================================================================ */
+
+
+.container {
+  margin: 0 auto;
+  width: 960px;
+  text-align: left;
+}
+
+.clear {
+  float: left;
+  width: 100%;
+  clear: both;
+}
+
+.column-three-fourth { width: 720px; }
+.column-two-third { width: 640px; }
+.column-one-half { width: 480px; }
+.column-one-third { width: 320px; }
+.column-one-fourth { width: 240px; }
+
+.column-one-fourth, .column-one-third, .column-one-half,
+.column-two-third,.column-three-fourth {
+  float: left;
+}
+
+.hidden {
+	display: none;
+}
+
+
+/* NAVIGATION
+================================================================================ */
+
+
+#navigation {
+  
+}
+
+#navigation ul {
+  margin: 0;
+  padding: 0;
+  float: right;
+}
+
+#navigation ul li {
+  display: block;
+  float: left;
+}
+
+#navigation ul li a {
+  display: block;
+  float: left;
+  padding: 20px;
+  color: rgb(124,130,136);
+}
+
+#navigation p {
+  font-family: "museo-1", "museo-1", Museo;
+  font-size: 24px;
+  font-weight: 100;
+  line-height: 24px;
+  padding: 0;
+  margin: 0;
+  background: transparent url(/static/images/logo.png) no-repeat left;
+  float: left;
+}
+
+#navigation p a:link,
+#navigation p a:visited {
+  color: rgb(0,0,0);
+  display: block;
+  padding: 18px 20px 22px 70px;
+  text-decoration: none;
+}
+
+#navigation p a:hover,
+#navigation p a:active {
+  color: rgb(100,100,100);
+}
+
+
+/* INTRO
+================================================================================ */
+
+
+#intro {
+  background: rgb(0,122,177) url(/static/images/shade-intro.png) repeat-x top;
+  color: rgb(191,229,246);
+  border-bottom: 1px solid rgb(0,122,177);
+  padding: 20px 0 20px 0;
+  color: rgb(205,230,240);
+}
+
+#intro h1,
+#intro h2,
+#intro p {
+  text-align: center;
+}
+
+#intro h1 {
+  text-shadow: 0 1px 0 rgba(0,0,0,.5);
+  color: rgb(255,255,255);
+}
+
+#intro h2 {
+  font-weight: 500;
+  text-shadow: 0 1px 0 rgba(0,0,0,.5);
+  color: rgb(255,255,255);
+}
+
+#intro img {
+  display: block;
+  margin: 20px 0 0 0;
+}
+
+
+/* INTERNAL
+================================================================================ */
+
+
+#internal {
+  background-color: rgb(223,245,255);
+}
+
+#internal ul {
+  padding: 0;
+  margin: 0;
+}
+
+#internal ul li {
+  list-style: none;
+  display: block;
+  float: left;
+}
+
+#internal ul li a {
+  display: block;
+  float: left;
+  padding: 20px;
+  font-weight: bold;
+}
+
+#internal ul li.current a {
+  background-color: rgb(255,255,255);
+}
+
+#internal ul li.action-button {
+  padding: 10px 0;
+  margin: 0;
+  float: right;
+}
+
+  #internal ul li.action-button a {
+    display: block;
+    text-align: center;
+    padding: 10px 20px;
+    color: rgb(255,255,255);
+    text-decoration: none;
+    -webkit-box-shadow: 0 0 3px rgba(0,0,0,1);
+    -moz-box-shadow: 0 0 3px rgba(0,0,0,1);
+    box-shadow: 0 0 3px rgba(0,0,0,1);
+    text-shadow: 0 -1px 0 rgba(0,0,0,.5);
+    background-image: url(/static/images/shade-button.png);
+    background-repeat: repeat-x;
+    background-position: top center;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+  }
+
+  #internal ul li.action-button a:link,
+  #internal ul li.action-button a:visited {
+    background-color: rgb(136,204,85);
+  }
+
+  #internal ul li.action-button a:hover,
+  #internal ul li.action-button a:active {
+    background-color: rgb(122,183,76);
+  }
+
+
+/* CONTENT
+================================================================================ */
+
+
+#content {
+  background-color: rgb(255,255,255);
+  padding: 20px 0;
+}
+
+#content form {
+  border: 1px solid rgb(240,240,240);
+  background-color: rgb(253,253,253);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  margin: 0;
+  padding: 19px 20px;
+}
+
+#content form legend {
+  font-size: 24px;
+  line-height: 30px;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  font-family: "museo-1", "museo-1", Museo;
+  color: rgb(0,0,0);
+}
+
+#content form legend.secure {
+  padding: 0 0 0 26px;
+  background-image: url(/static/images/lock-16x16.png);
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+#content form p {
+	padding: 0;
+	margin: 0;
+}
+
+#content form fieldset {
+  margin: 0;
+  padding: 10px 0 0 0;
+}
+
+#content form label {
+  display: block;
+  padding: 0 0 5px 0;
+  color: rgb(0,0,0);
+  font-weight: bold;
+}
+
+#content form input.text-field {
+  margin: 0 0 10px 0;
+  padding: 5px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  border: 1px solid rgb(200,200,200);
+  font-size: 1em;
+  width: 250px;
+}
+#content form input.text-field:focus {
+  outline: none;
+  border: 1px solid rgb(100,100,100);
+}
+
+#content form input.submit-button {
+  font-size: 1em;
+  padding: 10px 20px;
+  font-weight: bold;
+  border: none;
+  color: rgb(255,255,255);
+  background-color: rgb(0,122,177);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.5);
+  background-image: url(/static/images/shade-button.png);
+  background-repeat: repeat-x;
+  background-position: top center;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#content form input.submit-button:hover,
+#content form input.submit-button:focus {
+  outline: none;
+  background-color: rgb(0,145,210);
+}
+
+
+/* COPYRIGHT
+================================================================================ */
+
+
+#copyright {
+  border-top: 1px solid rgb(184,190,196);
+}
+
+#copyright p {
+  margin: 0;
+  padding: 20px;
+  font-size: .75em;
+  color: rgb(124,130,136);
+}

@@ -597,12 +597,17 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		agreement.name = args['title']
 		
-		# @todo: Catch error if no email was supplied
-		if not args['clientID']:
-			client = User.retrieveByEmail(args['email'])
-			agreement.clientID = client.id
-		else:
+		if args['clientID']:
 			agreement.clientID = args['clientID']
+		elif args['email']:
+			client = User.retreiveByEmail(args['email'])
+			
+			if not client:
+				client = Client.initWithDict(
+					dict(email=args['email'])
+				)
+			
+			agreement.clientID = client.id
 		
 		agreement.save()
 		agreement.refresh()
