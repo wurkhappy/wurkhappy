@@ -296,7 +296,19 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"client": None,
 				"vendor": None,
 				"phases": [],
-				"actions": [],
+				"actions": [ {
+					"id": "action-save",
+					"name": "Save as Draft",
+					"action": "/agreement/new.json",
+					"method": "POST",
+					"params": { }
+				}, {
+					"id": "action-send",
+					"name": "Send Estimate",
+					"action": "/agreement/send.json",
+					"method": "POST",
+					"params": { }
+				} ],
 				"self": "vendor"
 			}
 				
