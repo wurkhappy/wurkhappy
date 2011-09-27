@@ -160,3 +160,146 @@ class UserPrefs(MappedObj):
 			"name": self.name,
 			"value": self.value
 		}
+
+
+
+class StateTransitionError(Exception):
+	pass
+
+# -------------------------------------------------------------------
+# User State
+# -------------------------------------------------------------------
+
+class UserState(object):
+	""" UserState """
+	
+	def __init__(self, user):
+		assert type(user) == User
+		self.user = user
+	
+	def doTransition(self, action, data):
+		""" currentState : string, dict -> UserState """
+		
+		try:
+			return self._prepareFields(action, data)
+		except StateTransitionError as e:
+			error = {
+				"domain": "application.consistency",
+				"display": "",
+				"debug": "state transition error"
+			}
+			
+			raise HTTPErrorBetter(409, 'state transition error', JSON.dumps(error))
+		
+		return UserState.currentState(self.user)
+	
+	@classmethod
+	def currentState(clz, user):
+		""" currentState : User -> UserState """
+		
+		dateCreated = user.dateCreated
+		email = user.email
+		invitedBy = user.invitedBy
+		confirmationCode = user.confirmationCode
+		confirmationHash = user.confirmationHash
+		password = user.password
+		dateVerified = user.dateVerified
+		
+		states = [
+			(ActiveUserState, password and dateVerified and confirmationCode and confirmationHash and email),
+			(PendingUserState, confirmationCode and confirmationHash and email and dateCreated),
+			(NewUserState, dateCreated and email and password),
+			(InvitedUserState, dateCreated and email and invitedBy),
+			(BetaUserState, dateCreated and email),
+			(InvalidUserState, True)
+		]
+		
+		# like find-first
+		logging.info([s[0] for s in states if s[1]])
+		state = [s[0] for s in states if s[1]][0]
+		return state(user)
+
+	# @classmethod
+	# def testCurrentState(clz):
+	# 	agreementInstance = OrderedDict([('dateCreated', datetime(2011, 8, 1)),
+	# 					 ('dateSent', None),
+	# 					 ('dateAccepted', None),
+	# 					 ('dateModified', None),
+	# 					 ('dateDeclined', None),
+	# 					 ('dateVerified', None), 
+	# 					 ('dateContested', None)])
+	# 	assert currentState(agreementInstance)=='DraftState'
+	# 	for day, (col, state) in enumerate([('dateSent', 'EstimateState')
+	# 					    ,('dateDeclined', 'DeclinedState')
+	# 					    ,('dateSent', 'EstimateState')
+	# 					    ,('dateAccepted', 'InProgressState')
+	# 					    ,('dateSent', 'CompletedState')
+	# 					    ,('dateContested', 'InProgressState')
+	# 					    ,('dateSent', 'CompletedState')
+	# 					    ,('dateVerified' ,'PaidState')]):
+	# 		agreementInstance[col]=datetime(2011, 8, day+1)
+	# 		assert currentState(agreementInstance)==state
+
+class BetaUserState(UserState):
+	def __init__(self, agreementInstance):
+		super(DraftState, self).__init__(agreementInstance)
+	
+	def _prepareFields(self, action, data):
+		if action is "send_verification":
+			if 'confirmationCode' not in data or 'confirmationHash' not in data:
+				raise StateTransitionError("missing required fields")
+			
+			self.user.confirmationCode = data['confirmationCode']
+			self.user.confirmationHash = data['confirmationHash']
+		else:
+			raise StateTransitionError()
+
+class InvitedUserState(UserState):
+	def __init__(self, agreementInstance):
+		super(DraftState, self).__init__(agreementInstance)
+	
+	def _prepareFields(self, action, data):
+		if action is "send_verification":
+			if 'confirmationCode' not in data or 'confirmationHash' not in data:
+				raise StateTransitionError("missing required fields")
+			
+			self.user.confirmationCode = data['confirmationCode']
+			self.user.confirmationHash = data['confirmationHash']
+		else:
+			raise StateTransitionError()
+
+class NewUserState(UserState):
+	def __init__(self, agreementInstance):
+		super(DraftState, self).__init__(agreementInstance)
+	
+	def _prepareFields(self, action, data):
+		if action is "send_verification":
+			if 'confirmationCode' not in data or 'confirmationHash' not in data:
+				raise StateTransitionError("missing required fields")
+			
+			self.user.confirmationCode = data['confirmationCode']
+			self.user.confirmationHash = data['confirmationHash']
+		else:
+			raise StateTransitionError()
+
+class PendingUserState(UserState):
+	def __init__(self, agreementInstance):
+		super(DraftState, self).__init__(agreementInstance)
+	
+	def _prepareFields(self, action, data):
+		if action is "confirm":
+			if not self.user.password and 'password' not in data:
+				raise StateTransitionError("missing required password field")
+			else:
+				self.user.setPasswordHash(data['password'])
+			
+			self.user.dateVerified = datetime.now()
+		else:
+			raise StateTransitionError()
+
+class ActiveUserState(UserState):
+	def __init__(self, agreementInstance):
+		super(DraftState, self).__init__(agreementInstance)
+	
+	def _prepareFields(self, action, data):
+		raise StateTransitionError()

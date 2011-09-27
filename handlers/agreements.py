@@ -105,16 +105,16 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			lst.append({
 				"id": agr.id,
 				"name": agr.name,
-				"other_id": usr.id,
-				"other_name": usr.getFullName(),
+				"other_id": usr and usr.id,
+				"other_name": usr and usr.getFullName(),
 				"date": agr.dateCreated.strftime('%B %d, %Y'),
 				"amount": agr.getCostString(),
-				"profileURL": usr.profileSmallURL or '#', # Default profile photo? Set during signup?
-				#"state": AgreementState.currentState(agr),
+				"profileURL": usr and (usr.profileSmallURL or '#'), # Default profile photo? Set during signup?
+				#"state": InProgressState.currentState(agr),
 			})
 		
 		for agreement in agreements:
-			stateClass = AgreementStates.currentState(agreement).__class__
+			stateClass = AgreementState.currentState(agreement).__class__
 			
 			if stateClass is 'InvalidState':
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
@@ -122,13 +122,13 @@ class AgreementListHandler(Authenticated, BaseHandler):
 					)
 				)
 			if agreementType == 'Client':
-				other = User.retrieveByID(agreement.clientID)
+				other = User.retrieveByID(agreement.clientID) if agreement.clientID else None
 				
 				if stateClass in [DraftState, DeclinedState, ContestedState]:
 					appendAgreement(actionItems, agreement, other)
 				elif stateClass in [EstimateState, CompletedState]:
 					appendAgreement(awaitingReply, agreement, other)
-				elif stateClass in [AgreementState]:
+				elif stateClass in [InProgressState]:
 					appendAgreement(inProgress, agreement, other)
 			else:
 				other = User.retrieveByID(agreement.vendorID)
@@ -137,7 +137,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 					appendAgreement(actionItems, agreement, other)
 				elif stateClass in [DeclinedState, ContestedState]:
 					appendAgreement(awaitingReply, agreement, other)
-				elif stateClass in [AgreementState]:
+				elif stateClass in [InProgressState]:
 					appendAgreement(inProgress, agreement, other)
 		
 		templateDict['agreementType'] = agreementType
@@ -239,7 +239,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				} ],
 				"client": []
 			},
-			AgreementState : {
+			InProgressState : {
 				"vendor": [ {
 					"id": "action-markcomplete",
 					"name": "Mark Completed",
@@ -325,7 +325,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if agreement.vendorID == user.id:
 			agreementType = 'Client'
 		elif agreement.clientID == user.id:
-			stateClass = AgreementStates.currentState(agreement).__class__
+			stateClass = AgreementState.currentState(agreement).__class__
 			
 			if stateClass in [DraftState, InvalidState]:
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
@@ -493,7 +493,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			})
 		
 		templateDict['transactions'] = transactions
-		currentState = AgreementStates.currentState(agreement)
+		currentState = AgreementState.currentState(agreement)
 		templateDict['state'] = currentState.__class__.__name__
 		templateDict['actions'] = self.generateActionList(currentState, templateDict['self'])
 		
@@ -722,7 +722,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			"agreement": {
 				"id": agreement.id
 			},
-			"state": AgreementState.currentState(agreement)
+			"state": InProgressState.currentState(agreement)
 		}
 		
 		self.renderJSON(stateDict)
@@ -754,7 +754,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(role)
 		logging.info(action)
 		
-		currentState = AgreementStates.currentState(agreement)
+		currentState = AgreementState.currentState(agreement)
 		logging.info(currentState.__class__.__name__)
 		
 		# In order to make sure records are not put in inconsistent states, a

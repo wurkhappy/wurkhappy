@@ -195,7 +195,7 @@ class AgreementPhase (MappedObj):
 # DeclinedState -> dateAccepted null and dateDecline > dateSent
 #  vendor sees estimate, edit and re-send buttons; re-sent updates dateSent
 #  client sees nothing ?
-# AgreementState -> (dateAccepted > dateSent and dateContested null) or (dateContested > dateSent > dateAccepted)
+# InProgressState -> (dateAccepted > dateSent and dateContested null) or (dateContested > dateSent > dateAccepted)
 #  vendor sees agreement, mark-completed buttons; mark-completed updates dateSent
 #  client sees agreement
 # CompletedState -> (dateSent > dateAccepted and dateContested null) or (dateSent > dateContested > dateAccepted)
@@ -206,7 +206,7 @@ class AgreementPhase (MappedObj):
 # Do we store elsewhere a history of edits?
 # -------------------------------------------------------------------
 
-class AgreementStates(object):
+class AgreementState(object):
 	""" AgreementState """
 	
 	transitionNames = ["send", "edit", "accept", "decline", "mark_complete", "dispute", "verify"]
@@ -214,7 +214,7 @@ class AgreementStates(object):
 	actionMap = dict(zip(transitionNames, fieldNames))
 	
 	def __init__(self, agreementInstance):
-		assert type(agreementInstance) == Agreement
+		assert isinstance(agreementInstance, Agreement) #type(agreementInstance) == Agreement
 		self.agreementInstance=agreementInstance
 		self.actions = {"vendor": {}, "client" : {}}
 	
@@ -249,7 +249,7 @@ class AgreementStates(object):
 			('DraftState', not dateSent),
 			('EstimateState', not dateContested and not dateAccepted and (not dateDeclined or dateSent and dateDeclined < dateSent)),
 			('DeclinedState', not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent),
-			('AgreementState', (not dateContested and dateAccepted and dateSent and dateAccepted > dateSent) \
+			('InProgressState', (not dateContested and dateAccepted and dateSent and dateAccepted > dateSent) \
  				    or (dateContested and dateAccepted and dateSent and dateContested > dateSent and dateAccepted < dateSent)),
 			('InvalidState', True)
 		]
@@ -272,57 +272,57 @@ class AgreementStates(object):
 		for day, (col, state) in enumerate([('dateSent', 'EstimateState')
 						    ,('dateDeclined', 'DeclinedState')
 						    ,('dateSent', 'EstimateState')
-						    ,('dateAccepted', 'AgreementState')
+						    ,('dateAccepted', 'InProgressState')
 						    ,('dateSent', 'CompletedState')
-						    ,('dateContested', 'AgreementState')
+						    ,('dateContested', 'InProgressState')
 						    ,('dateSent', 'CompletedState')
 						    ,('dateVerified' ,'PaidState')]):
 			agreementInstance[col]=datetime(2011, 8, day+1)
 			assert currentState(agreementInstance)==state
 
-class DraftState(AgreementStates):
+class DraftState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
 		self.addButton('vendor', "edit")
 		self.addButton('vendor', "send")
 
-class EstimateState(AgreementStates):
+class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
 		self.addButton('vendor', "edit")
 		self.addButton('client', "accept")
 		self.addButton('client', "decline")
 
-class DeclinedState(AgreementStates):
+class DeclinedState(AgreementState):
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
 		self.addButton('vendor', "edit")
 		self.addButton('vendor', "send")
 
-class AgreementState(AgreementStates):
+class InProgressState(AgreementState):
 	def __init__(self, agreement):
-		super(AgreementState, self).__init__(agreement)
+		super(InProgressState, self).__init__(agreement)
 		self.addButton('vendor', 'mark_complete')
 
-class CompletedState(AgreementStates):
+class CompletedState(AgreementState):
 	def __init__(self, agreement):
 		super(CompletedState, self).__init__(agreement)
 		self.addButton('client', 'verify')
 		self.addButton('client', 'dispute')
 
-class ContestedState(AgreementStates):
+class ContestedState(AgreementState):
 	def __init__(self, agreement):
 		super(ContestedState, self).__init__(agreement)
 		self.addButton('vendor', 'send')
 	
-class PaidState(AgreementStates):
+class PaidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
 	def doTransition(self, r, b):
 		return self
 	
-class InvalidState(AgreementStates):
+class InvalidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
