@@ -77,10 +77,11 @@ $(document).ready(function() {
 		selectedValuesProp: "id",
 		inputName: "clientID",
 		searchObjProps: "name,email",
-		startText: "Email Address or Name of Existing Contact",
+		startText: "",
 		resultsHighlight: false,
 		neverSubmit: true,
 		selectionLimit: 1,
+		preFill: [slug['preFill']],
 		
 		// See if we can't muck around with internals here and add an email
 		// address to the internal data structure if that's what is typed, 
@@ -109,7 +110,12 @@ $(document).ready(function() {
 		for (var i = 0, len = buttonMaps.length; i < len; i++) {
 			if (buttonMaps.hasOwnProperty(i)) {
 				var map = buttonMaps[i];
+				
 				$("#" + map['id']).click(function(m) {
+					// Doing a function application on a closure here
+					// to bind the click function to the proper value
+					// from the iteration over buttonMaps.
+					
 					return function() {
 						var data = m['params'], capture = '';
 						data._xsrf = getCookie("_xsrf");
@@ -117,6 +123,7 @@ $(document).ready(function() {
 						
 						if (m['capture-id']) {
 							capture = $('#' + m['capture-id']).serialize(data);
+							console.log(capture);
 						}
 						
 						$.ajax({
@@ -124,7 +131,11 @@ $(document).ready(function() {
 							data: [jQuery.param(data), capture].join('&'),
 							dataType: "text",
 							type: m['method'],
-							success: successActions[m['id']]
+							success: successActions[m['id']],
+							error: function (jqXHR, textStatus, errorThrown) {
+								error = jQuery.parseJSON(jqXHR.responseText);
+								alert(error ? error.display : 'There was a problem of some sort');
+							}
 						});
 						return false;
 					}

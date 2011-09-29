@@ -185,7 +185,10 @@ class UserState(object):
 		except StateTransitionError as e:
 			error = {
 				"domain": "application.consistency",
-				"display": "",
+				"display": (
+					"There was a problem with your request. Our engineering "
+					"team has been notified and will look into it."
+				),
 				"debug": "state transition error"
 			}
 			

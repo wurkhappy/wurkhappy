@@ -209,12 +209,12 @@ class AgreementPhase (MappedObj):
 class AgreementState(object):
 	""" AgreementState """
 	
-	transitionNames = ["send", "edit", "accept", "decline", "mark_complete", "dispute", "verify"]
+	transitionNames = ["send", "update", "accept", "decline", "mark_complete", "dispute", "verify"]
 	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
 	actionMap = dict(zip(transitionNames, fieldNames))
 	
 	def __init__(self, agreementInstance):
-		assert isinstance(agreementInstance, Agreement) #type(agreementInstance) == Agreement
+		assert isinstance(agreementInstance, Agreement)
 		self.agreementInstance=agreementInstance
 		self.actions = {"vendor": {}, "client" : {}}
 	
@@ -283,20 +283,20 @@ class AgreementState(object):
 class DraftState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
-		self.addButton('vendor', "edit")
+		self.addButton('vendor', "update")
 		self.addButton('vendor', "send")
 
 class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
-		self.addButton('vendor', "edit")
+		self.addButton('vendor', "update")
 		self.addButton('client', "accept")
 		self.addButton('client', "decline")
 
 class DeclinedState(AgreementState):
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
-		self.addButton('vendor', "edit")
+		self.addButton('vendor', "update")
 		self.addButton('vendor', "send")
 
 class InProgressState(AgreementState):
@@ -313,6 +313,7 @@ class CompletedState(AgreementState):
 class ContestedState(AgreementState):
 	def __init__(self, agreement):
 		super(ContestedState, self).__init__(agreement)
+		self.addButton('vendor', 'update')
 		self.addButton('vendor', 'send')
 	
 class PaidState(AgreementState):

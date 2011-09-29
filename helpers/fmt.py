@@ -202,7 +202,7 @@ class Currency(Enforce):
 		if value is None or str(value[0]) is '':
 			return self.default
 		
-		return self.filter(val)
+		return self.filter(value[0])
 		
 class PhoneNumber(Enforce):
 	def __init__(self, default=None):

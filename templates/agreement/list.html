@@ -107,10 +107,11 @@
 				<table border="0" cellspacing="0" cellpadding="0">
 					<tr>
 						<td class="meta">
-							<span>{% if agreement['other_id'] %}<img src="{{ agreement['profileURL'] }}" width="50">{% end %}</span>
+							<!-- TODO: move the style to CSS and use a background placeholder image -->
+							<span style="height: 50px; width: 50px;">{% if agreement['other_id'] %}<img src="{{ agreement['profileURL'] }}" width="50">{% end %}</span>
 						</td>
 						<td>
-							<h3><a href="/agreement/{{ agreement['id'] }}">{{ 'Untitled' and agreement['name'] }}</a></h3>
+							<h3><a href="/agreement/{{ agreement['id'] }}">{{ agreement['name'] or 'Untitled Agreement' }}</a></h3>
 							<p>
 								{% if 'amount' in agreement and agreement['amount'] %}<strong>Cost:</strong> {{ agreement['amount'] }} &mdash; {% end %}
 								{% if 'paid' in agreement and agreement['paid'] %}<strong>Deposit:</strong> {{ agreement['paid'] }} &mdash; {% end %}

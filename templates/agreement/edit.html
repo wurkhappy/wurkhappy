@@ -1,11 +1,21 @@
 {% extends "../base.html" %}
 
+
+
 ### Redefine the main block
-
-
 {% block main %}
 
-{% module Slug({"_xsrf": "foo"}) %}
+
+{% set slug = { "_xsrf": '' } %}
+
+{% if data['self'] == 'vendor' and data['client'] %}
+	{% set slug['preFill'] = {"fullName": data['client']['fullName'], "id": data['client']['id']} %}
+{% else %}
+	{% set slug['preFill'] = {} %}
+{% end %}
+
+{% module Slug(slug) %}
+
 
 <div class="container">
 	{% block navigation %}
@@ -15,7 +25,7 @@
 	{% end %}
 	
 	<div id="content" class="clear">
-		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action">
+		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action" id="agreement-form">
 			{% raw xsrf_form_html() %}
 				
 			<h2>Recipient</h2>
@@ -27,9 +37,9 @@
 			<h2>Title and Summary</h2>
 			<fieldset>
 				<label for="">Title</label>
-				<input type="text" name="title" value="{{ data['name'] }}" size="100" />
+				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
 				<label for="summary">Summary</label>
-				<textarea name="summary" rows="3" cols="100"></textarea>
+				<textarea name="summary" rows="3" cols="100">{% if len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
 				<label for="">Date of Issue</label>
 				{% module DatePicker('agreement') %}
 			</fieldset>

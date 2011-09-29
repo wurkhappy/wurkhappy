@@ -48,8 +48,8 @@ class AgreementBase(object):
 		
 		agreementDict = agreement.publicDict()
 		
-		client = User.retrieveByID(agreement.clientID)
-		agreementDict['client'] = client.publicDict()
+		client = User.retrieveByID(agreement.clientID) if agreement.clientID else None
+		agreementDict["client"] = client and client.publicDict()
 		
 		vendor = User.retrieveByID(agreement.vendorID)
 		agreementDict['vendor'] = vendor.publicDict()
@@ -116,7 +116,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		for agreement in agreements:
 			stateClass = AgreementState.currentState(agreement).__class__
 			
-			if stateClass is 'InvalidState':
+			if stateClass == 'InvalidState':
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement.id, agreement.vendorID, agreement.clientID
 					)
@@ -183,14 +183,16 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			DraftState : {
 				"vendor": [ {
 					"id": "action-save",
-					"name": "Save as Draft",
-					"action": "/agreement/new.json",
+					"capture-id": "agreement-form",
+					"name": "Save Draft",
+					"action": "/agreement/%d/update.json" % agreement.id,
 					"method": "POST",
 					"params": { }
 				}, {
 					"id": "action-send",
+					"capture-id": "agreement-form",
 					"name": "Send Estimate",
-					"action": "/agreement/send.json",
+					"action": "/agreement/%d/send.json" % agreement.id,
 					"method": "POST",
 					"params": { }
 				} ],
@@ -201,6 +203,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					# @todo: This would be an edit view anyway; should just be
 					# 'send' action with an 'update' label.
 					"id": "action-save",
+					"capture-id": "agreement-form",
 					"name": "Save Changes",
 					"action": "/agreement/%d/update.json" % agreement.id,
 					"method": "POST",
@@ -225,6 +228,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			DeclinedState : {
 				"vendor": [ {
 					"id": "action-save",
+					"capture-id": "agreement-form",
 					"name": "Save as Draft",
 					"action": "/agreement/%d/update.json" % agreement.id,
 					"method": "POST",
@@ -232,6 +236,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				}, {
 					# @todo: This would be an edit view anyway; should just be a 'send' action.
 					"id": "action-resend",
+					"capture-id": "agreement-form",
 					"name": "Save and Re-submit",
 					"action": "/agreement/%d/send.json" % agreement.id,
 					"method": "GET",
@@ -298,12 +303,14 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"phases": [],
 				"actions": [ {
 					"id": "action-save",
+					"capture-id": "agreement-form",
 					"name": "Save as Draft",
 					"action": "/agreement/new.json",
 					"method": "POST",
 					"params": { }
 				}, {
 					"id": "action-send",
+					"capture-id": "agreement-form",
 					"name": "Send Estimate",
 					"action": "/agreement/send.json",
 					"method": "POST",
@@ -413,8 +420,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			templateDict['summaryComments'] = ''
 		
 		if agreementType == 'Client':
-			client = User.retrieveByID(agreement.clientID)
-			templateDict["client"] = client.publicDict()
+			client = User.retrieveByID(agreement.clientID) if agreement.clientID else None
+			templateDict["client"] = client and client.publicDict()
 			templateDict["vendor"] = user.publicDict()
 			templateDict["self"] = "vendor"
 			templateDict["other"] = "client"
@@ -631,7 +638,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			
 			agreement.clientID = args['clientID']
 		elif args['email']:
-			client = User.retreiveByEmail(args['email'])
+			client = User.retrieveByEmail(args['email'])
 			
 			if client.id == user.id:
 				error = {
@@ -768,7 +775,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		# the agreement's state. That way, if the state transition is invalid
 		# the changes to the agreement record won't be saved.
 		
-		if role is "vendor":
+		if role == "vendor":
 			try:
 				args = fmt.Parser(self.request.arguments,
 					optional= [
@@ -799,7 +806,8 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						)
 					
 					agreement.clientID = client.id
-			elif agreement.clientID is None and action is "send":
+			
+			if agreement.clientID is None and action == "send":
 				# @todo: this should be handled in the doTransition method...
 				error = {
 					"domain": "application.consistency",
@@ -813,8 +821,11 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				self.renderJSON(error)
 				return
 			
-			if isinstance(currentState, DraftState) or isinstance(currentState, DeclinedState):
-				agreement.name = args['title'] and agreement.name
+			if (isinstance(currentState, DraftState) or 
+					isinstance(currentState, EstimateState) or 
+					isinstance(currentState, DeclinedState)):
+				
+				agreement.name = args['title'] or agreement.name
 				
 				summary = AgreementSummary.retrieveByAgreementID(agreement.id)
 				
@@ -823,7 +834,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						dict(agreementID=agreement.id)
 					)
 				
-				summary.summary = args['summary'] and summary.summary
+				summary.summary = args['summary'] or summary.summary
 				
 				# @todo: Defer phase saves until state transition is complete
 				for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
@@ -851,7 +862,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		# which case the dispute fields in the agreement summary and agreement
 		# phase records get updated.
 		
-		elif role is "client":
+		elif role == "client":
 			try:
 				args = fmt.Parser(self.request.arguments,
 					optional=[
@@ -877,8 +888,9 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				agreementSummary.save()
 				
 				for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
-					phase.comments = args['phaseComments'][phase.phaseNumber]
-					phase.save()
+					if phase.phaseNumber < len(args['phaseComments']):
+						phase.comments = args['phaseComments'][phase.phaseNumber]
+						phase.save()
 			elif isinstance(currentState, CompletedState) and action in ["dispute", "verify"]:
 				pass
 		
