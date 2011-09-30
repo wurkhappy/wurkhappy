@@ -30,6 +30,7 @@ class AccountHandler(Authenticated, BaseHandler):
 		# userProfile = user.getProfile()
 		
 		userDict = {
+			'_xsrf': self.xsrf_token,
 			'id': user.id,
 			'firstName': user.firstName,
 			'lastName': user.lastName,

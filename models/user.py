@@ -24,8 +24,8 @@ class User(MappedObj):
 		self.confirmationCode = None
 		self.confirmationHash = None
 		self.invitedBy = None
-		self.confirmed = None # @todo: Delete for next deploy
-		self.subscriberStatus = 0 # @todo: Delete for next deploy
+		# self.confirmed = None # @todo: Delete field from schema
+		# self.subscriberStatus = 0 # @todo: Delete field from schema
 		self.firstName = None
 		self.lastName = None
 		self.telephone = None

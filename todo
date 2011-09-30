@@ -1,4 +1,0 @@
-
-	- Invites & referrals. As an extension of the signup and email verification process, we should allow users to invite friends by entering an email address. We'll send out an invite message with the verification code to create the account. One thing that I'll go ahead and add is a sponsorUserID field to record who invited a particular user.
-
-	- Invoices. This is something I'm working on currently, so this section is mainly to clue everyone in. I've been coming up with a data model for building invoices, and I think it's going to involve three new model objects: projects, invoices, and line items. A project belongs to a user and is a way of organizing invoices. An invoice is created for a particular project and has an associated client that it's sent to. Invoices are made up of line items that have a name, description, unit price, and quantity.

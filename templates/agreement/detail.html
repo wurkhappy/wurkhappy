@@ -6,7 +6,7 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": '', "preFill": {}} %}
+{% set slug = { "_xsrf": data['_xsrf'], "preFill": {}} %}
 
 {% module Slug(slug) %}
 

@@ -13,6 +13,8 @@ from handlers import *
 from tools.email import Email
 from tools.orm import Database
 from tools.amazonaws import AmazonS3
+from tools.beanstalk import Beanstalk
+
 import os
 import os.path
 
@@ -77,6 +79,7 @@ class Application(web.Application):
 			"db": config['database']['db']
 		}, None)
 		
+		Beanstalk.configure(config['beanstalk'])
 		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
 

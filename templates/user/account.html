@@ -1,8 +1,16 @@
 {% extends "../base.html" %}
 
-### Redefine the main block
 
+
+### Redefine the main block
 {% block main %}
+
+
+{% set slug = { "_xsrf": data['_xsrf'] } %}
+
+{% module Slug(slug) %}
+
+
 <div class="container">
 	<!-- adds background -->
 	{% block navigation %}

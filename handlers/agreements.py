@@ -7,6 +7,7 @@ from models.agreement import *
 from models.profile import Profile
 from helpers import fmt
 from tools.orm import ORMJSONEncoder
+from tools.beanstalk import Beanstalk
 
 from datetime import datetime
 import logging
@@ -14,34 +15,6 @@ import logging
 
 
 class AgreementBase(object):
-	##
-	# @param(str) dollar amount with optional dollar sign and fraction part
-	# @return an integer number of cents
-	
-	# @todo: throw this in fmt.
-	
-	def parseAmountString(self, string):
-		'''
-		Parses an input string in the form $12,345.67
-		(where the dollar sign, commas, and fraction part
-		are optional) into an integer number of cents.
-		'''
-		
-		logging.warn(string)
-		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
-		m = r.match(string)
-		if not m or len(m.groups()) != 2:
-			return None
-		logging.warn(m.groups())
-		d = int(m.groups()[0].replace(',', '')) * 100
-		
-		if m.groups()[1]:
-			d += int(m.groups()[1])
-		
-		return d
-	
-	
-	
 	def assembleDictionary(self, agreement):
 		# This should probably go in the model class, but it
 		# could be considered controller, so it's here for now.
@@ -77,6 +50,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		user = self.current_user
 		
 		templateDict = {
+			"_xsrf": self.xsrf_token,
 			"userID": user.id
 		}
 		
@@ -200,8 +174,6 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			},
 			EstimateState : {
 				"vendor": [ {
-					# @todo: This would be an edit view anyway; should just be
-					# 'send' action with an 'update' label.
 					"id": "action-save",
 					"capture-id": "agreement-form",
 					"name": "Save Changes",
@@ -234,7 +206,6 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"method": "POST",
 					"params": { }
 				}, {
-					# @todo: This would be an edit view anyway; should just be a 'send' action.
 					"id": "action-resend",
 					"capture-id": "agreement-form",
 					"name": "Save and Re-submit",
@@ -293,6 +264,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			title = "New Agreement &ndash; Wurk Happy"
 			
 			empty = {
+				"_xsrf": self.xsrf_token,
 				"id": None,
 				"name": "",
 				"date": "",
@@ -404,6 +376,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		# }
 		
 		templateDict = {
+			"_xsrf": self.xsrf_token,
 			"id": agreement.id,
 			"name": agreement.name,
 			"date": agreement.dateCreated.strftime('%B %d, %Y'),
@@ -515,81 +488,6 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
-	
-	
-	# @web.authenticated
-	# def post(self, agreementID=None):
-	# 	user = self.current_user
-	# 	
-	# 	logging.warn(self.request.arguments)
-	# 	
-	# 	agreement = Agreement.retrieveByID(agreementID) if agreementID else Agreement()
-	# 	
-	# 	if not agreement:
-	# 		# Should we serve a 404 page?
-	# 		self.redirect(self.request.uri)
-	# 		return
-	# 	
-	# 	if not agreement.id:
-	# 		agreement.vendorID = user.id
-	# 		agreement.clientID = 2
-	# 	
-	# 	if agreement.vendorID != user.id:
-	# 		# Likewise, should we serve a "beat it, jerk" page?
-	# 		self.redirect(self.request.uri)
-	# 		return
-	# 	
-	# 	agreementText = None
-	# 	
-	# 	try:
-	# 		args = fmt.Parser(self.request.arguments,
-	# 			optional=[
-	# 				('title', fmt.Enforce(str)),
-	# 				('cost', fmt.PositiveInteger(0)),
-	# 				('details', fmt.Enforce(str)),
-	# 				('refund', fmt.Enforce(str))
-	# 			],
-	# 			required=[]
-	# 		)
-	# 	except fmt.HTTPErrorBetter as e:
-	# 		logging.warn(e.__dict__)
-	# 		logging.warn(e.message)
-	# 		self.set_status(e.status_code)
-	# 		self.write(e.body_content)
-	# 		return
-	# 	
-	# 	if args['title']:
-	# 		agreement.name = args['title']
-	# 	
-	# 	if args['cost']:
-	# 		agreement.cost = args['cost']
-	# 	
-	# 	if agreement.id:
-	# 		agreement.dateModified = datetime.now()
-	# 	
-	# 	logging.warn(agreement.__dict__)
-	# 	agreement.save()
-	# 	
-	# 	if args['details']:
-	# 		agreementText = AgreementTxt.retrieveByAgreementID(agreement.id)
-	# 	
-	# 		if not agreementText:
-	# 			agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-	# 	
-	# 		agreementText.agreement = args['details']
-	# 	
-	# 	if args['refund']:
-	# 		agreementText = agreementText or AgreementTxt.retrieveByAgreementID(agreement.id)
-	# 		
-	# 		if not agreementText:
-	# 			agreementText = AgreementTxt.initWithDict(dict(agreementID=agreement.id))
-	# 		
-	# 		agreementText.refund = args['refund']
-	# 	
-	# 	if agreementText:
-	# 		agreementText.save()
-	# 	
-	# 	self.redirect('/agreement/%d' % agreement.id)
 
 
 
@@ -640,7 +538,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		elif args['email']:
 			client = User.retrieveByEmail(args['email'])
 			
-			if client.id == user.id:
+			if client and client.id == user.id:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't send estimates to yourself. Please choose a different client.",
@@ -651,9 +549,18 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 			
 			if not client:
-				client = Client.initWithDict(
+				client = User.initWithDict(
 					dict(email=args['email'])
 				)
+				
+				client.save()
+				client.refresh()
+				
+				with Beanstalk() as bconn:
+					msg = json.dumps(dict(userID=client.id, action='invite'))
+					bconn.use('email_notification_queue')
+					r = bconn.put(msg)
+					logging.warn('Beanstalk: email_notification_queue#%d %s' % (r, msg))
 			
 			agreement.clientID = client.id
 		
@@ -675,7 +582,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			phase = AgreementPhase()
 			phase.agreementID = agreement.id
 			phase.phaseNumber = num
-			phase.amount = cost #self.parseAmountString(cost)
+			phase.amount = cost
 			phase.description = descr
 			phase.save()
 		
@@ -804,6 +711,10 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						client = User.initWithDict(
 							dict(email=args['email'],invitedBy=user.id)
 						)
+						
+						with Beanstalk() as bconn:
+							bconn.use('email_notification_queue')
+							bconn.put(json.dumps(dict(userID=client.id, action='invite')))
 					
 					agreement.clientID = client.id
 			
@@ -846,7 +757,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						)
 					
 					if cost:
-						phase.amount = cost #self.parseAmountString(cost)
+						phase.amount = cost
 					
 					if descr:
 						phase.description = descr
