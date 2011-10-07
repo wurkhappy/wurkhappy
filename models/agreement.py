@@ -2,7 +2,12 @@ from tools.orm import *
 from collections import OrderedDict
 from datetime import datetime
 
+import bcrypt
+import hashlib
 import logging
+
+
+
 # -------------------------------------------------------------------
 # Agreements
 # -------------------------------------------------------------------
@@ -14,6 +19,8 @@ class Agreement(MappedObj):
 		self.vendorID = None
 		self.clientID = None
 		self.name = None
+		self.tokenFingerprint = None
+		self.tokenHash = None
 		self.dateCreated = None
 		self.dateSent = None
 		self.dateAccepted = None
@@ -68,6 +75,14 @@ class Agreement(MappedObj):
 			return result['SUM(b.amount)']
 	
 	@classmethod
+	def retrieveByFingerprint(clz, fingerprint):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM %s WHERE tokenFingerprint = %%s"
+			cursor.execute(query % clz.tableName(), fingerprint)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+	
+	@classmethod
 	def iteratorWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT * FROM %s WHERE vendorID = %%s ORDER BY dateCreated DESC" % clz.tableName(), vendorID)
@@ -90,6 +105,12 @@ class Agreement(MappedObj):
 			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self.id)
 			amount = cursor.fetchone()['SUM(amount)']
 			return "$%.02f" % (amount / 100) if amount else ""
+	
+	def setTokenHash(self, token):
+		self.tokenHash = bcrypt.hashpw(str(token), bcrypt.gensalt())
+	
+	def tokenIsValid(self, token):
+		return self.tokenHash and self.tokenHash == bcrypt.hashpw(str(token), self.tokenHash)
 	
 	def publicDict(self):
 		return OrderedDict([

@@ -100,13 +100,19 @@ class User(MappedObj):
 		return Profile.retrieveByUserID(self.id)
 	
 	def getFullName(self):
-		return " ".join([str(self.firstName or ""), str(self.lastName or "")]).strip()
+		return " ".join([str(self.firstName or ""), str(self.lastName or "")]).strip() or self.email
 	
 	def setPasswordHash(self, password):
 		self.password = bcrypt.hashpw(str(password), bcrypt.gensalt())
 	
 	def passwordIsValid(self, password):
 		return self.password == bcrypt.hashpw(str(password), self.password)
+	
+	def setConfirmationHash(self, confirmation):
+		self.confirmationHash = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
+	
+	def confirmationIsValid(self, confirmation):
+		return self.confirmationHash == bcrypt.hashpw(str(confirmation), self.confirmationHash)
 	
 	def publicDict(self):
 		return {
@@ -245,49 +251,48 @@ class UserState(object):
 
 class BetaUserState(UserState):
 	def __init__(self, agreementInstance):
-		super(DraftState, self).__init__(agreementInstance)
+		super(BetaUserState, self).__init__(agreementInstance)
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmationCode' not in data or 'confirmationHash' not in data:
+			if 'confirmationHash' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.confirmationCode = data['confirmationCode']
-			self.user.confirmationHash = data['confirmationHash']
+			self.user.setConfirmationHash(data['confirmationHash'])
+			# self.user.confirmationCode = data['confirmationCode']
+			# self.user.confirmationHash = data['confirmationHash']
 		else:
 			raise StateTransitionError()
 
 class InvitedUserState(UserState):
 	def __init__(self, agreementInstance):
-		super(DraftState, self).__init__(agreementInstance)
+		super(InvitedUserState, self).__init__(agreementInstance)
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmationCode' not in data or 'confirmationHash' not in data:
+			if 'confirmationHash' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.confirmationCode = data['confirmationCode']
-			self.user.confirmationHash = data['confirmationHash']
+			self.user.setConfirmationHash(data['confirmationHash'])
 		else:
 			raise StateTransitionError()
 
 class NewUserState(UserState):
 	def __init__(self, agreementInstance):
-		super(DraftState, self).__init__(agreementInstance)
+		super(NewUserState, self).__init__(agreementInstance)
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmationCode' not in data or 'confirmationHash' not in data:
+			if 'confirmationHash' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.confirmationCode = data['confirmationCode']
-			self.user.confirmationHash = data['confirmationHash']
+			self.user.setConfirmationHash(data['confirmationHash'])
 		else:
 			raise StateTransitionError()
 
 class PendingUserState(UserState):
 	def __init__(self, agreementInstance):
-		super(DraftState, self).__init__(agreementInstance)
+		super(PendingUserState, self).__init__(agreementInstance)
 	
 	def _prepareFields(self, action, data):
 		if action is "confirm":
@@ -302,7 +307,14 @@ class PendingUserState(UserState):
 
 class ActiveUserState(UserState):
 	def __init__(self, agreementInstance):
-		super(DraftState, self).__init__(agreementInstance)
+		super(ActiveUserState, self).__init__(agreementInstance)
+	
+	def _prepareFields(self, action, data):
+		raise StateTransitionError()
+
+class InvalidUserState(UserState):
+	def __init__(self, agreementInstance):
+		super(InvalidUserState, self).__init__(agreementInstance)
 	
 	def _prepareFields(self, action, data):
 		raise StateTransitionError()
