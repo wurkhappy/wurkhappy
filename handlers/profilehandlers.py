@@ -4,7 +4,6 @@ from base import *
 from models.user import User
 from models.profile import Profile
 from helpers.verification import Verification
-from helpers.validation import Validation
 
 # -------------------------------------------------------------------
 # Profile (Add / Edit)
@@ -70,10 +69,10 @@ class ProfileHandler(Authenticated, BaseHandler):
 		
 		blogURL = self.get_argument("blogURL", None)
 		portfolioURL = self.get_argument("portfolioURL", None)
-		if (blogURL and not Validation.validateURL(blogURL)) or (portfolioURL and not Validation.validateURL(portfolioURL)):
-			if errs != "":
-				errs += "-"
-			errs += "invalid_url"
+		# if (blogURL and not Validation.validateURL(blogURL)) or (portfolioURL and not Validation.validateURL(portfolioURL)):
+		# 	if errs != "":
+		# 		errs += "-"
+		# 	errs += "invalid_url"
 			
 		if errs != "":
 			self.redirect('/profile/'+profile.urlStub+"/edit?err="+errs)
