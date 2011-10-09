@@ -2,7 +2,7 @@ from __future__ import division
 import re
 
 from base import *
-from models.user import User
+from models.user import *
 from models.agreement import *
 from models.profile import Profile
 from helpers import fmt
@@ -10,6 +10,7 @@ from tools.orm import ORMJSONEncoder
 from tools.beanstalk import Beanstalk
 
 from datetime import datetime
+import hashlib
 import logging
 
 
@@ -254,10 +255,29 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			}
 		}[state][role]
 	
-	
-	@web.authenticated
+	# @web.authenticated
+	# @todo: SECURITY AUDIT
 	def get(self, agreementID=None):
 		user = self.current_user
+		agreement = None
+		
+		if not user:
+			logging.warn(self.request.arguments)
+			token = self.get_argument("t", None)
+			
+			agreement = agreementID and Agreement.retrieveByID(agreementID)
+			
+			# fingerprint = hashlib.md5(str(token)).hexdigest() # EWWWWW!
+			# logging.warn(fingerprint)
+			# agreement = token and Agreement.retrieveByFingerprint(fingerprint)
+			
+			if not (agreement and agreement.tokenIsValid(token)):
+				self.set_status(403)
+				self.write("forbidden")
+				# @todo: Properly handle the case
+				return
+			
+			user = User.retrieveByID(agreement.clientID)
 		
 		if not agreementID:
 			# Must have been routed from /agreement/new
@@ -294,7 +314,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			self.render("agreement/edit.html", title=title, data=empty, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 			return
 		
-		agreement = Agreement.retrieveByID(agreementID)
+		agreement = agreement or Agreement.retrieveByID(agreementID)
 		
 		if not agreement:
 			self.set_status(404)
@@ -524,7 +544,9 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		agreement.name = args['title']
 		
 		if args['clientID']:
-			if args['clientID'] == user.id:
+			client = User.retrieveByID(args['clientID'])
+			
+			if client and client.id == user.id:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't send estimates to yourself. Please choose a different client.",
@@ -534,7 +556,15 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				self.renderJSON(error)
 				return
 			
-			agreement.clientID = args['clientID']
+			if not client:
+				error = {
+					"domain": "resource.not_found",
+					"display": "We couldn't find the client you specified. Could you please try that again?",
+					"debug": "the 'clientID' specified was not found"
+				}
+				self.set_status(400)
+				self.renderJSON(error)
+				return
 		elif args['email']:
 			client = User.retrieveByEmail(args['email'])
 			
@@ -550,24 +580,47 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			
 			if not client:
 				client = User.initWithDict(
-					dict(email=args['email'])
+					dict(email=args['email'], invitedBy=user.id)
 				)
 				
 				client.save()
 				client.refresh()
-				
-				with Beanstalk() as bconn:
-					msg = json.dumps(dict(userID=client.id, action='invite'))
-					bconn.use('email_notification_queue')
-					r = bconn.put(msg)
-					logging.warn('Beanstalk: email_notification_queue#%d %s' % (r, msg))
-			
-			agreement.clientID = client.id
+		else:
+			client = None
 		
+		agreement.clientID = client and client.id
 		agreement.save()
 		agreement.refresh()
 		
 		if action == "send":
+			if not agreement.clientID:
+				# @todo: Check this. I'm pretty sure it makes sense, but uh...
+				error = {
+					"domain": "application.conflict",
+					"display": "You need to choose a recipient in order to send this estimates. Please choose a client in the recipient field.",
+					"debug": "'clientID' or 'email' parameter required"
+				}
+				self.set_status(409)
+				self.renderJSON(error)
+				return
+			
+			clientState = UserState.currentState(client)
+			
+			if isinstance(clientState, InvitedUserState):
+				data = {"confirmationHash": "foo"}
+				clientState.doTransition("send_verification", data)
+				
+				with Beanstalk() as bconn:
+					msg = json.dumps(dict(
+						userID=client.id,
+						agreementID=agreement.id,
+						action='agreementInvite'
+					))
+					
+					bconn.use('email_notification_queue')
+					r = bconn.put(msg)
+					logging.info('Beanstalk: email_notification_queue#%d %s' % (r, msg))
+			
 			agreement.dateSent = datetime.now()
 			agreement.save()
 			agreement.refresh()
@@ -703,34 +756,76 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			
 			if isinstance(currentState, DraftState):
 				if args['clientID']:
-					agreement.clientID = args['clientID']
+					client = User.retrieveByID(args['clientID'])
+					
+					if not client:
+						error = {
+							"domain": "resource.not_found",
+							"display": (
+								"We couldn't find the client you specified. "
+								"Could you please try that again?"
+							),
+							"debug": "the 'clientID' specified was not found"
+						}
+						self.set_status(400)
+						self.renderJSON(error)
+						return
+					
+					agreement.clientID = client.id
 				elif args['email']:
 					client = User.retrieveByEmail(args['email'])
+					
+					if client and client.id == user.id:
+						error = {
+							"domain": "application.conflict",
+							"display": "You can't send estimates to yourself. Please choose a different client.",
+							"debug": "'clientID' parameter has forbidden value"
+						}
+						self.set_status(409)
+						self.renderJSON(error)
+						return
 					
 					if not client:
 						client = User.initWithDict(
 							dict(email=args['email'],invitedBy=user.id)
 						)
 						
-						with Beanstalk() as bconn:
-							bconn.use('email_notification_queue')
-							bconn.put(json.dumps(dict(userID=client.id, action='invite')))
-					
+						client.save()
+						client.refresh()
 					agreement.clientID = client.id
-			
-			if agreement.clientID is None and action == "send":
-				# @todo: this should be handled in the doTransition method...
-				error = {
-					"domain": "application.consistency",
-					"display": (
-						"To send an estimate, you must specify a client. "
-						"Please enter a recipient's name or email address."
-					),
-					"debug": "'clientID' value required to send estimate"
-				}
-				self.set_status(400)
-				self.renderJSON(error)
-				return
+				
+				if action == "send":
+					if agreement.clientID is None:
+						# @todo: this should be handled in the doTransition method...
+						error = {
+							"domain": "application.consistency",
+							"display": (
+								"To send an estimate, you must specify a client. "
+								"Please enter a recipient's name or email address."
+							),
+							"debug": "'clientID' value required to send estimate"
+						}
+						self.set_status(400)
+						self.renderJSON(error)
+						return
+					else:
+						clientState = UserState.currentState(client)
+						
+						if isinstance(clientState, InvitedUserState):
+							data = {"confirmationHash": "foo"}
+							clientState.doTransition("send_verification", data)
+							
+							# @todo: also defer this to after the transition is successful?
+							with Beanstalk() as bconn:
+								msg = json.dumps(dict(
+									userID=client.id,
+									agreementID=agreement.id,
+									action='agreementInvite'
+								))
+								
+								bconn.use('email_notification_queue')
+								r = bconn.put(msg)
+								logging.warn('Beanstalk: email_notification_queue#%d %s' % (r, msg))
 			
 			if (isinstance(currentState, DraftState) or 
 					isinstance(currentState, EstimateState) or 

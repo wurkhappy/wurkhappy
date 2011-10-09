@@ -1,5 +1,5 @@
 import hashlib
-import base64
+# import base64
 import uuid
 import string
 import random
@@ -7,6 +7,8 @@ import hmac
 import os
 import smtplib
 import bcrypt
+
+from tools.base import Base16, Base58
 
 # -------------------------------------------------------------------
 # Verification
@@ -31,9 +33,8 @@ class Verification (object):
 	
 	@staticmethod
 	def _generateHashDigest():
-		rawDigest = hashlib.sha1(uuid.uuid4().get_bytes()).digest()
-		#TODO: Use b56 here
-		return base64.urlsafe_b64encode(rawDigest)
+		hexDigest = hashlib.sha1(uuid.uuid4().get_bytes()).hexdigest()
+		return Base58(Base16(hexDigest)).string
 	
 	@staticmethod
 	def checkCode(code):
@@ -43,17 +44,17 @@ class Verification (object):
 		for (index, digit) in enumerate(body):
 			checksum += string.index(alphabet, digit) * index
 		return string.index(alphabet, code[-1]) == checksum % 26
-	
-	@staticmethod
-	def hash_password(plain_password):
-		# default log_rounds is 12
-		return bcrypt.hashpw(plain_password, bcrypt.gensalt())
-	
-	@staticmethod
-	def check_password(hashedPassword, plainPassword):
-		return hashedPassword == bcrypt.hashpw(plainPassword, hashedPassword)
-	
-	@staticmethod
-	def passwordIsValid(hashedPassword, plainPassword):
-		return hashedPassword == bcrypt.hashpw(plainPassword, hashedPassword)
+	# 
+	# @staticmethod
+	# def hash_password(plain_password):
+	# 	# default log_rounds is 12
+	# 	return bcrypt.hashpw(plain_password, bcrypt.gensalt())
+	# 
+	# @staticmethod
+	# def check_password(hashedPassword, plainPassword):
+	# 	return hashedPassword == bcrypt.hashpw(plainPassword, hashedPassword)
+	# 
+	# @staticmethod
+	# def passwordIsValid(hashedPassword, plainPassword):
+	# 	return hashedPassword == bcrypt.hashpw(plainPassword, hashedPassword)
 
