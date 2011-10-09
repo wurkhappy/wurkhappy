@@ -215,7 +215,7 @@ class UserState(object):
 		dateVerified = user.dateVerified
 		
 		states = [
-			(ActiveUserState, password and dateVerified and confirmationCode and confirmationHash and email),
+			(ActiveUserState, password and dateVerified and email),
 			(PendingUserState, confirmationCode and confirmationHash and email and dateCreated),
 			(NewUserState, dateCreated and email and password),
 			(InvitedUserState, dateCreated and email and invitedBy),
@@ -223,31 +223,9 @@ class UserState(object):
 			(InvalidUserState, True)
 		]
 		
-		# like find-first
 		logging.info([s[0] for s in states if s[1]])
 		state = [s[0] for s in states if s[1]][0]
 		return state(user)
-
-	# @classmethod
-	# def testCurrentState(clz):
-	# 	agreementInstance = OrderedDict([('dateCreated', datetime(2011, 8, 1)),
-	# 					 ('dateSent', None),
-	# 					 ('dateAccepted', None),
-	# 					 ('dateModified', None),
-	# 					 ('dateDeclined', None),
-	# 					 ('dateVerified', None), 
-	# 					 ('dateContested', None)])
-	# 	assert currentState(agreementInstance)=='DraftState'
-	# 	for day, (col, state) in enumerate([('dateSent', 'EstimateState')
-	# 					    ,('dateDeclined', 'DeclinedState')
-	# 					    ,('dateSent', 'EstimateState')
-	# 					    ,('dateAccepted', 'InProgressState')
-	# 					    ,('dateSent', 'CompletedState')
-	# 					    ,('dateContested', 'InProgressState')
-	# 					    ,('dateSent', 'CompletedState')
-	# 					    ,('dateVerified' ,'PaidState')]):
-	# 		agreementInstance[col]=datetime(2011, 8, day+1)
-	# 		assert currentState(agreementInstance)==state
 
 class BetaUserState(UserState):
 	def __init__(self, agreementInstance):
