@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.15, for osx10.6 (i386)
+-- MySQL dump 10.13  Distrib 5.5.10, for osx10.6 (i386)
 --
 -- Host: localhost    Database: wurkhappy
 -- ------------------------------------------------------
--- Server version	5.5.15
+-- Server version	5.5.10
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -25,8 +25,10 @@ DROP TABLE IF EXISTS `agreement`;
 CREATE TABLE `agreement` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `vendorID` bigint(20) unsigned NOT NULL,
-  `clientID` bigint(20) unsigned NOT NULL,
+  `clientID` bigint(20) unsigned DEFAULT NULL,
   `name` varchar(150) DEFAULT NULL,
+  `tokenHash` varchar(60) DEFAULT NULL,
+  `tokenFingerprint` varchar(60) DEFAULT NULL,
   `dateCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dateSent` datetime DEFAULT NULL,
   `dateAccepted` datetime DEFAULT NULL,
@@ -35,8 +37,9 @@ CREATE TABLE `agreement` (
   `dateCompleted` datetime DEFAULT NULL,
   `dateVerified` datetime DEFAULT NULL,
   `dateContested` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tokenFingerprint` (`tokenFingerprint`)
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -57,7 +60,7 @@ CREATE TABLE `agreementPhase` (
   `comments` text,
   PRIMARY KEY (`id`),
   KEY `agreementID` (`agreementID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -74,7 +77,7 @@ CREATE TABLE `agreementSummary` (
   `comments` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `agreementID` (`agreementID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -91,7 +94,7 @@ CREATE TABLE `agreementTxn` (
   `status` tinyint(4) DEFAULT NULL,
   `dateModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -108,47 +111,6 @@ CREATE TABLE `forgot_password` (
   `validUntil` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `active` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `invoice`
---
-
-DROP TABLE IF EXISTS `invoice`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `invoice` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `userID` bigint(20) unsigned NOT NULL,
-  `clientID` bigint(20) unsigned DEFAULT NULL,
-  `projectID` bigint(20) unsigned NOT NULL,
-  `dateCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `datePaid` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `dateSent` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  PRIMARY KEY (`id`),
-  KEY `userID` (`userID`),
-  KEY `clientID` (`clientID`),
-  KEY `projectID` (`projectID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `lineItem`
---
-
-DROP TABLE IF EXISTS `lineItem`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `lineItem` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `invoiceID` bigint(20) unsigned NOT NULL,
-  `name` varchar(50) DEFAULT NULL,
-  `description` varchar(200) DEFAULT NULL,
-  `price` int(11) DEFAULT NULL,
-  `quantity` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `invoiceID` (`invoiceID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -173,6 +135,24 @@ CREATE TABLE `payment` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `paymentMethod`
+--
+
+DROP TABLE IF EXISTS `paymentMethod`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `paymentMethod` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `userID` bigint(20) unsigned NOT NULL,
+  `display` varchar(20) DEFAULT NULL,
+  `cardExpires` date DEFAULT NULL,
+  `abaDisplay` varchar(20) DEFAULT NULL,
+  `gatewayToken` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `profile`
 --
 
@@ -190,7 +170,7 @@ CREATE TABLE `profile` (
   `urlStub` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `userID` (`userID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -208,7 +188,28 @@ CREATE TABLE `project` (
   PRIMARY KEY (`id`),
   KEY `userID` (`userID`),
   KEY `clientUserID` (`clientID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `transaction`
+--
+
+DROP TABLE IF EXISTS `transaction`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `transaction` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `phaseID` bigint(20) unsigned NOT NULL,
+  `senderID` bigint(20) unsigned NOT NULL,
+  `recipientID` bigint(20) unsigned NOT NULL,
+  `paymentMethodID` bigint(20) unsigned NOT NULL,
+  `amount` int(10) unsigned DEFAULT NULL,
+  `dateInitiated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `dateApproved` datetime DEFAULT NULL,
+  `dateDeclined` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -223,6 +224,7 @@ CREATE TABLE `user` (
   `email` varchar(100) NOT NULL,
   `confirmationCode` varchar(60) DEFAULT NULL,
   `confirmationHash` varchar(60) DEFAULT NULL,
+  `invitedBy` bigint(20) unsigned DEFAULT NULL,
   `confirmed` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `subscriberStatus` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `firstName` varchar(60) DEFAULT NULL,
@@ -236,9 +238,10 @@ CREATE TABLE `user` (
   `profileSmallURL` varchar(100) DEFAULT NULL,
   `profileLargeURL` varchar(100) DEFAULT NULL,
   `dateCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `dateVerified` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -255,7 +258,7 @@ CREATE TABLE `userprefs` (
   `value` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `userID` (`userID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -267,4 +270,4 @@ CREATE TABLE `userprefs` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-09-22 16:49:29
+-- Dump completed on 2011-10-11 17:44:54
