@@ -4,7 +4,6 @@ from base import *
 from models.user import User
 from models.project import Project
 from helpers.verification import Verification
-from helpers.validation import Validation
 
 
 # ----------------------------------------------------------------------
