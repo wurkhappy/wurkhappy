@@ -85,10 +85,13 @@
 		</div>
 		
 		<div id="card-container" class="tab-content" style="display: none;">
-			<h2>Stored Credit Card</h2>
-			<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 2345</h3>
-			<p>Expires June 2015</p>
-			<p>Billing ZIP: 10012</p>
+			{% if data['storedCard'] %}
+				{% set card = data['storedCard'] %}
+				<h2>Stored Credit Card</h2>
+				<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['displayNumber'] }}</h3>
+				<p>Expires {{ card['expirationString'] }}</p>
+				<p>Billing ZIP: {{ card['billingZIP'] }}</p>
+			{% end %}
 			
 			<h2>Credit Card Details</h2>
 			<form action="/user/me/payments" method="POST" class="js-replace-action">
