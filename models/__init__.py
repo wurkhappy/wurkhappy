@@ -1,1 +1,1 @@
-__all__ = ["agreement", "forgotpassword", "payment", "profile", "project", "user"]
+__all__ = ["agreement", "forgotpassword", "paymentmethod", "transaction", "profile", "project", "user"]

@@ -2,17 +2,25 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
-
+from models.paymentmethod import PaymentMethod
 from helpers import fmt
 
 import json
 import logging
 import os
-import uuid
-from hashlib import sha1
+
+from datetime import datetime
+
+# Required for resizing profile image uploads
 import Image, ImageOps
 from StringIO import StringIO
+
+# Required for generating remote resource ID strings (S3 keys)
+import uuid
+from hashlib import sha1
 from tools.base import Base16, Base58
+
+# Required for uploading images to S3
 from tools.amazonaws import AmazonS3
 from boto.s3.key import Key
 
@@ -42,6 +50,16 @@ class AccountHandler(Authenticated, BaseHandler):
 				user.profileLargeURL or '#'
 			]
 		}
+		
+		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+		
+		if paymentMethod:
+			userDict['storedBank'] = paymentMethod.publicDict()
+		
+		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+		
+		if paymentMethod:
+			userDict['storedCard'] = paymentMethod.publicDict()
 		
 		self.render('user/account.html', 
 			title="Wurk Happy &ndash; My Account", data=userDict
@@ -100,7 +118,7 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		#TODO
+		# @todo:
 		# The HTTPErrorBetter raised by fmt.Parser could be, uhh, better.
 		# Errors that are responses to AJAX calls include a display message
 		# that is intended to be helpful to the user, in addition to 
@@ -221,21 +239,121 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 
 
 # -------------------------------------------------------------------
-# BankJSONHandler
+# BankAccountJSONHandler
 # -------------------------------------------------------------------
 
-class BankJSONHandler(Authenticated, BaseHandler):
+class BankAccountJSONHandler(Authenticated, BaseHandler):
 
 	@web.authenticated
 	def post(self):
-		print 'BankJSONHandler'
+		user = self.current_user
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					# @todo: create routing, account number formatters
+					('routingNumber', fmt.Enforce(str)),
+					('accountNumber', fmt.Enforce(str)),
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+		
+		# @todo: this is hackety until we actually verify this info through
+		# a payment gateway
+		
+		abaDisplay = args['routingNumber'][-3:]
+		accountDisplay = args['accountNumber'][-4:]
+		
+		if paymentMethod:
+			# Mark any existing payment method unused
+			paymentMethod.dateDeleted = datetime.now()
+			paymentMethod.save()
+		
+		paymentMethod = PaymentMethod.initWithDict(dict(
+			userID=user.id,
+			display=accountDisplay,
+			abaDisplay=abaDisplay
+		))
+		
+		paymentMethod.save()
+		paymentMethod.refresh()
+		
+		result = paymentMethod.publicDict()
+		self.renderJSON(result)
+
+
 
 # -------------------------------------------------------------------
-# CreditJSONHandler
+# CreditCardJSONHandler
 # -------------------------------------------------------------------
 
-class CreditJSONHandler(Authenticated, BaseHandler):
+class CreditCardJSONHandler(Authenticated, BaseHandler):
 
 	@web.authenticated
 	def post(self):
-		print 'CreditJSONHandler'
+		user = self.current_user
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					# @todo: create CC number formatter
+					('cardNumber', fmt.Enforce(str)),
+					('expirationMonth', fmt.Enforce(int)),
+					('expirationYear', fmt.Enforce(int)),
+					('verification', fmt.Enforce(int)),
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+		
+		if paymentMethod:
+			# Mark any existing payment method unused
+			paymentMethod.dateDeleted = datetime.now()
+			paymentMethod.save()
+		
+		# @todo: this is hackety until we actually verify this info through
+		# a payment gateway
+		
+		displayString = args['cardNumber'][-4:]
+		
+		# Assemble a human-readable string of the expiration month and year
+		cardExpiration = "%s %d" % ([
+			'January',
+			'February',
+			'March',
+			'April',
+			'May',
+			'June',
+			'July',
+			'August',
+			'September',
+			'October',
+			'November',
+			'December'
+		][args['expirationMonth'] - 1], args['expirationYear'])
+		
+		
+		paymentMethod = PaymentMethod.initWithDict(dict(
+			userID=user.id,
+			display=displayString,
+			cardExpires=cardExpiration
+		))
+		
+		paymentMethod.save()
+		paymentMethod.refresh()
+		
+		result = paymentMethod.publicDict()
+		self.renderJSON(result)

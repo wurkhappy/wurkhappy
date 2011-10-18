@@ -16,9 +16,9 @@ class Transaction(MappedObj):
 	
 	def __init__(self):
 		self.id = None
-		self.phaseID = None # @todo: make this a unique index (can't pay twice on a phase)
-		self.senderID = None
-		self.recipientID = None
+		self.agreementPhaseID = None
+		self.senderID = None # fromClientID
+		self.recipientID = None # toVendorID
 		self.paymentMethodID = None
 		self.amount = None
 		self.dateInitiated = None
@@ -61,9 +61,31 @@ class Transaction(MappedObj):
 				result = cursor.fetchone()
 	
 	@classmethod
-	def retrieveByPhaseID(clz, phaseID):
+	def iteratorWithAgreementID(clz, agreementID):
 		with Database() as (conn, cursor):
-			query = "SELECT * FROM %s WHERE phaseID = %%s"
+			query = """SELECT t.* FROM %s AS t
+				LEFT JOIN agreementPhase AS p ON t.agreementPhaseID = p.id
+				LEFT JOIN agreement AS a ON p.agreementID = a.id
+				WHERE p.agreementID = %%s ORDER BY p.phaseNumber"""
+			cursor.execute(query % clz.tableName(), agreementID)
+			result = cursor.fetchone()
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+	
+	@classmethod
+	def retrieveByAgreementPhaseID(clz, phaseID):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM %s WHERE agreementPhaseID = %%s"
 			cursor.execute(query % clz.tableName(), phaseID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
+	
+	def publicDict(self):
+		return OrderedDict([
+			('id', self.id),
+			('senderID', self.senderID),
+			('recipientID', self.recipientID),
+			('paymentMethodID', self.paymentMethodID),
+			('amount', self.amount)
+		])

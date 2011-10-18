@@ -6,5 +6,5 @@ __all__ = [
 	"profilehandlers",
 	"users",
 	"accounts",
-	"files"
+	"payments"
 ]

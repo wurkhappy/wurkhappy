@@ -84,17 +84,41 @@
 			</form>
 		</div>
 		
+		<div id="bank-container" class="tab-content" style="display: none;">
+			{% if data.get('storedBank') %}
+				{% set bank = data['storedBank'] %}
+				<h2>Stored Bank Account</h2>
+				<p>Routing Number</p>
+				<h3>&bull;&bull;&bull;&bull;&bull;&bull;{{ bank['abaDisplay'] }}</h3>
+				<p>Account Number</p>
+				<h3>&bull;&bull;&bull;&bull; &bull;&bull;{{ bank['display'] }}</h3>
+			{% end %}
+			
+			<h2>Bank Account Details</h2>
+			<form action="/user/me/bankaccount" method="POST" class="js-replace-action">
+				{% raw xsrf_form_html() %}
+				<fieldset>
+					<label for="routingNumber">Routing Number</label>
+					<input type="text" name="routingNumber" size="100" />
+					<label for="accountNumber">Account Number</label>
+					<input type="text" name="accountNumber" size="100" />
+				</fieldset>
+				<fieldset class="submit-buttons">
+					<input type="submit" value="Update Bank Account Details" />
+				</fieldset>
+			</form>
+		</div>
 		<div id="card-container" class="tab-content" style="display: none;">
-			{% if data['storedCard'] %}
+			{% if data.get('storedCard') %}
 				{% set card = data['storedCard'] %}
 				<h2>Stored Credit Card</h2>
-				<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['displayNumber'] }}</h3>
-				<p>Expires {{ card['expirationString'] }}</p>
-				<p>Billing ZIP: {{ card['billingZIP'] }}</p>
+				<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['display'] }}</h3>
+				<p>Expires {{ card['cardExpires'] }}</p>
+				<!--<p>Billing ZIP: {% comment card['billingZIP'] %}</p>-->
 			{% end %}
 			
 			<h2>Credit Card Details</h2>
-			<form action="/user/me/payments" method="POST" class="js-replace-action">
+			<form action="/user/me/creditcard" method="POST" class="js-replace-action">
 				{% raw xsrf_form_html() %}
 				<fieldset>
 					<label for="cardNumber">Credit Card Number</label>
@@ -116,15 +140,15 @@
 					</select>
 					<select name="expirationYear">
 						<option value="2011">2011</option>
-						<option value="2011">2012</option>
-						<option value="2011">2013</option>
-						<option value="2011">2014</option>
-						<option value="2011">2015</option>
-						<option value="2011">2016</option>
-						<option value="2011">2017</option>
-						<option value="2011">2018</option>
-						<option value="2011">2019</option>
-						<option value="2011">2020</option>
+						<option value="2012">2012</option>
+						<option value="2013">2013</option>
+						<option value="2014">2014</option>
+						<option value="2015">2015</option>
+						<option value="2016">2016</option>
+						<option value="2017">2017</option>
+						<option value="2018">2018</option>
+						<option value="2019">2019</option>
+						<option value="2020">2020</option>
 					</select>
 					<label for="verification">CVV</label><span>(What's that?)</span>
 					<input type="text" name="verification" size="20" />
