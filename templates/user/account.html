@@ -95,7 +95,7 @@
 			{% end %}
 			
 			<h2>Bank Account Details</h2>
-			<form action="/user/me/bankaccount" method="POST" class="js-replace-action">
+			<form action="/user/me/paymentmethod" method="POST" class="js-replace-action">
 				{% raw xsrf_form_html() %}
 				<fieldset>
 					<label for="routingNumber">Routing Number</label>
@@ -111,15 +111,22 @@
 		<div id="card-container" class="tab-content" style="display: none;">
 			{% if data.get('storedCard') %}
 				{% set card = data['storedCard'] %}
-				<h2>Stored Credit Card</h2>
-				<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['display'] }}</h3>
-				<p>Expires {{ card['cardExpires'] }}</p>
-				<!--<p>Billing ZIP: {% comment card['billingZIP'] %}</p>-->
+				<form action="/user/me/paymentmethod/{{ card['id'] }}" method="DELETE" class="js-replace-action">
+					<fieldset>
+						<h2>Stored Credit Card</h2>
+						<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['display'] }}</h3>
+						<p>Expires {{ card['cardExpires'] }}</p>
+						<!--<p>Billing ZIP: {% comment card['billingZIP'] %}</p>-->
+					</fieldset>
+					<fieldset class="submit-buttons">
+						<input type="submit" value="Delete This Card" />
+					</fieldsest>
+				</form>
 			{% end %}
 			
 			<h2>Credit Card Details</h2>
-			<form action="/user/me/creditcard" method="POST" class="js-replace-action">
-				{% raw xsrf_form_html() %}
+			<form action="/user/me/paymentmethod" method="POST" class="js-replace-action">
+				{% comment raw xsrf_form_html() %}
 				<fieldset>
 					<label for="cardNumber">Credit Card Number</label>
 					<input type="text" name="cardNumber" size="100" />
