@@ -239,12 +239,13 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 
 
 # -------------------------------------------------------------------
-# PaymentMethodBase
+# NewPaymentMethodJSONHandler
 # -------------------------------------------------------------------
-# The credit card handler and bank account handler inherit the delete
-# method from this base class.
+# Creates new payment methods; either ACH or credit card. Returns
+# 201 on success with JSON repr of the new method and a Location
+# header for the newly created resource.
 
-class PaymentMethodJSONHandler(Authenticated, BaseHandler):
+class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def post(self):
 		user = self.current_user
@@ -260,7 +261,7 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 					('cardNumber', fmt.Enforce(str)),
 					('expirationMonth', fmt.Enforce(int)),
 					('expirationYear', fmt.Enforce(int)),
-					('verification', fmt.Enforce(int))
+					('verification', fmt.Enforce(str))
 				],
 				required=[]
 			)
@@ -270,64 +271,75 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+		paymentMethod = None
 		
-		# @todo: this is hackety until we actually verify this info through
-		# a payment gateway
+		if args['routingNumber'] and args['accountNumber']:
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
 		
-		abaDisplay = args['routingNumber'][-3:]
-		accountDisplay = args['accountNumber'][-4:]
+			# @todo: this is hackety until we actually verify this info through
+			# a payment gateway
 		
-		if paymentMethod:
-			# Mark any existing payment method unused
-			paymentMethod.dateDeleted = datetime.now()
-			paymentMethod.save()
+			abaDisplay = args['routingNumber'][-3:]
+			accountDisplay = args['accountNumber'][-4:]
 		
-		paymentMethod = PaymentMethod.initWithDict(dict(
-			userID=user.id,
-			display=accountDisplay,
-			abaDisplay=abaDisplay
-		))
+			if paymentMethod:
+				# Mark any existing payment method unused
+				paymentMethod.dateDeleted = datetime.now()
+				paymentMethod.save()
+		
+			paymentMethod = PaymentMethod.initWithDict(dict(
+				userID=user.id,
+				display=accountDisplay,
+				abaDisplay=abaDisplay
+			))
+		elif args['cardNumber'] and args['verification']:
+			paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+		
+			if paymentMethod:
+				# Mark any existing payment method unused
+				paymentMethod.dateDeleted = datetime.now()
+				paymentMethod.save()
+		
+			# @todo: this is hackety until we actually verify this info through
+			# a payment gateway
+		
+			displayString = args['cardNumber'][-4:]
+		
+			# Assemble a human-readable string of the expiration month and year
+			cardExpiration = "%s %d" % ([
+				'January',
+				'February',
+				'March',
+				'April',
+				'May',
+				'June',
+				'July',
+				'August',
+				'September',
+				'October',
+				'November',
+				'December'
+			][args['expirationMonth'] - 1], args['expirationYear'])
+		
+		
+			paymentMethod = PaymentMethod.initWithDict(dict(
+				userID=user.id,
+				display=displayString,
+				cardExpires=cardExpiration
+			))
+		else:
+			# @todo: Handle this error. there were not proper args
+			error = {
+				"domain": "web.request",
+				"display": "",
+				"debug": "00C1S"
+			}
+			self.set_status(400)
+			self.renderJSON(error)
+			return
 		
 		paymentMethod.save()
 		paymentMethod.refresh()
-		
-		#######
-		
-		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
-		
-		if paymentMethod:
-			# Mark any existing payment method unused
-			paymentMethod.dateDeleted = datetime.now()
-			paymentMethod.save()
-		
-		# @todo: this is hackety until we actually verify this info through
-		# a payment gateway
-		
-		displayString = args['cardNumber'][-4:]
-		
-		# Assemble a human-readable string of the expiration month and year
-		cardExpiration = "%s %d" % ([
-			'January',
-			'February',
-			'March',
-			'April',
-			'May',
-			'June',
-			'July',
-			'August',
-			'September',
-			'October',
-			'November',
-			'December'
-		][args['expirationMonth'] - 1], args['expirationYear'])
-		
-		
-		paymentMethod = PaymentMethod.initWithDict(dict(
-			userID=user.id,
-			display=displayString,
-			cardExpires=cardExpiration
-		))
 		
 		result = paymentMethod.publicDict()
 		locationStr = 'http://%s/user/me/paymentmethod/%d.json' % (
@@ -337,7 +349,32 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 		self.set_status(201)
 		self.set_header('Location', locationStr)
 		self.renderJSON(result)
-	
+
+
+
+# -------------------------------------------------------------------
+# PaymentMethodJSONHandler
+# -------------------------------------------------------------------
+# Retrieves the JSON representation of a specific payment method or
+# deletes said method.
+
+class PaymentMethodJSONHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self, paymentMethodID):
+		user = self.current_user
+		paymentMethod = PaymentMethod.retrieveByID(paymentMethodID)
+		
+		if paymentMethod.userID != user.id:
+			# The user is not authorized to see it
+			error = {
+				"domain": "application.resource.not_found",
+				"display": "The specified payment method could not be found.",
+				"debug": "no such resource"
+			}
+			self.set_status(404)
+			self.renderJSON(error)
+		
+		self.renderJSON(paymentMethod.publicDict())
 	
 	@web.authenticated
 	def delete(self, paymentMethodID):
@@ -359,123 +396,3 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 		paymentMethod.save()
 		
 		self.renderJSON([True])
-
-
-
-# -------------------------------------------------------------------
-# BankAccountJSONHandler
-# -------------------------------------------------------------------
-
-class BankAccountJSONHandler(PaymentMethodJSONHandler):
-	@web.authenticated
-	def post(self):
-		user = self.current_user
-		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[],
-				required=[
-					# @todo: create routing, account number formatters
-					('routingNumber', fmt.Enforce(str)),
-					('accountNumber', fmt.Enforce(str)),
-				]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
-		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
-		
-		# @todo: this is hackety until we actually verify this info through
-		# a payment gateway
-		
-		abaDisplay = args['routingNumber'][-3:]
-		accountDisplay = args['accountNumber'][-4:]
-		
-		if paymentMethod:
-			# Mark any existing payment method unused
-			paymentMethod.dateDeleted = datetime.now()
-			paymentMethod.save()
-		
-		paymentMethod = PaymentMethod.initWithDict(dict(
-			userID=user.id,
-			display=accountDisplay,
-			abaDisplay=abaDisplay
-		))
-		
-		paymentMethod.save()
-		paymentMethod.refresh()
-		
-		result = paymentMethod.publicDict()
-		self.renderJSON(result)
-
-
-
-# -------------------------------------------------------------------
-# CreditCardJSONHandler
-# -------------------------------------------------------------------
-
-class CreditCardJSONHandler(PaymentMethodJSONHandler):
-	@web.authenticated
-	def post(self):
-		user = self.current_user
-		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[],
-				required=[
-					# @todo: create CC number formatter
-					('cardNumber', fmt.Enforce(str)),
-					('expirationMonth', fmt.Enforce(int)),
-					('expirationYear', fmt.Enforce(int)),
-					('verification', fmt.Enforce(int)),
-				]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
-		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
-		
-		if paymentMethod:
-			# Mark any existing payment method unused
-			paymentMethod.dateDeleted = datetime.now()
-			paymentMethod.save()
-		
-		# @todo: this is hackety until we actually verify this info through
-		# a payment gateway
-		
-		displayString = args['cardNumber'][-4:]
-		
-		# Assemble a human-readable string of the expiration month and year
-		cardExpiration = "%s %d" % ([
-			'January',
-			'February',
-			'March',
-			'April',
-			'May',
-			'June',
-			'July',
-			'August',
-			'September',
-			'October',
-			'November',
-			'December'
-		][args['expirationMonth'] - 1], args['expirationYear'])
-		
-		
-		paymentMethod = PaymentMethod.initWithDict(dict(
-			userID=user.id,
-			display=displayString,
-			cardExpires=cardExpiration
-		))
-		
-		paymentMethod.save()
-		paymentMethod.refresh()
-		
-		result = paymentMethod.publicDict()
-		self.renderJSON(result)

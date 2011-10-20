@@ -12,31 +12,6 @@ function getCookie(name) {
 	return c ? c[1] : undefined;
 }
 
-// jQuery.postJSON = function(url, data, callback) {
-// 	data._xsrf = getCookie("_xsrf");
-// 	console.log(data);
-// 	$.ajax({
-// 		url: url,
-// 		data: $.param(data),
-// 		contentType: false,
-// 		processData: false,
-// 		//dataType: "text",
-// 		type: "POST",
-// 		success: callback,
-// 		beforeSend: function (jqXHR, settings) {
-// 			console.log(jqXHR);
-// 			return false;
-// 		}
-// 	});
-// };
-// 
-// 
-// $.fn.submitAJAX = function(callback) {
-// 	var $form = this, params = $form.serializeArray();
-// 	//TODO: look into FormData object.
-// 	// Can use jQuery.each($('input[type=file]')[0].files, function (i, file) { data.append('photo', file); });
-// 	$.postJSON($form.attr('action') + '.json', params, callback);
-// };
 
 $(document).ready(function() {
 	// Find tab classes and activate flippers
@@ -101,8 +76,19 @@ $(document).ready(function() {
 	});
 	
 	$(".js-replace-action").ajaxForm({
+		data: {'_xsrf': slug['_xsrf']},
 		beforeSubmit: function (arr, $form, options) {
+			// @todo: This should only append if it's not already there.
+			// We add the .json extension to the form action URL
+			// for AJAX requests.
 			options.url = $form.attr('action') + '.json';
+			
+			if ($form.attr('method') === 'DELETE') {
+				// Tornado ignores the HTTP body on DELETE requests, so we
+				// need to pack up the form parameters into the query string
+				options.url += '?' + jQuery.param(options.data);
+				options.data = null;
+			}
 		}
 	});
 	

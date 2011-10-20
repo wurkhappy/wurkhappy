@@ -45,8 +45,12 @@ class Application(web.Application):
 			# JSON handlers to update account information
 			(r'/user/me/account\.json', accounts.AccountJSONHandler),
 			(r'/user/me/password\.json', accounts.PasswordJSONHandler),
-			(r'/user/me/creditcard\.json', accounts.CreditCardJSONHandler),
-			(r'/user/me/bankaccount\.json', accounts.BankAccountJSONHandler),
+			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),
+			(r'/user/me/paymentmethod/([0-9]+)\.json', accounts.PaymentMethodJSONHandler),
+			
+			# @todo: Let's get rid of these
+			# (r'/user/me/creditcard\.json', accounts.CreditCardJSONHandler),
+			# (r'/user/me/bankaccount\.json', accounts.BankAccountJSONHandler),
 			
 			# Wurk Happy contact directory for current user
 			(r'/user/me/contacts\.json', users.ContactsJSONHandler),
