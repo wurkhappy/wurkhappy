@@ -145,11 +145,13 @@ CREATE TABLE `paymentMethod` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `userID` bigint(20) unsigned NOT NULL,
   `display` varchar(20) DEFAULT NULL,
-  `cardExpires` date DEFAULT NULL,
+  `cardExpires` varchar(20) DEFAULT NULL,
   `abaDisplay` varchar(20) DEFAULT NULL,
   `gatewayToken` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `dateDeleted` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `userID_dateDeleted` (`userID`,`dateDeleted`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -200,7 +202,7 @@ DROP TABLE IF EXISTS `transaction`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `transaction` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `phaseID` bigint(20) unsigned NOT NULL,
+  `agreementPhaseID` bigint(20) unsigned NOT NULL,
   `senderID` bigint(20) unsigned NOT NULL,
   `recipientID` bigint(20) unsigned NOT NULL,
   `paymentMethodID` bigint(20) unsigned NOT NULL,
@@ -208,7 +210,8 @@ CREATE TABLE `transaction` (
   `dateInitiated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dateApproved` datetime DEFAULT NULL,
   `dateDeclined` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `agreementPhaseID` (`agreementPhaseID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -270,4 +273,4 @@ CREATE TABLE `userprefs` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-10-11 17:44:54
+-- Dump completed on 2011-10-20 18:58:56
