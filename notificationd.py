@@ -23,7 +23,7 @@ class MailController (object):
 	
 	def __init__(self, config):
 		self.config = config
-		# self.tubeName = config['notifications']['beanstalk_tube']
+		self.tubeName = config['notifications']['beanstalk_tube']
 		Beanstalk.configure(config['beanstalk'])
 		Database.configure(config['database'])
 		Email.configure(config['smtp'])
@@ -37,7 +37,7 @@ class MailController (object):
 		logging.info('{"message": "Starting up..."}')
 		
 		with Beanstalk() as bconn:
-			bconn.watch('email_notification_queue')
+			bconn.watch(self.tubeName)
 			
 			while self._continue:
 				msg = bconn.reserve(timeout=15)
@@ -170,7 +170,11 @@ if __name__ == "__main__":
 	
 	procID = procParser.write(os.getpid())
 	
+	# The log format is a JSON array containing the log level, the ISO 8601
+	# date string, the process number, the filename and line number of the
+	# log statement, and finally any message object that was logged:
 	# ["INFO", "<ISO8601>", <PROC>, "<FILE:LINE>", {<MESSAGE>}]
+	
 	logformat = '["%(levelname)s", "%(asctime)s", %(process)d, "%(filename)s:%(lineno)d", %(msg)s]'
 	logging.basicConfig(format=logformat, level=logging.INFO)
 	

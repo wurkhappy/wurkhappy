@@ -29,40 +29,44 @@
 	</div>
 	<div id="content" class="clear">
 		<div id="details-container" class="tab-content">
-			<h2>Profile Preview</h2>
-			<div class="data-table">
-				<table border="0" cellspacing="0" cellpadding="0">
-					<tr>
-						<td class="meta">
-							<span><img src="{{ data['profileURL'][0] }}" alt="Profile photo" width="50" height="50" /></span>
-						</td>
-						<td>
-							<h3><a href="/user/me/profile">{{ data['fullName'] }}</a></h3>
-							<p>{{ data['email'] }}</p>
-							<p>{{ data['telephone'] }}</p>
-						</td>
-					</tr>
-				</table>
+			<div id="profile_preview">
+				<h2>Profile Preview</h2>
+				<div class="data-table">
+					<table border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="meta">
+								<span><img src="{{ data['profileURL'][0] }}" alt="Profile photo" width="50" height="50" /></span>
+							</td>
+							<td>
+								<h3><a href="/user/me/profile">{{ data['fullName'] }}</a></h3>
+								<p>{{ data['email'] }}</p>
+								<p>{{ data['telephone'] }}</p>
+							</td>
+						</tr>
+					</table>
+				</div>
 			</div>
 			
-			<h2>Personal Details</h2>
-			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action">
-				<fieldset>
-					<label for="firstName">First Name</label>
-					<input type="text" name="firstName" value="{{ data['firstName'] or '' }}" size="100" />
-					<label for="lastName">Last Name</label>
-					<input type="text" name="lastName" value="{{ data['lastName'] or '' }}" size="100" />
-					<label for="profilePhoto">Photo</label>
-					<input type="file" class="upload" name="profilePhoto" />
-					<label for="email">Email</label>
-					<input type="text" name="email" value="{{ data['email'] }}" size="100" />
-					<label for="telephone">Phone Number</label>
-					<input type="text" name="telephone" value="{{ data['telephone'] }}" size="100" />
-				</fieldset>
-				<fieldset class="submit-buttons">
-					<input type="submit" value="Save Personal Details" />
-				</fieldset>
-			</form>
+			<div id="profile_form">
+				<h2>Personal Details</h2>
+				<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile_update">
+					<fieldset>
+						<label for="firstName">First Name</label>
+						<input type="text" name="firstName" value="{{ data['firstName'] or '' }}" size="100" />
+						<label for="lastName">Last Name</label>
+						<input type="text" name="lastName" value="{{ data['lastName'] or '' }}" size="100" />
+						<label for="profilePhoto">Photo</label>
+						<input type="file" class="upload" name="profilePhoto" />
+						<label for="email">Email</label>
+						<input type="text" name="email" value="{{ data['email'] }}" size="100" />
+						<label for="telephone">Phone Number</label>
+						<input type="text" name="telephone" value="{{ data['telephone'] }}" size="100" />
+					</fieldset>
+					<fieldset class="submit-buttons">
+						<input type="submit" value="Save Personal Details" />
+					</fieldset>
+				</form>
+			</div>
 		</div>
 		
 		<div id="password-container" class="tab-content" style="display: none;">
@@ -84,85 +88,91 @@
 		
 		<div id="bank-container" class="tab-content" style="display: none;">
 			{% if data.get('storedBank') %}
-				{% set bank = data['storedBank'] %}
-				<h2>Stored Bank Account</h2>
-				<p>Routing Number</p>
-				<h3>&bull;&bull;&bull;&bull;&bull;&bull;{{ bank['abaDisplay'] }}</h3>
-				<p>Account Number</p>
-				<h3>&bull;&bull;&bull;&bull; &bull;&bull;{{ bank['display'] }}</h3>
-				<form action="/user/me/paymentmethod/{{ bank['id'] }}" method="DELETE" class="js-replace-action clear">
-					<fieldset class="submit-buttons">
-						<input type="submit" value="Delete This Card" />
-					</fieldsest>
-				</form>
+				<div id="stored-bank">
+					{% set bank = data['storedBank'] %}
+					<h2>Stored Bank Account</h2>
+					<p>Routing Number</p>
+					<h3>&bull;&bull;&bull;&bull;&bull;&bull;{{ bank['abaDisplay'] }}</h3>
+					<p>Account Number</p>
+					<h3>&bull;&bull;&bull;&bull; &bull;&bull;{{ bank['display'] }}</h3>
+					<form action="/user/me/paymentmethod/{{ bank['id'] }}" method="DELETE" class="js-replace-action clear" id="bank_delete">
+						<fieldset class="submit-buttons">
+							<input type="submit" value="Delete This Card" />
+						</fieldsest>
+					</form>
+				</div>
 			{% end %}
-			
-			<h2 class="clear">Bank Account Details</h2>
-			<form action="/user/me/paymentmethod/new" method="POST" class="js-replace-action clear">
-				<fieldset>
-					<label for="routingNumber">Routing Number</label>
-					<input type="text" name="routingNumber" size="100" />
-					<label for="accountNumber">Account Number</label>
-					<input type="text" name="accountNumber" size="100" />
-				</fieldset>
-				<fieldset class="submit-buttons">
-					<input type="submit" value="Update Bank Account Details" />
-				</fieldset>
-			</form>
+			<div id="bank-form">
+				<h2 class="clear">Bank Account Details</h2>
+				<form action="/user/me/paymentmethod/new" method="POST" class="js-replace-action clear" id="bank_update">
+					<fieldset>
+						<label for="routingNumber">Routing Number</label>
+						<input type="text" name="routingNumber" size="100" />
+						<label for="accountNumber">Account Number</label>
+						<input type="text" name="accountNumber" size="100" />
+					</fieldset>
+					<fieldset class="submit-buttons">
+						<input type="submit" value="Update Bank Account Details" />
+					</fieldset>
+				</form>
+			</div>
 		</div>
 		<div id="card-container" class="tab-content" style="display: none;">
 			{% if data.get('storedCard') %}
-				{% set card = data['storedCard'] %}
-				<h2>Stored Credit Card</h2>
-				<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['display'] }}</h3>
-				<p>Expires {{ card['cardExpires'] }}</p>
-				<!--<p>Billing ZIP: {% comment card['billingZIP'] %}</p>-->
-				<form action="/user/me/paymentmethod/{{ card['id'] }}" method="DELETE" class="js-replace-action clear">
-					<fieldset class="submit-buttons">
-						<input type="submit" value="Delete This Card" />
-					</fieldsest>
-				</form>
+				<div id="stored-card">
+					{% set card = data['storedCard'] %}
+					<h2>Stored Credit Card</h2>
+					<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['display'] }}</h3>
+					<p>Expires {{ card['cardExpires'] }}</p>
+					<!--<p>Billing ZIP: {% comment card['billingZIP'] %}</p>-->
+					<form action="/user/me/paymentmethod/{{ card['id'] }}" method="DELETE" class="js-replace-action clear" id="card_delete">
+						<fieldset class="submit-buttons">
+							<input type="submit" value="Delete This Card" />
+						</fieldsest>
+					</form>
+				</div>
 			{% end %}
-			
-			<h2 class="clear">Credit Card Details</h2>
-			<form action="/user/me/paymentmethod/new" method="POST" class="js-replace-action clear">
-				<fieldset>
-					<label for="cardNumber">Credit Card Number</label>
-					<input type="text" name="cardNumber" size="100" />
-					<label for="">Expiration Date</label>
-					<select name="expirationMonth">
-						<option value="01">January</option>
-						<option value="02">February</option>
-						<option value="03">March</option>
-						<option value="04">April</option>
-						<option value="05">May</option>
-						<option value="06">June</option>
-						<option value="07">July</option>
-						<option value="08">August</option>
-						<option value="09">September</option>
-						<option value="10">October</option>
-						<option value="11">November</option>
-						<option value="12">December</option>
-					</select>
-					<select name="expirationYear">
-						<option value="2011">2011</option>
-						<option value="2012">2012</option>
-						<option value="2013">2013</option>
-						<option value="2014">2014</option>
-						<option value="2015">2015</option>
-						<option value="2016">2016</option>
-						<option value="2017">2017</option>
-						<option value="2018">2018</option>
-						<option value="2019">2019</option>
-						<option value="2020">2020</option>
-					</select>
-					<label for="verification">CVV</label><span>(What's that?)</span>
-					<input type="text" name="verification" size="20" />
-				</fieldset>
-				<fieldset class="submit-buttons">
-					<input type="submit" value="Update Credit Card Details" />
-				</fieldset>
-			</form>
+			<div id="card-form">
+				<h2 class="clear">Credit Card Details</h2>
+				<form action="/user/me/paymentmethod/new" method="POST" class="js-replace-action clear" id="card_update">
+					<fieldset>
+						<label for="cardNumber">Credit Card Number</label>
+						<input type="text" name="cardNumber" size="100" />
+						<label for="">Expiration Date</label>
+						<select name="expirationMonth">
+							<option value="01">January</option>
+							<option value="02">February</option>
+							<option value="03">March</option>
+							<option value="04">April</option>
+							<option value="05">May</option>
+							<option value="06">June</option>
+							<option value="07">July</option>
+							<option value="08">August</option>
+							<option value="09">September</option>
+							<option value="10">October</option>
+							<option value="11">November</option>
+							<option value="12">December</option>
+						</select>
+						<select name="expirationYear">
+							<option value="2011">2011</option>
+							<option value="2012">2012</option>
+							<option value="2013">2013</option>
+							<option value="2014">2014</option>
+							<option value="2015">2015</option>
+							<option value="2016">2016</option>
+							<option value="2017">2017</option>
+							<option value="2018">2018</option>
+							<option value="2019">2019</option>
+							<option value="2020">2020</option>
+						</select>
+						<label for="verification">CVV</label><span>(What's that?)</span>
+						<input type="text" name="verification" size="20" />
+					</fieldset>
+					<fieldset class="submit-buttons">
+						<input type="submit" value="Update Credit Card Details" />
+					</fieldset>
+				</form>
+			</div>
 		</div>
 	</div>
 	

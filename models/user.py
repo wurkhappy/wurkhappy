@@ -84,7 +84,7 @@ class User(MappedObj):
 				result = cursor.fetchone()
 	
 	def setProfileImage(self, data, ext, headers=None):
-		#TODO: Move this method to a more appropriate class.
+		# @todo: Move this method to a more appropriate class.
 		hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
 		name = '%s%s' % (hashString, ext)
 		with AmazonS3() as (conn, bucket):

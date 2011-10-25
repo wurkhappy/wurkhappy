@@ -220,7 +220,6 @@ class PhoneNumber(Enforce):
 		return '(%s) %s-%s' % (val[0:3], val[3:6], val[6:10])
 	
 	def __lshift__(self, value):
-		logging.warn(value)
 		if value is None or str(value[0]) is '':
 			return self.default
 

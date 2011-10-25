@@ -29,14 +29,14 @@ from modules import modules
 class Application(web.Application):
 	def __init__(self, config):
 		handlers = [
+			# Redirect as appropriate based on user state
 			(r'/', root.RootHandler),
-			(r'/signup', authhandlers.SignupHandler),
+			
+			(r'/signup', authhandlers.SignupHandler), # /account/create
 			(r'/login', authhandlers.LoginHandler),
 			(r'/logout', authhandlers.LogoutHandler),
-			# (r'/profiles/?(.*)', profilehandlers.ProfilesHandler),
-			# (r'/profile/?([^\./|^\.\\]+)?/?([^\./|^\.\\]+)?', profilehandlers.ProfileHandler),
-			(r'/forgot_password', authhandlers.ForgotPasswordHandler),
-			(r'/reset_password', authhandlers.ResetPasswordHandler),
+			(r'/forgot_password', authhandlers.ForgotPasswordHandler), # /account/forgetpassword
+			(r'/reset_password', authhandlers.ResetPasswordHandler), # /account/resetpassword
 			
 			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
@@ -48,10 +48,6 @@ class Application(web.Application):
 			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),
 			(r'/user/me/paymentmethod/([0-9]+)\.json', accounts.PaymentMethodJSONHandler),
 			
-			# @todo: Let's get rid of these
-			# (r'/user/me/creditcard\.json', accounts.CreditCardJSONHandler),
-			# (r'/user/me/bankaccount\.json', accounts.BankAccountJSONHandler),
-			
 			# Wurk Happy contact directory for current user
 			(r'/user/me/contacts\.json', users.ContactsJSONHandler),
 
@@ -59,12 +55,14 @@ class Application(web.Application):
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
 			(r'/agreement/new/?', agreements.AgreementHandler),
 			
+			# JSON handlers to create & update agreements and change their state
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
 			(r'/agreement/([0-9]+)/status\.json', agreements.AgreementStatusJSONHandler),
 			(r'/agreement/([0-9]+)/(update|send|accept|decline|mark_complete|verify|dispute)\.json', agreements.AgreementActionJSONHandler),
 			(r'/agreement/(new|send)\.json', agreements.NewAgreementJSONHandler),
 			
-			(r'/payment/new/?', payments.PaymentHandler),
+			# JSON handler to initiate a new payment
+			(r'/payment/new\.json', payments.PaymentHandler),
 		]
 		
 		settings = {

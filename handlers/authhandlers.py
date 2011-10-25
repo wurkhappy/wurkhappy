@@ -54,7 +54,14 @@ class SignupHandler(BaseHandler):
 			user.confirmationHash = verifier.hashDigest
 			user.setPasswordHash(args['password'])
 			user.save()
-			self.set_secure_cookie("user_id", str(user.id))
+			user.refresh()
+			
+			# @todo: This should be better. Static value in config file...
+			# user.profileSmallURL = self.application.config['application']['profileURLFormat'] % (user.id % 5, 's')
+			user.profileSmallURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user.id % 5)
+			user.save()
+			
+			self.set_secure_cookie("user_id", str(user.id), httponly=True)
 			self.redirect('/user/me/account')
 		else:
 			# User exists, redirect with error
@@ -115,7 +122,7 @@ class LoginHandler(BaseHandler):
 			self.set_status(401)
 			self.render("user/login.html", title="Sign In to Wurk Happy", error=error)
 		else:
-			self.set_secure_cookie("user_id", str(user.id))
+			self.set_secure_cookie("user_id", str(user.id), httponly=True)
 			self.redirect('/user/me/account') #TODO: Should go to dashboard...
 
 

@@ -123,7 +123,7 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		# Errors that are responses to AJAX calls include a display message
 		# that is intended to be helpful to the user, in addition to 
 		# machine-parseable error identifiers.
-		#  
+		# 
 		# error = {
 		# 	'domain': 'web.request',
 		# 	'display': (
@@ -138,9 +138,8 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		user.lastName = args['lastName'] or user.lastName
 		user.telephone = args['telephone'] or user.telephone
 		
-		#TODO: This needs refactoring
+		# @todo: This needs refactoring
 		if 'profilePhoto' in self.request.files:
-			logging.warn('Got profile photo!')
 			fileDict = self.request.files['profilePhoto'][0]
 			base, ext = os.path.splitext(fileDict['filename'])
 			
@@ -193,7 +192,8 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 					user.__dict__[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
 		
 		user.save()
-		self.write(json.dumps({"success": True}))
+		logging.warn(user.publicDict())
+		self.renderJSON(user.publicDict())
 
 
 

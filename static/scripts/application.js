@@ -82,6 +82,13 @@ $(document).ready(function() {
 			// We add the .json extension to the form action URL
 			// for AJAX requests.
 			options.url = $form.attr('action') + '.json';
+			options.dataType = "json";
+			
+			if ($form.attr('id')) {
+				// Set the success action based on the form's ID field,
+				// if there is one
+				options.success = successActions[$form.attr('id')];
+			}
 			
 			if ($form.attr('method') === 'DELETE') {
 				// Tornado ignores the HTTP body on DELETE requests, so we
@@ -159,6 +166,62 @@ successActions = {
 	'action-verify': function (data, status, xhr) {
 		$('.action-button').hide();
 		alert('Successfully verified the work completed');
+	},
+	profile_update: function (data, status, xhr) {
+		$('#profile_preview').replaceWith('<div id="profile_preview">\
+			<h2>Profile Preview</h2>\
+			<div class="data-table">\
+				<table border="0" cellspacing="0" cellpadding="0">\
+					<tr>\
+						<td class="meta">\
+							<span><img src="' + data.profileURL[0] + '" alt="Profile photo" width="50" height="50" /></span>\
+						</td>\
+						<td>\
+							<h3><a href="/user/me/profile">' + data.fullName + '</a></h3>\
+							<p>' + data.email + '</p>\
+							<p>' + data.telephone + '</p>\
+						</td>\
+					</tr>\
+				</table>\
+			</div>\
+		</div>');
+	},
+	card_update: function (data, status, xhr) {
+		// @todo: Clear the form fields!
+		$('#stored-card').remove();
+		$('#card-container').prepend('<div id="stored-card">\
+			<h2>Stored Credit Card</h2>\
+			<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; ' + data.display + '</h3>\
+			<p>Expires ' + data.cardExpires + '</p>\
+			<!--<p>Billing ZIP: </p>-->\
+			<form action="/user/me/paymentmethod/' + data.id + '" method="DELETE" class="js-replace-action clear">\
+				<fieldset class="submit-buttons">\
+					<input type="submit" value="Delete This Card" />\
+				</fieldsest>\
+			</form>\
+		</div>');
+	},
+	card_delete: function (data, status, xhr) {
+		$('#stored-card').remove();
+	},
+	bank_update: function (data, status, xhr) {
+		// @todo: Clear the form fields!
+		$('#stored-bank').remove();
+		$('#bank-container').prepend('<div id="stored-bank">\
+			<h2>Stored Bank Account</h2>\
+			<p>Routing Number</p>\
+			<h3>&bull;&bull;&bull;&bull;&bull;&bull;' + data.abaDisplay + '</h3>\
+			<p>Account Number</p>\
+			<h3>&bull;&bull;&bull;&bull; &bull;&bull;' + data.display + '</h3>\
+			<form action="/user/me/paymentmethod/' + data.id + '" method="DELETE" class="js-replace-action clear" id="bank_delete">\
+				<fieldset class="submit-buttons">\
+					<input type="submit" value="Delete This Card" />\
+				</fieldsest>\
+			</form>\
+		</div>');
+	},
+	bank_delete: function (data, status, xhr) {
+		$('#stored-bank').remove();
 	}
 }
 

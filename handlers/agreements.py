@@ -131,9 +131,6 @@ class AgreementListHandler(Authenticated, BaseHandler):
 
 
 class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
-	def constructDateTime(self, day, month, year):
-		return datetime(int(year), int(month), int(day))
-	
 	def generateActionList(self, agreementState, role):
 		"""
 		Given an agreement state and the current user's role, returns a list
@@ -233,7 +230,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"name": "Verify and Pay",
 					# The verify and pay action should redirect to payment page.
 					# But we do this for now to prove it works.
-					"action": "/agreement/%d/verify.json" % agreement.id,
+					"action": "/payment/new.json",
+					# "action": "/agreement/%d/verify.json" % agreement.id,
 					"method": "POST",
 					"params": { }
 				}, {

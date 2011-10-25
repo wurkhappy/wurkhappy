@@ -16,14 +16,9 @@ from email.mime.text import MIMEText
 
 
 
-def printfl(string):
-	print string
-	sys.stdout.flush()
-
-
-
 class QueueHandler(object):
 	def __init__(self):
+		# @todo: This should be set in a config file.
 		self.loader = template.Loader('templates/notification')
 
 
@@ -33,7 +28,12 @@ class InviteHandler(QueueHandler):
 		user = User.retrieveByID(body['userID'])
 		
 		if user:
-			printfl(json.dumps(user.publicDict(), cls=ORMJSONEncoder))
+			logging.info(json.dumps({
+				"message": "Test hook recieved user",
+				"userID": user.id,
+				"userName": user.getFullName(),
+				"userEmail": user.email
+			}))
 		else:
 			raise Exception("No such user")
 
@@ -77,14 +77,16 @@ class AgreementInviteHandler(QueueHandler):
 		
 		with Email() as (server):
 			senderName = "Wurk Happy Community"
-			recipientAddress = "brendan+test@wurkhappy.com" # client.email
+			# @todo: Replace this line with "recipientAddress = client.email" for production deployment
+			recipientAddress = client.email if client.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 			
 			# Create message container - the correct MIME type is multipart/alternative.
 			msg = MIMEMultipart('alternative')
 			msg['Subject'] = subject
 			msg['From'] = senderName
 			msg['To'] = recipientAddress
-
+			
+			# @todo: Something sensible here, please...
 			# Create the body of the message (a plain-text and an HTML version).
 			text = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 			html = htmlString
