@@ -31,6 +31,7 @@ class Application(web.Application):
 			(r'/signup.json', landing.SignupJSONHandler),
 			(r'/about', landing.AboutHandler),
 			(r'/jobs', landing.JobsHandler),
+			(r'/techstars', landing.TechstarsHandler),
 		]
 		
 		settings = {

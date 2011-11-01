@@ -117,3 +117,7 @@ class JobsHandler(BaseHandler):
 			title="Wurk Happy is hiring.")
 	
 
+class TechstarsHandler(BaseHandler):
+	def get(self):
+		self.render('landing/techstars.html', title="About Our Team")
+
