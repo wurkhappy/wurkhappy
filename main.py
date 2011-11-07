@@ -68,7 +68,7 @@ class Application(web.Application):
 		settings = {
 			"xsrf_cookies": True,
 			# Convert cookie_secret from unicode string to ascii string, so as not to break hashlib
-			"cookie_secret": str(config['tornado']['cookie_secret']), 
+			"cookie_secret": str(config['tornado']['cookie_secret']),
 			"login_url": "/login",
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),

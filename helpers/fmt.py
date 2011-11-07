@@ -24,7 +24,7 @@ class Parser(object):
 		
 		# Traverse optional list, populate dict
 		# Traverse required list, populate dict
-		# If required list has any items, raise an error
+		# If required list is missing any items, raise an error
 		
 		err = []
 		
