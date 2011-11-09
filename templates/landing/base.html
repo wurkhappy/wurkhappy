@@ -56,6 +56,11 @@
 	<!-- scripts concatenated and minified via ant build script-->
 	<script src="{{ static_url("scripts/landing.js") }}"></script>
 	<!-- end concatenated and minified scripts-->
+	<script type="text/javascript">
+		$(window).unload(function() {
+			_gaq.push(['_trackEvent', 'Unload']);
+		});
+	</script>
 
 </body>
 </html>
