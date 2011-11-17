@@ -104,6 +104,83 @@ class Agreement(MappedObj):
 			amount = cursor.fetchone()['SUM(amount)']
 			return "$%.02f" % (amount / 100) if amount else ""
 	
+	def getCurrentPhase(self):
+		with Database() as (conn, cursor):
+			query = """SELECT * FROM agreementPhase WHERE agreementID = %s AND
+				dateVerified IS NULL ORDER BY phaseNumber LIMIT 1"""
+			cursor.execute(query, self.id)
+			result = cursor.fetchone()
+			return AgreementPhase.initWithDict(result)
+	
+	def getCurrentState(self):
+		# The states are, in order:
+		#   (D) DraftState
+		#   (E) EstimateState
+		#   (X) DeclinedState
+		#   (A) AgreementState
+		#   (M) MarkedState
+		#   (C) ContestedState
+		#   (V) VerifiedState
+		#   (F) CompletedState
+		# 
+		# Double lined arrows ( ==> ) are state changes that occur on user
+		# input. Single lined arrows ( --> ) are overlapping states (for
+		# example, an agreement in the declined state also behaves as a
+		# draft).
+		# 
+		# The "x" represents a hidden draft. The vendor has not yet sent it
+		# to the client. The "1" and "2" markers represent the currently
+		# active phase of the agreement.
+		# 
+		#     |  D  |  E  |  X  |  A  |  M  |  C  |  V  |  F  |
+		#     |     |     |     |     |     |     |     |     |
+		#     |  x ==> o ==> o ---.   |     |     |     |     |
+		#     |     |     |     |  |  |     |     |     |     |
+		#     |   ,---------------/   |     |     |     |     |
+		#     |  |  |     |     |     |     |     |     |     |
+		#     |   \--> o ========> 1 ==> 1 ==> 1 ---.   |     |
+		#     |     |     |     |     |     |     |  |  |     |
+		#     |     |     |   ,---------------------/   |     |
+		#     |     |     |  |  |     |     |     |     |     |
+		#     |     |     |   \--> 1 ==> 1 ========> 1 ---.   |
+		#     |     |     |     |     |     |     |     |  |  |
+		#     |     |     |   ,---------------------------/   |
+		#     |     |     |  |  |     |     |     |     |     |
+		#     |     |     |   \--> 2 ==> 2 ========> 2 --> o  |
+		#     |     |     |     |     |     |     |     |     |
+		
+		dateSent =  self.dateSent
+		dateAccepted = self.dateAccepted
+		dateDeclined = self.dateDeclined
+		
+		# Get the first agreement phase that has not been marked complete.
+		phase = self.getCurrentPhase()
+		
+		dateCompleted = phase and phase.dateCompleted
+		dateVerified = phase and phase.dateVerified
+		dateContested = phase and phase.dateContested
+		
+		# @todo: Unit test these against some example cases.
+		states = [
+			(PaidState, dateVerified or not phase),
+			# If phase is null, all phases are paid and
+			# the agreement is in the final state.
+			(ContestedState, dateAccepted and dateCompleted and dateContested),
+			(CompletedState, dateAccepted and dateCompleted and not dateContested),
+			(InProgressState, dateSent and dateAccepted),
+			(EstimateState, dateSent and not dateContested and not dateAccepted),
+			(DeclinedState, dateSent and dateDeclined and not dateAccepted),
+			(DraftState, not dateSent),
+			(InvalidState, True)
+		]
+		
+		# like find-first
+		logging.info([s[0] for s in states if s[1]])
+		subStateName = [s[0] for s in states if s[1]][0]
+		return subStateName(self)
+		
+		
+	
 	def setTokenHash(self, token):
 		self.tokenHash = bcrypt.hashpw(str(token), bcrypt.gensalt())
 	
@@ -121,8 +198,8 @@ class Agreement(MappedObj):
 			('dateAccepted', self.dateAccepted),
 			('dateModified', self.dateModified),
 			('dateDeclined', self.dateDeclined),
-			('dateVerified', self.dateVerified),
-			('dateContested', self.dateContested)
+			# ('dateVerified', self.dateVerified),
+			# ('dateContested', self.dateContested)
 		])
 
 
@@ -199,6 +276,8 @@ class AgreementPhase (MappedObj):
 			('amount', self.amount),
 			('estimatedCompletion', self.estDateCompleted),
 			('dateCompleted', self.dateCompleted),
+			('dateVerified', self.dateVerified),
+			('dateContested', self.dateContested),
 			('description', self.description),
 			('comments', self.comments)
 		])
@@ -237,10 +316,30 @@ class AgreementState(object):
 	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
 	actionMap = dict(zip(transitionNames, fieldNames))
 	
-	def __init__(self, agreementInstance, phaseList):
+	inProgressPhaseNumber = None
+	
+	def __init__(self, agreementInstance):#, phaseList):
 		assert isinstance(agreementInstance, Agreement)
 		self.agreement = agreementInstance
-		self.phaseList = phaseList
+		# self.phaseList = phaseList
+		# 
+		# # Calculate which phase is currently in progress.
+		# # @todo: THIS SHOULD BE WAY CLEANER
+		# phaseNum = None
+		# 
+		# for phase in phaseList:
+		# 	phaseNum = phase.phaseNumber
+		# 	
+		# 	if phase.dateCompleted:				
+		# 		if phase.dateContested:
+		# 			phaseNum = phase.phaseNumber
+		# 		else:
+		# 			break
+		# 	else:
+		# 		break
+		# 
+		# self.inProgressPhaseNumber = phaseNum
+		
 		self.actions = {"vendor": {}, "client" : {}}
 	
 	def addAction(self, role, actionName):
@@ -254,7 +353,7 @@ class AgreementState(object):
 			fmat = 'Invalid transition for agreement %d (role: %s, action: %s)'
 			logging.error(fmat % (self.agreementInstance.id, role, action))
 		
-		return self.currentState(self.agreementInstance)
+		return self.agreement.getCurrentState()
 	
 	def performTransition(self, role, action, data):
 		""" currentState : string, dict -> AgreementState """
@@ -273,11 +372,12 @@ class AgreementState(object):
 			
 			raise HTTPErrorBetter(409, 'state transition error', JSON.dumps(error))
 		
-		return UserState.currentState(self.user)
+		return self.agreement.getCurrentState()
 	
 	@classmethod
 	def currentState(clz, agreementInstance, phaseList):
-		""" currentState : Agreement -> AgreementState """
+		logging.warn('AGREEMENTSTATE.CURRENTSTATE IS DEPRECATED')
+		""" currentState : Agreement, [AgreementPhase] -> AgreementState """
 		
 		dateSent =  agreementInstance.dateSent
 		dateAccepted = agreementInstance.dateAccepted
@@ -290,7 +390,7 @@ class AgreementState(object):
 		# @todo: this is a nasty hack, it should be easier to test these states
 		dateCompleted = None
 		dateVerified = None
-		dateCotested = None
+		dateContested = None
 		
 		for phase in phaseList:
 			if phase.dateCompleted:
@@ -415,10 +515,11 @@ class InProgressState(AgreementState):
 	def _prepareFields(self, role, action, data):
 		if role == 'vendor':
 			if action == 'mark_complete':
-				# @todo: use phases!
-				# We want to get the highest uncompleted phase and set its
-				# dateCompleted field.
-				self.agreement.dateCompleted = datetime.now()
+				# The caller to InProgressState.performTransition() will pass
+				# the phase number as a value in the data dictionary.
+				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
+				phase = self.agreement.getCurrentPhase()
+				phase.dateCompleted = datetime.now()
 			else:
 				raise StateTransitionError()
 		else:
@@ -433,11 +534,13 @@ class CompletedState(AgreementState):
 	def _prepareFields(self, role, action, data):
 		if role == 'client':
 			if action == 'verify':
-				# @todo: verify the phase!
-				self.agreement.dateVerified = datetime.now()
+				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
+				phase = self.agreement.getCurrentPhase()
+				phase.dateVerified = datetime.now()
 			elif action == 'dispute':
-				# @todo: dispute the phase!
-				self.agreement.dateContested = datetime.now()
+				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
+				phase = self.agreement.getCurrentPhase()
+				phase.dateContested = datetime.now()
 			else:
 				raise StateTransitionError()
 		else:
