@@ -7,12 +7,23 @@ import json
 
 
 class BaseHandler(web.RequestHandler):
+	def set_secure_cookie(self, name, value, expires_days=30, **kwargs):
+		kwargs['httponly'] = True
+		
+		if self.protocol == 'https':
+			kwargs['secure'] = True
+		
+		web.RequestHandler.set_secure_cookie(
+			self, name, value, expires_days, **kwargs
+		)
+	
 	def authenticated(self, method):
 		pass
 	
 	def superuser(self, method):
 		pass
-		
+	
+	# What is this for? I think Jamie wrote it, but I don't think it's used anywhere...
 	def parseErrors(self):
 		err = self.get_argument("err", None)
 		if err:

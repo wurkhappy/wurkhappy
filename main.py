@@ -73,7 +73,8 @@ class Application(web.Application):
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			"ui_modules": modules,
-			"debug": config['tornado']['debug']
+			"debug": config['tornado'].get('debug', False),
+			"xheaders": config['tornado'].get('xheaders', False)
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -101,7 +102,7 @@ if __name__ == "__main__":
 	options.define("config", default="config.yaml", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)
-	options.define("debug", default=False, help="start in debug mode", type=bool)
+	options.define("debug", default=None, help="start in debug mode", type=bool)
 	options.parse_command_line()
 	
 	workingDir = os.path.dirname(__file__)
@@ -109,7 +110,11 @@ if __name__ == "__main__":
 		os.chdir(workingDir)
 	
 	conf = yaml.load(open(options.options.config, 'r'))
-	conf['tornado']['debug'] = options.options.debug
+	
+	# Override debug setting with command line flag, if set
+	if options.options.debug:
+		conf['tornado']['debug'] = options.options.debug
+	
 	server = HTTPServer(Application(conf))
 	
 	port = options.options.port
