@@ -9,6 +9,7 @@
 
 			<div class="column-one-half">
 				<ul>
+					<li><a href="/about">About Us</a></li>
 					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
 				</ul>
 			</div>
@@ -19,100 +20,103 @@
 {% block main %}
 	<div id="intro" class="clear">
 		<div class="container">
+			<div class="column-one-third">
+				<h2>Work Faster</h2>
+				<p>Quickly send and manage your estimates, proposals, and payments.</p>
+				<img src="{{ static_url('images/promo-1.png') }}" alt="Something Cool">
+			</div>
+			<div class="column-one-third">
+				<h2>Work Smarter</h2>
+				<p>Stay involved when it impacts the customer, and automate the rest.</p>
+				<img src="{{ static_url('images/promo-2.png') }}" alt="Something Cool">
+			</div>
+			<div class="column-one-third">
+				<h2>Work Professionally</h2>
+				<p>Make a great impression with simple, clear and focused interfaces.</p>
+				<img src="{{ static_url('images/promo-3.png') }}" alt="Something Cool">
+			</div>
 			<div class="clear">
-				<h1>The Simplest Way to Do Business</h1>
-			</div>
-
-			<div class="column-one-third">
-				<img src="{{ static_url("images/promo-1.png") }}" alt="Something Cool">
-
-				<h2>Very Fast Payment</h2>
-				<p>Our platform takes away 90% of payment processing time</p>
-			</div>
-
-			<div class="column-one-third">
-				<img src="{{ static_url("images/promo-2.png") }}" alt="Something Cool">
-
-				<h2>Professional Organization</h2>
-				<p>Take the amateur out of your operation with our polished system</p>
-			</div>
-
-			<div class="column-one-third">
-				<img src="{{ static_url("images/promo-3.png") }}" alt="Something Cool">
-
-				<h2>Complete Control</h2>
-				<p>Do business your way</p>
+				<h1>Wurk Happy, your business made simple.</h1>
 			</div>
 		</div>
 	</div>
-
+	
 	<div id="internal" class="clear">
 		<div class="container">
 			<ul>
-				<li class="tab current" id="everyone-button"><a href="#">For Everyone</a></li>
-				<li class="tab" id="clients-button"><a href="#">Work with Clients</a></li>
-				<li class="tab" id="freelancers-button"><a href="#">Work with Freelancers</a></li>
-				<!--<li class="action-button"><a href="">Start Your Free Trial</a></li>-->
+				<li class="tab current" id="proposals-button"><a href="#">Proposals &amp; Estimates</a></li>
+				<li class="tab" id="relationships-button"><a href="#">Relationship Management</a></li>
+				<li class="tab" id="payments-button"><a href="#">Automatic Payments</a></li>
+				<!--<li class="action-button"><a href="">Create Your Free Account</a></li>-->
 			</ul>
 		</div>
 	</div>
 
 	<div id="content" class="clear">
-		<div class="container tab-content" id="everyone-container"> <!-- Start "For Everyone" tab -->
+		<div class="container tab-content" id="proposals-container"> <!-- Start "For Everyone" tab -->
 			<div class="column-one-third">
-				<h2>Work Smarter</h2>
-				<p>Use fewer tools to accomplish more.</p>
-				<p>Manage proposals, estimates, service agreements, payment schedules, pay, and get paid in a dead simple interface.</p>
+
+				<h2>Simple for Sender</h2>
+				<p>Getting proposals and estimates sent is a breeze! Just add the relevant details of the services provided, any refund policies, and setup a step-by-step payment schedule.</p>
+				<ul class="features">
+					<li>Define Services and Refunds</li>
+					<li>Setup Payment Schedules</li>
+					<li>Automate with Templates</li>
+				</ul>
+
 			</div>
 
 			<div class="column-one-third">
-				<h2>Not Harder</h2>
-				<ul>
-					<li>Send and Receive Proposals</li>
-					<li>Agree to Detailed Estimates</li>
-					<li>Manage Through Last Payment</li>
-					<li>Confirmation at Every Step</li>
-					<li>Automate Payments in Advance</li>
-					<li>Works with Most Cards/Banks</li>
+
+				<h2>Clear for Recipient</h2>
+				<p>Within a few seconds, a recipient can view an easy to understand proposal and estimate. Changes can be requested and an agreement can be connected to a payment method.</p>
+				<ul class="features">
+					<li>Make Change Requests</li>
+					<li>Agree Through Application</li>
+					<li>Manage Multiple Agreements</li>
 				</ul>
+
 			</div>
 		</div> <!-- End "For Everyone" tab -->
 	
-		<div class="container tab-content hidden" id="clients-container"> <!-- Start "Work With Clients" tab -->
+		<div class="container tab-content hidden" id="relationships-container"> <!-- Start "Work With Clients" tab -->
 			<div class="column-one-third">
-				<h2>Keep it Simple</h2>
-				<p>Use software that fits your workflow. </p>
-				<p>Spend less time on the parts of your business you like least while looking more professional to your clients.</p>
+				<h2>Maintain Agreements</h2>
+				<p>Easily update any agreement and all sides will be alerted to any requests or changes. Agreements can be cancelled at any time and a full history of all actions is built right in.</p>
+				<ul class="features">
+					<li>Change Requests</li>
+					<li>Editable Agreements</li>
+					<li>Full Agreement History</li>
+				</ul>
 			</div>
-
 			<div class="column-one-third">
-				<h2>Look Professional</h2>
-				<ul>
-					<li>Create proposals and estimates</li>
-					<li>Accept advance payment</li>
-					<li>Organize work in payment milestones</li>
-					<li>Automated payment processing on payment due dates</li>
-					<li>Big picture overviews of the business process</li>
+				<h2>Respectful Payments</h2>
+				<p>It's just good business to make payments on time. Setup a clear payment schedule and automate payments when both sides consider a milestone complete.</p>
+				<ul class="features">
+					<li>Setup Payment Schedules</li>
+					<li>Payments on Completion</li>
+					<li>Clear Grace Periods</li>
 				</ul>
 			</div>
 		</div> <!-- End "Work With Clients" tab -->
 
-		<div class="container tab-content hidden" id="freelancers-container"> <!-- Start "Work With Freelancers" tab -->
+		<div class="container tab-content hidden" id="payments-container"> <!-- Start "Work With Freelancers" tab -->
 			<div class="column-one-third">
-				<h2>All Your Freelancers</h2>
-				<p>Use software that empowers you.</p>
-				<p>Whether you're coordinating a special event or managing a marketing campaign, Wurk Happy is your go-to tool to keep track of and pay the freelancers that work for you.</p>
+				<h2>Protecting Value</h2>
+				<p>Once the work is considered complete by both sides, the appropriate payment is automatically initiated. Keeping the project on schedule and payments current will benefit everyone.</p>
+				<ul class="features">
+					<li>Setup Payment Schedules</li>
+					<li>Payments on Completion</li>
+					<li>Alerts for Payment Problems</li>
+				</ul>
 			</div>
-
 			<div class="column-one-third">
-				<h2>One Interface</h2>
-				<ul>
-					<li>Payment reminders</li>
-					<li>Big picture overviews of the business process</li>
-					<li>Cancel work at any time</li>
-					<li>Request changes to service agreements in real time</li>
-					<li>Change payment due dates to adjust your cashflow</li>
-					<li>Pay online via credit card or ACH bank transfer</li>
+				<h2>Reducing Friction</h2>
+				<p>When a project is delayed because of a payment problem, everyone loses. Keeping everyone on the same page and paid up is a great way to build valuable business relationships.</p>
+				<ul class="features">
+					<li>Connect to a Credit Card</li>
+					<li>Connect to a Bank Account</li>
+					<li>Manage Cash Flow</li>
 				</ul>
 			</div>
 		</div> <!-- End "Work With Freelancers" tab -->

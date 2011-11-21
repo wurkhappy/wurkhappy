@@ -107,8 +107,12 @@ class SignupJSONHandler(BaseHandler):
 class AboutHandler(BaseHandler):
 	def get(self):
 		self.render('landing/about.html',
-			title="Wurk Happy is in New York City.")
+			title="About Wurk Happy")
 
+
+class AboutPersonHandler(BaseHandler):
+	def get(self, person):
+		self.render('landing/about/%s.html' % person, title='Wurk Happy')
 
 
 class JobsHandler(BaseHandler):

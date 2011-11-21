@@ -1,30 +1,45 @@
 {% extends "base.html" %}
 
 {% block header %}
-	<div id="header" class="column-full">
+	<div id="navigation" class="clear">
 		<div class="container">
-			
-			<p>Wurk Happy</p>
-			
+			<div class="column-one-half">
+				<p><a href="/">Wurk Happy</a></p>
+			</div>
+			<div class="column-one-half">
+				<ul>
+					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
+				</ul>
+			</div>
 		</div>
 	</div>
 {% end %}
 
 {% block main %}
-	<div id="intro" class="column-full">
+	<div id="internal" class="clear">
 		<div class="container">
-			
-			<h1>We &hearts; NY!</h1>
-			<p>Wurk Happy is a New York-based startup that thinks<br />it&rsquo;s about time independent workers got a fair deal.</p>
-			
+			<ul>
+				<li class="current" id="about-button"><a href="/about">About Us</a></li>
+				<li class="" id="marcus-button"><a href="/about/marcus">Marcus Ellison</a></li>
+				<li class="" id="brendan-button"><a href="/about/brendan">Brendan Berg</a></li>
+			</ul>
 		</div>
 	</div>
-
-	<div id="footer" class="column-full">
+	<div id="content" class="clear">
 		<div class="container">
 			
-			<p>All text and design is copyright &copy; 2011 Wurk Happy, Inc. All rights reserved.</p>
+			<h1>About Wurk Happy</h1>
 			
+			<p>Wurk Happy&rsquo;s software allows freelancers to create and negotiate payment agreements that act as automatic billing and payment interfaces between them and their clients.</p>
+			
+			<p>We think it&rsquo;s about time independent workers got a fair deal.</p>
+			
+			<h2>Meet Our Team</h2>
+			
+			<ul>
+				<li><a href="/about/marcus">Marcus Ellison</a>, Co-Founder &amp; CEO</li>
+				<li><a href="/about/brendan">Brendan Berg</a> Co-Founder &amp; CTO</li>
+			</ul>
 		</div>
 	</div>
 {% end %}
