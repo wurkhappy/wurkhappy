@@ -355,11 +355,11 @@ class AgreementState(object):
 		
 		return self.agreement.getCurrentState()
 	
-	def performTransition(self, role, action, data):
+	def performTransition(self, role, action, unsavedRecords):
 		""" currentState : string, dict -> AgreementState """
 		
 		try:
-			return self._prepareFields(role, action, data)
+			return self._prepareFields(role, action, unsavedRecords)
 		except StateTransitionError as e:
 			error = {
 				"domain": "application.consistency",
@@ -456,7 +456,7 @@ class DraftState(AgreementState):
 		self.addAction('vendor', "update")
 		self.addAction('vendor', "send")
 	
-	def _prepareFields(self, role, action, data):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'update':
 				self.agreement.dateModified = datetime.now()
@@ -474,17 +474,20 @@ class EstimateState(AgreementState):
 		self.addAction('client', "accept")
 		self.addAction('client', "decline")
 	
-	def _prepareFields(self, role, action, data):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'update':
 				self.agreement.dateModified = datetime.now()
+				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
 		elif role == 'client':
 			if action == 'accept':
 				self.agreement.dateAccepted = datetime.now()
+				unsavedRecords.append(self.agreement)
 			elif action == 'decline':
 				self.agreement.dateDeclined = datetime.now()
+				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
 		else:
@@ -496,12 +499,14 @@ class DeclinedState(AgreementState):
 		self.addAction('vendor', "update")
 		self.addAction('vendor', "send")
 	
-	def _prepareFields(self, role, action, data):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if role == 'update':
 				self.agreement.dateModified = datetime.now()
+				unsavedRecords.append(self.agreement)
 			elif role == 'send':
 				self.agreement.dateSent = datetime.now()
+				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
 		else:
@@ -512,14 +517,16 @@ class InProgressState(AgreementState):
 		super(InProgressState, self).__init__(agreement)
 		self.addAction('vendor', 'mark_complete')
 	
-	def _prepareFields(self, role, action, data):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'mark_complete':
 				# The caller to InProgressState.performTransition() will pass
 				# the phase number as a value in the data dictionary.
 				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
 				phase = self.agreement.getCurrentPhase()
+				logging.warn(phase)
 				phase.dateCompleted = datetime.now()
+				unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError()
 		else:
@@ -531,16 +538,18 @@ class CompletedState(AgreementState):
 		self.addAction('client', 'verify')
 		self.addAction('client', 'dispute')
 	
-	def _prepareFields(self, role, action, data):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'client':
 			if action == 'verify':
 				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
 				phase = self.agreement.getCurrentPhase()
 				phase.dateVerified = datetime.now()
+				unsavedRecords.append(phase)
 			elif action == 'dispute':
 				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
 				phase = self.agreement.getCurrentPhase()
 				phase.dateContested = datetime.now()
+				unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError()
 		else:
@@ -552,12 +561,16 @@ class ContestedState(AgreementState):
 		self.addAction('vendor', 'update')
 		self.addAction('vendor', 'send')
 	
-	def _prepareFields(self, role, action, data):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'update':
 				self.agreement.dateModified = datetime.now()
-			elif action == 'send':
-				self.agreement.dateSent = datetime.now()
+				unsavedRecords.append(self.agreement)
+			elif action == 'mark_complete':
+				phase = self.agreement.getCurrentPhase()
+				logging.warn(phase)
+				phase.dateCompleted = datetime.now()
+				unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError()
 		else:

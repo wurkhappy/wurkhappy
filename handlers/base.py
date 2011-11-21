@@ -10,7 +10,7 @@ class BaseHandler(web.RequestHandler):
 	def set_secure_cookie(self, name, value, expires_days=30, **kwargs):
 		kwargs['httponly'] = True
 		
-		if self.protocol == 'https':
+		if self.request.protocol == 'https':
 			kwargs['secure'] = True
 		
 		web.RequestHandler.set_secure_cookie(
