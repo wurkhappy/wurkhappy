@@ -2,7 +2,9 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
-
+from models.agreement import *
+from models.paymentmethod import PaymentMethod
+from models.transaction import Transaction
 from helpers import fmt
 
 import json
@@ -18,7 +20,7 @@ import os
 class PaymentHandler(Authenticated, BaseHandler):
 	
 	@web.authenticated
-	def get(self):
+	def post(self):
 		user = self.current_user
 		
 		try:
@@ -26,7 +28,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 				optional=[],
 				required=[
 					('password', fmt.Enforce(str)),
-					('phaseID', fmt.Enforce(int)),
+					('agreementID', fmt.Enforce(int)),
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
@@ -47,7 +49,8 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 			return
 		
-		phase = AgreementPhase.retrieveByID(args['phaseID'])
+		agreement = Agreement.retrieveByID(args['agreementID'])
+		phase = agreement.getCurrentPhase()
 		
 		if not phase:
 			error = {
@@ -58,7 +61,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 			return
 		
-		agreement = Agreement.retrieveByID(phase.agreementID)
+		# agreement = Agreement.retrieveByID(phase.agreementID)
 		
 		if not (agreement and agreement.clientID == user.id):
 			# The logged-in user is not authorized to make a payment
@@ -71,6 +74,18 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.set_status(403)
 			self.renderJSON(error)
 			return
+		
+		agreementState = agreement.getCurrentState()
+		
+		if not isinstance(agreementState, CompletedState):
+			error = {
+				"domain": "application.consistency",
+				"display": "The request could not be completed at this time. :(((",
+				"debug": "tried to pay an incomplete phase"
+			}
+			
+			self.set_status(409)
+			self.renderJSON(error)
 		
 		# Look up the user's preferred payment method
 		paymentPref = UserPrefs.retrieveByUserIDAndName(user.id, 'preferredPaymentID')
@@ -98,6 +113,27 @@ class PaymentHandler(Authenticated, BaseHandler):
 		transaction.refresh()
 		
 		# @todo: Put the transaction info on the processing queue.
+		
+		unsavedRecords = []
+		
+		try:
+			agreementState.performTransition('client', 'verify', unsavedRecords)
+		except StateTransitionError as e:
+			error = {
+				"domain": "application.consistency",
+				"display": (
+					"We were unable to process your request at this time. "
+					"Could you please try again in a moment? If the problem "
+					"persists, you can get in touch with our support staff."
+				),
+				"debug": "error location (file marker / stacktrace ID)"
+			}
+			self.set_status(409)
+			self.renderJSON(error)
+		
+		for record in unsavedRecords:
+			logging.warn(record)
+			record.save()
 		
 		transactionJSON = transaction.publicDict()
 		transactionJSON['paymentMethod'] = paymentMethod.publicDict()

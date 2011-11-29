@@ -1,7 +1,7 @@
 /*
                       _      _                             
-__      _()    ()_ __| | __ | |__   __ _ _ __  _ __  _   _ 
-\ \ /\ / /-    -| '__| |/ / | '_ \ / _` | '_ \| '_ \| | | |
+__      ___    _ _ __| | __ | |__   __ _ _ __  _ __  _   _ 
+\ \ /\ / / |  | | '__| |/ / | '_ \ / _` | '_ \| '_ \| | | |
  \ V  V /| \__/ | |  |   <  | | | | (_| | |_) | |_) | |_| |
   \_/\_/  \____/|_|  |_|\_\ |_| |_|\__,_| .__/| .__/ \__, |
                                        |_|   |_|    |___/ 
@@ -109,16 +109,16 @@ $(document).ready(function() {
 					// to bind the click function to the proper value
 					// from the iteration over buttonMaps.
 					
-					return function() {
+					var captureAndSend = function() {
 						var data = m['params'], capture = '';
 						data._xsrf = getCookie("_xsrf");
 						var string = jQuery.param(data);
 						
 						if (m['capture-id']) {
-							capture = $('#' + m['capture-id']).serialize(data);
+							var capture = $('#' + m['capture-id']).serialize(data);
 							console.log(capture);
 						}
-						
+
 						$.ajax({
 							url: m['action'],
 							data: [jQuery.param(data), capture].join('&'),
@@ -130,6 +130,22 @@ $(document).ready(function() {
 								alert(error ? error.display : 'There was a problem of some sort');
 							}
 						});
+					};
+					
+					return function() {
+						if (m['html']) {
+							console.log('Rendering HTML');
+							// Render the included HTML popup and then submit.
+							var popup = $(m['html']);
+							popup.children('#password-form').submit(function() {
+								console.log('clicked');
+								captureAndSend();
+								return false;
+							});
+							$('#content').prepend(popup);
+						} else {
+							captureAndSend();
+						}
 						return false;
 					}
 				}(map));
@@ -165,6 +181,7 @@ successActions = {
 	},
 	'action-verify': function (data, status, xhr) {
 		$('.action-button').hide();
+		$('#password-div').remove();
 		alert('Successfully verified the work completed');
 	},
 	profile_update: function (data, status, xhr) {

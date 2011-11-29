@@ -110,7 +110,9 @@ class Agreement(MappedObj):
 				dateVerified IS NULL ORDER BY phaseNumber LIMIT 1"""
 			cursor.execute(query, self.id)
 			result = cursor.fetchone()
-			return AgreementPhase.initWithDict(result)
+			phase = AgreementPhase.initWithDict(result)
+			logging.warn('getCurrentPhase: %s' % phase)
+			return phase
 	
 	def getCurrentState(self):
 		# The states are, in order:
