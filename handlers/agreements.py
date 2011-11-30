@@ -645,7 +645,8 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						action='agreementInvite'
 					))
 					
-					bconn.use('email_notification_queue')
+					# bconn.use('email_notification_queue')
+					bconn.use(self.application.configuration['notifications']['beanstalk_tube'])
 					r = bconn.put(msg)
 					logging.info('Beanstalk: email_notification_queue#%d %s' % (r, msg))
 			
