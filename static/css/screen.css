@@ -112,17 +112,31 @@ h3 {
 	font-weight: 500;
 }
 
-.preview p {
-	background: rgb(255,247,204) url(/static/images/icons/note-32x32.png) no-repeat 20px 20px;
-	color: rgb(127,106,0);
-	padding: 20px 20px 20px 72px;
-	margin: 0 20px 20px 20px;
-	font-style: italic;
+.notes {
+	background: #FFF7CC url(/static/images/icons/note-32x32.png) no-repeat 20px 15px;
 	-webkit-border-radius: 5px;
 	   -moz-border-radius: 5px;
 	        border-radius: 5px;
+	color: #7F6A00;
+	margin: 0 20px 20px;
+	padding: 15px 15px 15px 72px;
 }
 
+.notes p {
+	color: rgb(127,106,0);
+	margin-bottom: 0;
+	padding: 2px 0 5px 0;
+	font-style: italic;
+}
+
+.add.notes textarea {
+	display: none;
+	width: 585px;
+}
+
+.add.notes {
+	cursor: pointer;
+}
 
 /* STRUCTURE
 ================================================================================ */

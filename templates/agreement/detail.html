@@ -14,13 +14,13 @@
 <div class="container">
 	{% block navigation %}
 	{% end %}
-	
+
 	{% block header %}
 	{% end %}
-	
+
 	<div id="content" class="clear">
 		{% set otherUser = data[data['other']] %}
-		
+
 		<div id="agreement-profile" class="data-table">
 			<table border="0" cellspacing="0" cellpadding="0">
 				<tr>
@@ -34,7 +34,7 @@
 				</tr>
 			</table>
 		</div>
-		
+
 		<div id="payment-schedule" class="clear">
 			<h2>Payment Schedule for {{ data['amount'] }}</h2>
 			<ul>
@@ -46,9 +46,9 @@
 				{% end %}
 			</ul>
 		</div>
-		
+
 		<form id="comments-form" class="invisible">
-		
+
 		<div class="column-three-fourth">
 			<h2>Summary</h2>
 			{% if data['summary'] %}
@@ -56,22 +56,23 @@
 			{% else %}
 				<p>&mdash;</p>
 			{% end %}
-			
+
 			{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or data['state'] == 'CompletedState') %}
-				<div class="preview">
-					<p><textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea></p>
+				<div class="add notes">
+					<p>Add comments and feedback on the agreement here.</p>
+					<textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
 				</div>
 			{% elif data['summaryComments'] %}
-				<div class="preview">
-					<p>{{ data['summaryComments'] }}</p>
+				<div class="notes">
+				  <p>{% raw escape(data['summaryComments']).replace('\n', '<br/>') %}</p>
 				</div>
 			{% end %}
 		</div>
-		
+
 		<!-- Listing of agreement's phases -->
-		
+
 		{% for num, phase in enumerate(data['phases'], 1) %}
-			<div class="clear">
+			<div class="clear column-three-fourth">
 				<h2 class="steps">
 					Phase {{ str(num) }} ({{ phase['amount'] }})
 					{% if phase['dateCompleted'] %}
@@ -80,21 +81,22 @@
 						<span>Estimated completion on {{ phase['estDateCompleted'] }}</span>
 					{% end %}
 				</h2>
-		
+
 				<p>{{ phase['description'] }}</p>
-			
+
 				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or data['state'] == 'CompletedState') %}
-					<div class="preview column-three-fourth">
-						<p><textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea></p>
+					<div class="add notes">
+						<p>Add comments and feedback on the agreement here.</p>
+						<textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
 					</div>
 				{% elif 'comments' in phase %}
-					<div class="preview column-three-fourth">
-						<p>{{ phase['comments'] }}</p>
+					<div class="notes">
+						<p>{% raw escape(phase['comments']).replace('\n', '<br/>') %}</p>
 					</div>
 				{% end %}
 			</div>
 		{% end %}
-		
+
 		<div id="agreement-history" class="clear">
 			<h2>Agreement History</h2>
 			<ul>
@@ -104,10 +106,10 @@
 				{% end %}
 			</ul>
 		</div>
-		
+
 		</form>
 	</div>
-	
+
 	{% block footer %}
 	{% end %}
 </div>
@@ -147,9 +149,9 @@
 
 {% block header %}
 	<div id="intro" class="clear">
-		
+
 		<div class="column-three-fourth">
-			
+
 			<h1>{{ data['name'] }}</h1>
 			<p>{% if len(data['transactions']) %}
 				{% set transaction = data['transactions'][-1] %}
@@ -158,18 +160,18 @@
 				<span>This draft has not been sent.</span>
 			{% end %}
 			</p>
-			
+
 		</div>
 		<div class="column-one-fourth">
-		
+
 			<ul class="action-button">
 			{% for action in data['actions'] %}
 				<li><a href="#" id="{{ action['id'] }}" class="top"><span>{{ action['name'] }}</span></a></li>
 			{% end %}
 			</ul>
-		
+
 		</div>
-	
+
 	</div>
 {% end %}
 
