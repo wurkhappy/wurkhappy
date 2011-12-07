@@ -40,8 +40,6 @@
 				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
 				<label for="summary">Summary</label>
 				<textarea name="summary" rows="3" cols="100">{% if data['summary'] and len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
-				<label for="">Date of Issue</label>
-				{% module DatePicker('agreement') %}
 			</fieldset>
 
 
