@@ -14,6 +14,13 @@ function getCookie(name) {
 
 
 $(document).ready(function() {
+	// Activate registered actions
+	for (var i = 0, len = actions.length; i < len; i++) {
+		if (actions.hasOwnProperty(i)) {
+			actions[i]();
+		}
+	}
+	
 	// Find tab classes and activate flippers
 	$('.tab').click(function () {
 		// Get current elt's class, find corresponding container class
@@ -34,19 +41,6 @@ $(document).ready(function() {
 		return false;
 	});
 	
-	$('.observed').change(function() {
-		var $this = $(this);
-		console.log($this.attr('id'));
-		var id = $this.attr('id').match(/^([^\-]+).*$/);
-		
-		if (id.hasOwnProperty(1)) {
-			// ugh.
-		}
-		
-		console.log(id);
-		//$($this.attr('id')
-	});
-	
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
 		selectedItemProp: "fullName",
 		selectedValuesProp: "id",
@@ -56,7 +50,7 @@ $(document).ready(function() {
 		resultsHighlight: false,
 		neverSubmit: true,
 		selectionLimit: 1,
-		preFill: [slug['preFill']],
+		preFill: slug['preFill'],
 		
 		// See if we can't muck around with internals here and add an email
 		// address to the internal data structure if that's what is typed, 

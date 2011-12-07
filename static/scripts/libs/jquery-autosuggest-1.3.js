@@ -95,18 +95,23 @@
 					prefill_value = opts.preFill;
 				} else {
 					prefill_value = "";
+					// [BB: Updated to fix selected value bug]
+					// From here ----
+					var prefill_items = [];
 					var prefill_count = 0;
 					for (k in opts.preFill) if (opts.preFill.hasOwnProperty(k)) prefill_count++;
 					if(prefill_count > 0){
 						for(var i=0; i < prefill_count; i++){
 							var new_v = opts.preFill[i][opts.selectedValuesProp];
 							if(new_v == undefined){ new_v = ""; }
-							prefill_value = prefill_value+new_v+",";
+							prefill_items.push(new_v);
 							if(new_v != ""){
 								add_selected_item(opts.preFill[i], "000"+i);	
 							}		
 						}
+						prefill_value = prefill_items.join(',');
 					}
+					// To here ----
 				}
 				if(prefill_value != ""){
 					input.val("");

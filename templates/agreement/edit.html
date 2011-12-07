@@ -9,7 +9,7 @@
 {% set slug = { "_xsrf": data['_xsrf']} %}
 
 {% if data['self'] == 'vendor' and data['client'] %}
-	{% set slug['preFill'] = {"fullName": data['client']['fullName'], "id": data['client']['id']} %}
+	{% set slug['preFill'] = [{"fullName": data['client']['fullName'], "id": data['client']['id']}] %}
 {% else %}
 	{% set slug['preFill'] = {} %}
 {% end %}
