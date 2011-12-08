@@ -59,12 +59,12 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			agreementType = 'Client'
 			agreements = Agreement.iteratorWithVendorID(user.id)
 			templateDict['agreementCount'] = Agreement.countWithVendorID(user.id)
-			templateDict['aggregateCost'] = "$%.0f" % ((Agreement.amountWithVendorID(user.id) or 0.0) / 100)
+			templateDict['aggregateCost'] = Agreement.costStringWithVendorID(user.id)
 		elif withWhom.lower() == 'vendors':
 			agreementType = 'Vendor'
 			agreements = Agreement.iteratorWithClientID(user.id)
 			templateDict['agreementCount']  = Agreement.countWithClientID(user.id)
-			templateDict['aggregateCost']  = "$%.0f" % ((Agreement.amountWithClientID(user.id) or 0.0) / 100)
+			templateDict['aggregateCost']  = Agreement.costStringWithClientID(user.id)
 		else:
 			self.set_status(403)
 			self.write("Forbidden")
@@ -458,13 +458,11 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		currentPhase = agreement.getCurrentPhase()
 		
 		templateDict["phases"] = []
-		totalAmount = 0
 		
 		for phase in phases:
-			totalAmount += phase.amount if phase.amount else 0
 			
 			phaseDict = {
-				"amount": "$%.02f" % (phase.amount / 100) if phase.amount else "",
+				"amount": phase.getCostString(),
 				"description": phase.description,
 				"estDateCompleted": phase.estDateCompleted,
 				"dateCompleted": phase.dateCompleted
@@ -475,7 +473,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			
 			templateDict["phases"].append(phaseDict)
 		
-		templateDict["amount"] = "$%.02f" % (totalAmount / 100)
+		templateDict["amount"] = agreement.getCostString()
 		
 		# Transactions are datetime properties of the agreement.
 		
@@ -561,7 +559,6 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					('details', fmt.List(fmt.Enforce(str))),
 					('estDateCompleted', fmt.List(fmt.Enforce(str))),
 					('date', fmt.List(fmt.Date()))
-					# @todo: actually do something with the dates
 				]
 			)
 		except fmt.HTTPErrorBetter as e:

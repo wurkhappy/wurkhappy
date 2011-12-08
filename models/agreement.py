@@ -49,6 +49,11 @@ class Agreement(MappedObj):
 			return result['COUNT(*)']
 	
 	@classmethod
+	def costStringWithVendorID(clz, vendorID):
+		amount = clz.amountWithVendorID(vendorID)
+		return "${:,}".format(amount) if amount else ""
+	
+	@classmethod
 	def amountWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
 			query = """SELECT SUM(b.amount) FROM %s AS a
@@ -61,7 +66,13 @@ class Agreement(MappedObj):
 			return result['SUM(b.amount)']
 	
 	@classmethod
+	def costStringWithClientID(clz, clientID):
+		amount = clz.amountWithClientID(clientID)
+		return "${:,}".format(amount) if amount else ""
+	
+	@classmethod
 	def amountWithClientID(clz, clientID):
+		# @todo: this needs to be checked. Not sure it's getting the right sum
 		with Database() as (conn, cursor):
 			query = """SELECT SUM(b.amount) FROM %s AS a
 				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id
@@ -102,7 +113,7 @@ class Agreement(MappedObj):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self.id)
 			amount = cursor.fetchone()['SUM(amount)']
-			return "$%.02f" % (amount / 100) if amount else ""
+			return "${:,}".format(amount / 100) if amount else ""
 	
 	def getCurrentPhase(self):
 		with Database() as (conn, cursor):
@@ -272,6 +283,9 @@ class AgreementPhase (MappedObj):
 				AND phaseNumber = %%s LIMIT 1"""
 			cursor.execute(query % clz.tableName(), (agreementID, phaseNumber))
 			return clz.initWithDict(cursor.fetchone())
+	
+	def getCostString(self):
+		return "${:,}".format(self.amount / 100) if self.amount else ""
 	
 	def publicDict(self):
 		return OrderedDict([
