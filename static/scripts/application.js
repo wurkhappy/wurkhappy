@@ -236,3 +236,9 @@ successActions = {
 	}
 }
 
+$('.add.notes').click(function(e) {
+  if (!$(e.target).is('textarea')) {
+    $(this).children().toggle();
+  };
+})
+
