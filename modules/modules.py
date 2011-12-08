@@ -1,6 +1,7 @@
 from tornado.web import UIModule
 from datetime import datetime
 from tools.orm import ORMJSONEncoder
+from datetime import datetime
 import json
 import logging
 
@@ -44,7 +45,7 @@ actions.push(function() {{
 		
 		if name == None:
 			name = "{0}-iso".format(pickerID)
-		
+		logging.warn(datestamp)
 		defaultISO = datestamp.strftime('%Y-%m-%d') if datestamp else ""
 		
 		return self.render_string("modules/datepicker.html", 

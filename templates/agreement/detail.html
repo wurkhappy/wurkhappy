@@ -40,8 +40,8 @@
 			<ul>
 				{% for num, phase in enumerate(data['phases'], 1) %}
 					<li>
-						{% if phase['dateCompleted'] %}<span>Completed {{ phase['dateCompleted'] }}</span>{% end %}
-						<strong>{{ phase['amount'] }}</strong> &mdash; Phase {{ str(num) }}{% if phase['estDateCompleted'] %} on {{ phase['estDateCompleted'] }}{% end %}
+						{% if phase['dateCompleted'] %}<span>Completed {{ phase['dateCompleted'].strftime('%B %d, %Y') }}</span>{% end %}
+						<strong>{{ phase['amount'] }}</strong> &mdash; Phase {{ str(num) }}{% if phase['estDateCompleted'] %} on {{ phase['estDateCompleted'].strftime('%B %d, %Y') }}{% end %}
 					</li>
 				{% end %}
 			</ul>
@@ -76,9 +76,9 @@
 				<h2 class="steps">
 					Phase {{ str(num) }} ({{ phase['amount'] }})
 					{% if phase['dateCompleted'] %}
-						<span style="color: green">Completed {{ phase['dateCompleted'] }}</span>
+						<span style="color: green">Completed {{ phase['dateCompleted'].strftime('%B %d, %Y') }}</span>
 					{% elif phase['estDateCompleted'] %}
-						<span>Estimated completion on {{ phase['estDateCompleted'] }}</span>
+						<span>Estimated completion on {{ phase['estDateCompleted'].strftime('%B %d, %Y') }}</span>
 					{% end %}
 				</h2>
 

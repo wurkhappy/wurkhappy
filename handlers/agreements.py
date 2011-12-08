@@ -466,8 +466,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			phaseDict = {
 				"amount": "$%.02f" % (phase.amount / 100) if phase.amount else "",
 				"description": phase.description,
-				"estDateCompleted": phase.estDateCompleted.strftime('%B %d, %Y') if phase.estDateCompleted else None,
-				"dateCompleted": phase.dateCompleted.strftime('%B %d, %Y') if phase.dateCompleted else None
+				"estDateCompleted": phase.estDateCompleted,
+				"dateCompleted": phase.dateCompleted
 			}
 			
 			if phase.comments:
@@ -667,7 +667,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			phase.phaseNumber = num
 			phase.amount = cost
 			phase.description = descr
-			phase.estDateCompleted = datetime.strptime(date, '%Y-%m-%d')
+			phase.estDateCompleted = date
 			phase.save()
 		
 		self.set_status(201)
