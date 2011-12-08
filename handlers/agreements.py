@@ -559,7 +559,8 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					('summary', fmt.Enforce(str)),
 					('cost', fmt.List(fmt.Currency(None))),
 					('details', fmt.List(fmt.Enforce(str))),
-					('estDateCompleted', fmt.List(fmt.Enforce(str)))
+					('estDateCompleted', fmt.List(fmt.Enforce(str))),
+					('date', fmt.List(fmt.Date()))
 					# @todo: actually do something with the dates
 				]
 			)
@@ -660,12 +661,13 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		summary.save()
 		summary.refresh()
 		
-		for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
+		for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
 			phase = AgreementPhase()
 			phase.agreementID = agreement.id
 			phase.phaseNumber = num
 			phase.amount = cost
 			phase.description = descr
+			phase.estDateCompleted = datetime.strptime(date, '%Y-%m-%d')
 			phase.save()
 		
 		self.set_status(201)
@@ -781,6 +783,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						('cost', fmt.List(fmt.Currency(None))),
 						('details', fmt.List(fmt.Enforce(str))),
 						('estDateCompleted', fmt.List(fmt.Enforce(str))),
+						('date', fmt.List(fmt.Date()))
 						# ('phaseNumber', fmt.Enforce(int))
 					]
 				)
@@ -896,7 +899,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				summary.summary = args['summary'] or summary.summary
 				
 				# @todo: Defer phase saves until state transition is complete
-				for num, (cost, descr) in enumerate(zip(args['cost'], args['details'])):
+				for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
 					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement.id, num)
 					
 					if not phase:
@@ -909,6 +912,9 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					
 					if descr:
 						phase.description = descr
+					
+					if date:
+						phase.estDateCompleted = date
 					phase.save()
 				
 				summary.save()

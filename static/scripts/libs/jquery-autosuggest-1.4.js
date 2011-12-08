@@ -95,6 +95,11 @@
 					prefill_value = opts.preFill;
 				} else {
 					prefill_value = "";
+					// Bb: 07 December 2011
+					// Added prefill_items array that items are pushed into, then the
+					// array is joined into a comma-separated string.
+					var prefill_items = [];
+					
 					var prefill_count = 0;
 					for (k in opts.preFill) if (opts.preFill.hasOwnProperty(k)) prefill_count++;
 					
@@ -102,13 +107,13 @@
 						for(var i=0; i < prefill_count; i++){
 							var new_v = opts.preFill[i][opts.selectedValuesProp];
 							if(new_v == undefined){ new_v = ""; }
-							prefill_value = prefill_value+new_v+",";
+							prefill_items.push(new_v);
 							if(new_v != ""){
 								add_selected_item(opts.preFill[i], "000"+i);	
 							}		
 						}
+						prefill_value = prefill_items.join(',');
 					}
-
 				}
 				if(prefill_value != ""){
 					input.val("");

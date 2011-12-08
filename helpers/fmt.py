@@ -5,6 +5,8 @@ import json
 import re
 import logging
 
+from datetime import datetime
+
 class HTTPErrorBetter(HTTPError):
 	def __init__(self, status_code, log_message, body_content, *args):
 		HTTPError.__init__(self, status_code, log_message, *args)
@@ -230,7 +232,29 @@ class PhoneNumber(Enforce):
 
 		return self.filter(val)
 
-
+class Date(Enforce):
+	def __init__(self, default=None):
+		Enforce.__init__(self, datetime, default)
+	
+	def filter(self, value):
+		logging.warn(value)
+		
+		r = re.compile(r'^([0-9]{4})-([0-9]{2})-([0-9]{2})$')
+		match = r.match(value)
+		
+		if not match:
+			raise Exception("value must be well-formed")
+		
+		logging.warn(match.groups())
+		parts = match.groups()
+		d = datetime(int(parts[0]), int(parts[1]), int(parts[2]))
+		return d
+	
+	def __lshift__(self, value):
+		if value is None or str(value[0]) is '':
+			return self.default
+		
+		return self.filter(value[0])
 
 if __name__ == "__main__":
 	try:

@@ -2,7 +2,7 @@ from tornado.web import UIModule
 from datetime import datetime
 from tools.orm import ORMJSONEncoder
 import json
-
+import logging
 
 class Slug(UIModule):
 	
@@ -19,37 +19,38 @@ class DatePicker(UIModule):
 	def embedded_javascript(self):
 		return """
 actions.push(function() {{
-	// var day = {datestamp.day}, month = {datestamp.month}, year = {datestamp.year};
-	$('fieldset.observed select.observed').change(function(elt) {{
-		return function() {{
-			var $elt = $(elt);
-			var name = $elt.attr('name');
-			console.log("value:");
-			console.log($elt.val());
-			if (name === 'day') {{
-				day = $elt.val();
-			}} else if (name === 'month') {{
-				month = $elt.val();
-			}} else if (name === 'year') {{
-				year = $elt.val();
-			}}
-			var dateString = year + "-" + month + "-" + day;
-			$('#{pickerID}-iso').val(dateString);
-			$('#{pickerID}-output').html(dateString);
-		}}(elt);
+	$('fieldset.observed select.observed').change(function(event) {{
+		var $elt = $(event.target);
+		var rootID = $elt.parent().attr('id');
+		var name = $elt.attr('name');
+		var dateParts = $('#'+rootID+'-iso').val().split("-");
+		var year = dateParts[0], month = dateParts[1], day = dateParts[2];
+		if (name === 'day') {{
+			day = $elt.val();
+		}} else if (name === 'month') {{
+			month = $elt.val();
+		}} else if (name === 'year') {{
+			year = $elt.val();
+		}}
+		$('#'+rootID+' input[type=hidden]').val(year + "-" + month + "-" + day);
 	}});
 }});"""
 
 
-	# @todo: don't hard-code the range
-	def render(self, pickerID, datestamp=datetime.now(), yearRange=range(2011, 2025)):
-		self.pickerID = pickerID
-		self.datestamp = datestamp
-		defaultISO = datestamp.isoformat() if datestamp else ""
+	# @todo: don't hard-code the range (where to put it?)
+	def render(self, pickerID, name=None, datestamp="now", yearRange=range(2011, 2025)):
+		if datestamp == "now":
+			datestamp = datetime.now()
+		
+		if name == None:
+			name = "{0}-iso".format(pickerID)
+		
+		defaultISO = datestamp.strftime('%Y-%m-%d') if datestamp else ""
 		
 		return self.render_string("modules/datepicker.html", 
 			pickerID=pickerID,
 			datestamp=datestamp,
 			yearRange=yearRange,
-			defaultISO=defaultISO
+			defaultISO=defaultISO,
+			dateFieldName=name
 		)

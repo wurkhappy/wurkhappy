@@ -4,23 +4,21 @@
 <fieldset id="{{ pickerID }}" class="observed">
 	<select name="month" id="{{ pickerID }}-month" class="observed">
 		{% for num, month in enumerate(months, 1) %}
-			<option value="{{ num }}"{% if datestamp and datestamp.month == num %} selected="true"{% end %}>{{ month }}</option>
+			<option value="{{ "{:02d}".format(num) }}"{% if datestamp and datestamp.month == num %} selected="true"{% end %}>{{ month }}</option>
 		{% end %}
 	</select>
 
 	<select name="day" id="{{ pickerID }}-day" class="observed">
 		{% for day in range(1, 32) %}
-			<option value="{{ day }}"{% if datestamp and datestamp.day == day %} selected="true"{% end %}>{{ day }}</option>
+			<option value="{{ "{:02d}".format(day) }}"{% if datestamp and datestamp.day == day %} selected="true"{% end %}>{{ day }}</option>
 		{% end %}
 	</select>
 
 	<select name="year" id="{{ pickerID }}-year" class="observed">
 		{% for year in yearRange %}
-			<option value="{{ day }}"{% if datestamp and datestamp.year == year %} selected="true"{% end %}>{{ year }}</option>
+			<option value="{{ year }}"{% if datestamp and datestamp.year == year %} selected="true"{% end %}>{{ year }}</option>
 		{% end %}
 	</select>
 
-	<input type="hidden" id="{{ pickerID }}-iso" name="iso" value="{{ defaultISO }}" />.
-
-	<p id="{{ pickerID }}-output">{{ defaultISO }}</p>
+	<input type="hidden" id="{{ pickerID }}-iso" name="{{ dateFieldName }}" value="{{ defaultISO }}" />
 </fieldset>
