@@ -192,13 +192,21 @@
 							tab_press = true;
 							var i_input = input.val().replace(/(,)/g, "");
 							if(i_input != "" && values_input.val().search(","+i_input+",") < 0 && i_input.length >= opts.minChars){	
+								// Bb: 08 December 2011
+								// Only add an item if it appears to be a valid email.
+								// Add it to a hidden email field & don't add email addr
+								// to clientID value list
 								e.preventDefault();
 								var n_data = {};
 								n_data[opts.selectedItemProp] = i_input;
-								n_data[opts.selectedValuesProp] = i_input;																				
+								n_data[opts.selectedValuesProp] = i_input;
 								var lis = $("li", selections_holder).length;
-								add_selected_item(n_data, "00"+(lis+1));
-								input.val("");
+								if (appears_valid_email(i_input)) {
+									n_data[opts.selectedValuesProp] = "";
+									add_selected_item(n_data, "00"+(lis+1));
+									input.val("");
+								}
+								// End Bb
 							}
 						case 13: // return
 							tab_press = false;
@@ -329,6 +337,16 @@
 					results_holder.show();
 					opts.resultsComplete.call(this);
 				}
+				
+				// Bb: 08 December 2011
+				// Support functions for handling custom email addresses
+				function appears_valid_email(data) {
+					// (string) -> bool
+					// Simple regex to filter obviously wrong email addresses
+					// uses the same pattern as the fmt.Email class
+					return data.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/) !== null;
+				}
+				// End Bb
 				
 				function add_selected_item(data, num){
 					values_input.val(values_input.val()+data[opts.selectedValuesProp]+",");

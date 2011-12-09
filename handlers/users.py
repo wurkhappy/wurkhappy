@@ -36,14 +36,13 @@ class ContactsJSONHandler(Authenticated, BaseHandler):
 		
 		query = args['q'].lower()
 		
-		iterator = User.iteratorWithContactsForID(user.id)
-		condition = lambda x: x.getFullName().lower().find(query) > -1
-		
-		contacts = [user.publicDict() for user in iterator if condition(user)]
-		
-		# for user in User.iteratorWithContactsForID(user.id):
-		# 	if user.getFullName().lower().find(query) > -1:
-		# 		contacts.append(user.publicDict())
+		if len(query) < 2:
+			contacts = []
+		else:
+			iterator = User.iteratorWithContactsForID(user.id)
+			condition = lambda x: x.getFullName().lower().find(query) > -1 or x.email.lower().find(query) > -1
+			
+			contacts = [user.publicDict() for user in iterator if condition(user)]
 		
 		self.renderJSON({"contacts": contacts})
 

@@ -45,7 +45,7 @@ $(document).ready(function() {
 		selectedItemProp: "fullName",
 		selectedValuesProp: "id",
 		inputName: "clientID",
-		searchObjProps: "name,email",
+		searchObjProps: "fullName,email",
 		startText: "",
 		resultsHighlight: false,
 		neverSubmit: true,
@@ -62,9 +62,14 @@ $(document).ready(function() {
 			return data.contacts;
 		},
 		selectionAdded: function(elem, data) {
-			$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="clientID" value="'+data.id+'" />');
+			if (data['id'] === "") {
+				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="email" value="'+data.fullName+'" />');
+			} else {
+				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="clientID" value="'+data.id+'" />');
+			}
 		},
-		selectionDeleted: function(elem) {
+		selectionRemoved: function(elem) {
+			elem.remove();
 			$('#wh-'+elem.attr('id')).remove();
 		}
 	});
