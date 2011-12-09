@@ -51,7 +51,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def costStringWithVendorID(clz, vendorID):
 		amount = clz.amountWithVendorID(vendorID)
-		return "${:,}".format(amount) if amount else ""
+		return "${:,}".format(amount / 100) if amount else ""
 	
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
@@ -68,7 +68,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def costStringWithClientID(clz, clientID):
 		amount = clz.amountWithClientID(clientID)
-		return "${:,}".format(amount) if amount else ""
+		return "${:,}".format(amount / 100) if amount else ""
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
@@ -122,7 +122,6 @@ class Agreement(MappedObj):
 			cursor.execute(query, self.id)
 			result = cursor.fetchone()
 			phase = AgreementPhase.initWithDict(result)
-			logging.warn('getCurrentPhase: %s' % phase)
 			return phase
 	
 	def getCurrentState(self):

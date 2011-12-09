@@ -105,6 +105,9 @@ class AgreementListHandler(Authenticated, BaseHandler):
 					appendAgreement(awaitingReply, agreement, other)
 				elif stateClass in [InProgressState]:
 					appendAgreement(inProgress, agreement, other)
+					logging.warn('{{"domain":"application.inconsistency", "debug":{{"agreementID":{id}}')
+				elif stateClass in [PaidState]:
+					templateDict['agreementCount'] -= 1
 			else:
 				other = User.retrieveByID(agreement.vendorID)
 				
@@ -114,6 +117,8 @@ class AgreementListHandler(Authenticated, BaseHandler):
 					appendAgreement(awaitingReply, agreement, other)
 				elif stateClass in [InProgressState]:
 					appendAgreement(inProgress, agreement, other)
+				elif stateClass in [PaidState]:
+					templateDict['agreementCount'] -= 1
 		
 		templateDict['agreementType'] = agreementType
 		templateDict['agreementGroups'] = []
