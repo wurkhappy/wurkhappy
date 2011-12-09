@@ -15,14 +15,14 @@
 	
 	<div id="content" class="clear">
 		<div class="clear">
-			{% if len(bag['agreementGroups']) %}
-				{% for name, agreements in bag['agreementGroups'] %}
+			{% if len(data['agreementGroups']) %}
+				{% for name, agreements in data['agreementGroups'] %}
 					{% block listgroup %}
 					{% end %}
 				{% end %}
 			{% else %}
 				<h2>You Don't Have Any Current Agreements</h2>
-				<p>Wurk Happy can help you organize and negotiate agreements with your {% if agreement_with == 'Client' %}clients {% elif agreement_with == 'Vendor' %}vendors {% end %}. Click the "Create New Agreement" button to get started! [In the future, we'll have a better tutorial here.]</p>
+				<p>Wurk Happy can help you organize and negotiate agreements with your {% if data['agreementType'] == 'Client' %}clients {% elif data['agreementType'] == 'Vendor' %}vendors {% end %}. Click the "Create New Agreement" button to get started! [In the future, we'll have a better tutorial here.]</p>
 			{% end %}
 		</div>
 	</div>
@@ -42,8 +42,8 @@
 		<div class="column-one-half">
 
 			<ul class="clear">
-				<li{% if bag['agreementType'] == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li{% if bag['agreementType'] == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
+				<li{% if data['agreementType'] == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
+				<li{% if data['agreementType'] == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
 				<li><a href="/people"><strong>People</strong></a></li>
 			</ul>
 
@@ -54,7 +54,7 @@
 			<ul id="admin" class="clear">
 				<li><a href="/logout">Log Out</a></li>
 				<li><a href="/user/me/account">Account</a></li>
-				<li><a href="/user/{{ bag['userID'] }}/preferences">Preferences</a></li>
+				<li><a href="/user/{{ data['userID'] }}/preferences">Preferences</a></li>
 			</ul>
 
 		</div>
@@ -68,21 +68,21 @@
 	<div id="intro" class="clear">
 
 		<div class="column-three-fourth">
-			{% if bag['agreementCount'] == 0 %}
-				<h1>No {{ escape(bag['agreementType']) }} Agreements</h1>
-			{% elif bag['agreementCount'] == 1 %}
-				<h1><strong>1</strong> {{ bag['agreementType'] }} Agreement ({{ bag['aggregateCost'] }})</h1>
+			{% if data['agreementCount'] == 0 %}
+				<h1>No {{ escape(data['agreementType']) }} Agreements</h1>
+			{% elif data['agreementCount'] == 1 %}
+				<h1><strong>1</strong> {{ data['agreementType'] }} Agreement ({{ data['aggregateCost'] }})</h1>
 			{% else %}
-				<h1><strong>{{ bag['agreementCount'] }}</strong> {{ bag['agreementType'] }} Agreements ({{ bag['aggregateCost'] }})</h1>
+				<h1><strong>{{ data['agreementCount'] }}</strong> {{ data['agreementType'] }} Agreements ({{ data['aggregateCost'] }})</h1>
 			{% end %}
 
 		</div>
 		<div class="column-one-fourth">
 
 			<ul class="action-button">
-				{% if agreement_with == 'Client' %}
+				{% if data['agreementType'] == 'Client' %}
 					<li><a href="/agreement/new" class="single">Create New Agreement</a></li>
-				{% elif agreement_with == 'Vendor' %}
+				{% elif data['agreementType'] == 'Vendor' %}
 					<li><a href="/message/new" class="single">Request Agreement</a></li>
 				{% end %}
 			</ul>
@@ -121,7 +121,7 @@
 								{% if agreement['other_id'] is None %}
 									Unsent draft from {{ agreement['date'] }}</p>
 								{% else %}
-									{% if agreement_with == 'Client' %}Sent to {% elif agreement_with == 'Vendor' %}Received from {% end %}
+									{% if data['agreementType'] == 'Client' %}Sent to {% elif data['agreementType'] == 'Vendor' %}Received from {% end %}
 									<strong><a href="/people/{{ agreement['other_id'] }}">{{ agreement['other_name'] }}</a></strong>
 									on {{ agreement['date'] }}</p>
 								{% end %}

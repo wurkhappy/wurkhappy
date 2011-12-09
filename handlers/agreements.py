@@ -105,7 +105,6 @@ class AgreementListHandler(Authenticated, BaseHandler):
 					appendAgreement(awaitingReply, agreement, other)
 				elif stateClass in [InProgressState]:
 					appendAgreement(inProgress, agreement, other)
-					logging.warn('{{"domain":"application.inconsistency", "debug":{{"agreementID":{id}}')
 				elif stateClass in [PaidState]:
 					templateDict['agreementCount'] -= 1
 			else:
@@ -125,14 +124,14 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		
 		for (name, lst) in [
 			("Requires Attention", actionItems),
-			("Waiting for Client", awaitingReply),
+			("Waiting for %s" % agreementType, awaitingReply),
 			("In Progress", inProgress)]:
 			
 			if len(lst):
 				templateDict['agreementGroups'].append((name, lst))
 		
 		title = "%s Agreements &ndash; Wurk Happy" % agreementType
-		self.render("agreement/list.html", title=title, bag=templateDict, agreement_with=agreementType)
+		self.render("agreement/list.html", title=title, data=templateDict)
 
 
 class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
