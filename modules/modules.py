@@ -45,8 +45,8 @@ actions.push(function() {{
 		
 		if name == None:
 			name = "{0}-iso".format(pickerID)
-		logging.warn(datestamp)
-		defaultISO = datestamp.strftime('%Y-%m-%d') if datestamp else ""
+		
+		defaultISO = datestamp.strftime('%Y-%m-%d') if datestamp else "2011-01-01"
 		
 		return self.render_string("modules/datepicker.html", 
 			pickerID=pickerID,
