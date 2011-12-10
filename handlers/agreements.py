@@ -10,7 +10,7 @@ from tools.orm import ORMJSONEncoder
 from tools.beanstalk import Beanstalk
 
 from datetime import datetime
-import random.randint
+from random import randint
 import hashlib
 import logging
 
@@ -610,7 +610,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 			
 			if not client:
-				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (random.randint(0, 5))
+				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
 				client = User.initWithDict(
 					dict(
 						email=args['email'],
@@ -834,7 +834,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						return
 					
 					if not client:
-						profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (random.randint(0, 5))
+						profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
 						client = User.initWithDict(
 							dict(
 								email=args['email'],
