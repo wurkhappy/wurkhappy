@@ -18,6 +18,10 @@ class SignupHandler(BaseHandler):
 			}
 
 	def get(self):
+		# data = {
+		# 	"user": self.current_user.getPublicDict()
+		# }
+		
 		flash = {"error": self.parseErrors()}
 		self.render("user/signup.html", title="Sign Up", flash=flash, logged_in_user=self.current_user)
 
@@ -28,7 +32,7 @@ class SignupHandler(BaseHandler):
 				required=[
 					('email', fmt.Email()),
 					('password', fmt.Enforce(str))
-					#TODO: Should have a password plaintext formatter to
+					# @todo: Should have a password plaintext formatter to
 					# enforce well-formed passwords.
 				]
 			)
@@ -65,6 +69,7 @@ class SignupHandler(BaseHandler):
 			self.redirect('/user/me/account')
 		else:
 			# User exists, redirect with error
+			# @todo: render with error slug instead
 			self.redirect("/signup?err=email_exists")
 
 
