@@ -12,18 +12,9 @@ import logging
 # -------------------------------------------------------------------
 
 class SignupHandler(BaseHandler):
-	ERR = 	{	
-			"email_exists":"That email already exists. Please use a different email.",
-			"email_invalid":"That email address is invalid. Please use a valid email address."
-			}
-
+	
 	def get(self):
-		# data = {
-		# 	"user": self.current_user.getPublicDict()
-		# }
-		
-		flash = {"error": self.parseErrors()}
-		self.render("user/signup.html", title="Sign Up", flash=flash, logged_in_user=self.current_user)
+		self.render("user/signup.html", title="Sign Up", error=None)
 
 	def post(self):
 		try:
@@ -39,9 +30,32 @@ class SignupHandler(BaseHandler):
 		except fmt.HTTPErrorBetter as e:
 			logging.warn(e.__dict__)
 			logging.warn(e.message)
-			self.redirect("/signup?err=email_invalid")
-			# self.set_status(e.status_code)
-			# self.write(e.body_content)
+			
+			if e.body_content.find("'password' parameter is required") != -1:
+				# We caught an exception because the password was missing
+				error = {
+					"domain": "authentication",
+					"display": (
+						"I'm sorry, you must choose a password to continue. "
+						"Please pick a password that is easy for you to "
+						"remember, but hard for others to guess."
+					),
+					"debug": "'password' parameter is required"
+				}
+			else:
+				error = {
+					"domain": "authentication",
+					"display": (
+						"I'm sorry, that didn't look like a proper email "
+						"address. Could you please enter a valid email address?"
+					),
+					"debug": "'email' parameter must be well-formed"
+				}
+			
+			self.set_status(e.status_code)
+			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
+			
+			# self.redirect("/signup?err=email_invalid")
 			return
 		
 		# Check whether user exists already
@@ -61,16 +75,27 @@ class SignupHandler(BaseHandler):
 			user.refresh()
 			
 			# @todo: This should be better. Static value in config file...
-			# user.profileSmallURL = self.application.config['application']['profileURLFormat'] % (user.id % 5, 's')
+			# user.profileSmallURL = self.application.config['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
+			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
 			user.profileSmallURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user.id % 5)
 			user.save()
 			
 			self.set_secure_cookie("user_id", str(user.id), httponly=True)
 			self.redirect('/user/me/account')
 		else:
-			# User exists, redirect with error
-			# @todo: render with error slug instead
-			self.redirect("/signup?err=email_exists")
+			# User exists, render with error
+			error = {
+				"domain": "authentication",
+				"display": (
+					"I'm sorry, that email already exists. Did you mean to "
+					"log in instead?"
+				),
+				"debug": "specified email address is already registered"
+			}
+			
+			self.set_status(e.status_code)
+			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
+			# self.redirect("/signup?err=email_exists")
 
 
 
@@ -272,8 +297,8 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 		
 		if not (user and user.passwordIsValid(args['currentPassword'])):
 			# User wasn't found, or password is wrong, display error
-			#TODO: Exponential back-off when user enters incorrect password.
-			#TODO: Flag accounds if passwords change too often.
+			# @todo: Exponential back-off when user enters incorrect password.
+			# @todo: Flag accounds if passwords change too often.
 			error = {
 				"domain": "web.request",
 				"debug": "please validate authentication credentials"

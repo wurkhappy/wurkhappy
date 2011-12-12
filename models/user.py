@@ -106,6 +106,13 @@ class User(MappedObj):
 		self.password = bcrypt.hashpw(str(password), bcrypt.gensalt())
 	
 	def passwordIsValid(self, password):
+		if self.password is None:
+			logging.warn(json.dumps({
+				"domain": "model.consistency",
+				"message": "This user is missing a valid 'password' record.",
+				"userID": self.id
+			}))
+			return False
 		return self.password == bcrypt.hashpw(str(password), self.password)
 	
 	def setConfirmationHash(self, confirmation):

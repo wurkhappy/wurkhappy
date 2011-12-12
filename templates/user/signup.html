@@ -9,12 +9,10 @@
 	{% end %}
 
 	<div id="content" class="clear">
-		{% if flash.get("error") != None %}
-			{% for e in flash["error"] %}
-				<p class="error">
-					{{ e }}
-				</p>
-			{% end %}
+		{% if error and error.get("display") %}
+			<p class="error">
+				{{ error['display'] }}
+			</p>
 		{% end %}
 	</div>
 	
