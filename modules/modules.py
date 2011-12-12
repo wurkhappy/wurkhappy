@@ -14,6 +14,14 @@ class Slug(UIModule):
 		self.slugDict = slugDict
 		return ''
 
+
+
+class Navigation(UIModule):
+	def render(self, data):
+		return self.render_string("modules/navigation.html", data=data)
+
+
+
 class DatePicker(UIModule):
 	""" Presents an HTML date picker with ISO 8601 hidden field
 	"""

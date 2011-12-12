@@ -48,7 +48,8 @@ class AccountHandler(Authenticated, BaseHandler):
 			'profileURL': [
 				user.profileSmallURL or '#',
 				user.profileLargeURL or '#'
-			]
+			],
+			'self': 'account'
 		}
 		
 		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)

@@ -37,29 +37,7 @@
 ### Component blocks included from above
 
 {% block navigation %}
-	<div id="navigation" class="clear">
-
-		<div class="column-one-half">
-
-			<ul class="clear">
-				<li{% if data['agreementType'] == 'Client' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-				<li{% if data['agreementType'] == 'Vendor' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
-				<li><a href="/people"><strong>People</strong></a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-half">
-
-			<ul id="admin" class="clear">
-				<li><a href="/logout">Log Out</a></li>
-				<li><a href="/user/me/account">Account</a></li>
-				<li><a href="/user/{{ data['userID'] }}/preferences">Preferences</a></li>
-			</ul>
-
-		</div>
-
-	</div>
+	{% module Navigation(data) %}
 {% end %}
 
 
