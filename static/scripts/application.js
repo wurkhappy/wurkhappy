@@ -247,3 +247,14 @@ $('.add.notes').click(function(e) {
   };
 })
 
+$('#phases').accordion({
+	header: 'h2'
+});
+
+$('#phases .add-phase').click(function(e) {
+  e.preventDefault();
+  var nextPhase = $(this).parents('li').next('li');
+  nextPhase.show();
+  nextPhase.find('h2').click();
+  $(this).remove();
+});

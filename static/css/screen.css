@@ -645,6 +645,12 @@ h2.steps span {
 	display: block;
 }
 
+/* Agreement Phases */
+#content #phases h2 { cursor: pointer; }
+#content #phases ul { margin: 0; padding: 0; }
+#content #phases ul li { display: none; list-style: none; margin: 0; padding: 0; }
+#content #phases ul li:first-child { display: block; }
+#content #phases .add-phase { font-size: 12px; font-weight: bold; margin-top: 20px; }
 
 /* FOOTER
 ================================================================================ */
