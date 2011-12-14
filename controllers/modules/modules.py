@@ -6,21 +6,21 @@ import json
 import logging
 
 class Slug(UIModule):
-	
+
 	def embedded_javascript(self):
 		return "var slug = %s;" % json.dumps(self.slugDict, cls=ORMJSONEncoder)
-	
+
 	def render(self, slugDict):
 		self.slugDict = slugDict
 		return ''
-
-
 
 class Navigation(UIModule):
 	def render(self, data):
 		return self.render_string("modules/navigation.html", data=data)
 
-
+class Footer(UIModule):
+	def render(self):
+		return self.render_string("modules/footer.html")
 
 class DatePicker(UIModule):
 	""" Presents an HTML date picker with ISO 8601 hidden field
@@ -50,13 +50,13 @@ actions.push(function() {{
 	def render(self, pickerID, name=None, datestamp="now", yearRange=range(2011, 2025)):
 		if datestamp == "now":
 			datestamp = datetime.now()
-		
+
 		if name == None:
 			name = "{0}-iso".format(pickerID)
-		
+
 		defaultISO = datestamp.strftime('%Y-%m-%d') if datestamp else "2011-01-01"
-		
-		return self.render_string("modules/datepicker.html", 
+
+		return self.render_string("modules/datepicker.html",
 			pickerID=pickerID,
 			datestamp=datestamp,
 			yearRange=yearRange,

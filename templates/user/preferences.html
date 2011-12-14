@@ -7,10 +7,10 @@
 <div class="container">
 	{% block navigation %}
 	{% end %}
-	
+
 	{% block header %}
 	{% end %}
-	
+
 	<div id="content" class="clear">
 		<form action="/user/{{ user_id }}/preferences" method="POST" accept-charset="utf-8">
 			{% raw xsrf_form_html() %}
@@ -35,9 +35,8 @@
 			</fieldset>
 		</form>
 	</div>
-	
-	{% block footer %}
-	{% end %}
+
+	{% module Footer() %}
 </div>
 
 {% end %}
@@ -63,83 +62,21 @@
 
 {% block header %}
 	<div id="intro" class="clear">
-	
+
 		<div class="column-three-fourth">
-		
+
 			<h1>Preferences</h1>
-		
+
 		</div>
-	
+
 		<div class="column-one-fourth">
-		
+
 			<div class="action-button">
 				<a href="/agreement/" class="single cancel">Cancel Changes</a>
 			</div>
-		
+
 		</div>
-	
+
 	</div>
 {% end %}
 
-
-
-{% block footer %}
-	<div id="footer" class="clear">
-
-		<div class="column-one-fourth">
-
-			<h3>Archives</h3>
-
-			<ul>
-				<li><a href="">All Client Agreements</a></li>
-				<li><a href="">All Vendor Agreements</a></li>
-				<li><a href="">All People</a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-fourth">
-
-			<h3>Section 2</h3>
-
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-fourth">
-
-			<h3>Section 3</h3>
-
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-
-		</div>
-
-		<div class="column-one-fourth">
-
-			<h3>Section 4</h3>
-
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-
-		</div>
-
-	</div>
-
-
-	<div id="copyright" class="clear">
-
-		<p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
-
-	</div>
-{% end %}
