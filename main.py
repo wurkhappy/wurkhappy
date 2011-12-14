@@ -18,7 +18,7 @@ from controllers.beanstalk import Beanstalk
 import os
 import os.path
 
-from modules import modules
+from controllers.modules import modules
 
 # -------------------------------------------------------------------
 # Application main

@@ -1,8 +1,8 @@
 from models.user import User
 from models.agreement import Agreement
-from tools.email import Email
-from tools.orm import ORMJSONEncoder
-from helpers.verification import Verification
+from controllers.email import Email
+from controllers.orm import ORMJSONEncoder
+from controllers.verification import Verification
 
 import tornado.template as template
 import json
