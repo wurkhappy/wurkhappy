@@ -18,37 +18,32 @@
 	<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
 	<script type="text/javascript">
-		
+
 		var _gaq = _gaq || [];
 		_gaq.push(['_setAccount', 'UA-24101674-1']);
 		_gaq.push(['_setDomainName', '.wurkhappy.com']);
 		_gaq.push(['_trackPageview']);
-		
+
 		(function() {
 			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
 			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 		})();
-		
+
 	</script>
 
 </head>
 <body>
-	
+
 	{% block header %}
 	{% end %}
-	
+
 	{% block main %}
 	{% end %}
-	
+
 	{% block footer %}
-		<div id="copyright" class="clear">
-			<div class="container">
-				<p>Copyright &#169; Wurk Happy &mdash; All Rights Reserved</p>
-			</div>
-		</div>
 	{% end %}
-	
+
 	<!-- Javascript at the bottom for fast page loading -->
 
 	<script src="{{ static_url("scripts/libs/jquery-1.4.2.js") }}"></script>

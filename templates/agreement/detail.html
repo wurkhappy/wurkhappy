@@ -110,8 +110,7 @@
 		</form>
 	</div>
 
-	{% block footer %}
-	{% end %}
+	{% module Footer() %}
 </div>
 {% end %}
 
@@ -168,50 +167,4 @@
 
 {% block transactionitem %}
 				<li>{{ transaction['type'] }} <a href="/people/{{ data[transaction['user']]['id'] }}">{{ data[transaction['user']]['fullName'] }}</a> on {{ transaction['date'] }}</li>
-{% end %}
-
-
-
-{% block footer %}
-	<div id="footer" class="clear">
-		<div class="column-one-fourth">
-			<h3>Archives</h3>
-			<ul>
-				<li><a href="">All Client Agreements</a></li>
-				<li><a href="">All Vendor Agreements</a></li>
-				<li><a href="">All People</a></li>
-			</ul>
-		</div>
-
-		<div class="column-one-fourth">
-			<h3>Section 2</h3>
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-		</div>
-
-		<div class="column-one-fourth">
-			<h3>Section 3</h3>
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-		</div>
-
-		<div class="column-one-fourth">
-			<h3>Section 4</h3>
-			<ul>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-				<li><a href="#">Links</a></li>
-			</ul>
-		</div>
-	</div>
-
-	<div id="copyright" class="clear">
-		<p>Powered by Wurk Happy &bull; Copyright &#169; Wurk Happy. All rights reserved.</p>
-	</div>
 {% end %}

@@ -15,7 +15,7 @@
 			</p>
 		{% end %}
 	</div>
-	
+
 	<div id="content" class="clear">
 		<form action="/signup" method="POST" accept-charset="utf-8">
 			{% raw xsrf_form_html() %}
@@ -30,9 +30,8 @@
 			</fieldset>
 		</form>
 	</div>
-	
-	{% block footer %}
-	{% end %}
+
+	{% module Footer() %}
 </div>
 {% end %}
 
@@ -61,14 +60,5 @@
 		<div class="column-three-fourth">
 			<h1>{{ title }}</h1>
 		</div>
-	</div>
-{% end %}
-
-
-
-{% block footer %}
-	<div id="footer" class="clear">&nbsp;</div>
-	<div id="copyright" class="clear">
-		<p>Copyright &#169; Wurk Happy. All rights reserved.</p>
 	</div>
 {% end %}
