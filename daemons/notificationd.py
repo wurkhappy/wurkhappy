@@ -10,9 +10,9 @@
 # For example:
 # sudo python -m daemons.notificationd --config=_b.yaml
 
-from tools.email import Email
-from tools.orm import Database, ORMJSONEncoder
-from tools.beanstalk import Beanstalk
+from controllers.email import Email
+from controllers.orm import Database, ORMJSONEncoder
+from controllers.beanstalk import Beanstalk
 from controllers.background import notifications
 
 import json

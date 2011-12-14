@@ -5,9 +5,9 @@ from base import *
 from models.user import *
 from models.agreement import *
 from models.profile import Profile
-from helpers import fmt
-from tools.orm import ORMJSONEncoder
-from tools.beanstalk import Beanstalk
+from controllers import fmt
+from controllers.orm import ORMJSONEncoder
+from controllers.beanstalk import Beanstalk
 
 from datetime import datetime
 from random import randint

@@ -1,6 +1,6 @@
 from base import *
 from models.user import *
-from helpers.verification import Verification
+from controllers.verification import Verification
 
 from datetime import datetime
 import logging

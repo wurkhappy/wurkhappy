@@ -5,7 +5,7 @@ from models.user import User, UserPrefs
 from models.agreement import *
 from models.paymentmethod import PaymentMethod
 from models.transaction import Transaction
-from helpers import fmt
+from controllers import fmt
 
 import json
 import logging

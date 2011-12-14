@@ -3,7 +3,7 @@ import re
 from base import *
 from models.user import User
 from models.profile import Profile
-from helpers.verification import Verification
+from controllers.verification import Verification
 
 # -------------------------------------------------------------------
 # Profile (Add / Edit)

@@ -8,7 +8,7 @@ import os
 import smtplib
 import bcrypt
 
-from tools.base import Base16, Base58
+from base import Base16, Base58
 
 # -------------------------------------------------------------------
 # Verification

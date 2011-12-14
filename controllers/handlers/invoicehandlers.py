@@ -5,7 +5,7 @@ from models.user import User
 from models.project import Project
 from models.invoice import Invoice
 from models.lineitem import LineItem
-from helpers.verification import Verification
+from controllers.verification import Verification
 
 # ----------------------------------------------------------------------
 # Invoice Handler

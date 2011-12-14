@@ -3,7 +3,7 @@ from __future__ import division
 from base import *
 from models.user import User, UserPrefs
 from models.paymentmethod import PaymentMethod
-from helpers import fmt
+from controllers import fmt
 
 import json
 import logging
@@ -18,10 +18,10 @@ from StringIO import StringIO
 # Required for generating remote resource ID strings (S3 keys)
 import uuid
 from hashlib import sha1
-from tools.base import Base16, Base58
+from controllers.base import Base16, Base58
 
 # Required for uploading images to S3
-from tools.amazonaws import AmazonS3
+from controllers.amazonaws import AmazonS3
 from boto.s3.key import Key
 
 # -------------------------------------------------------------------

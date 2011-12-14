@@ -9,9 +9,9 @@ from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
 
-from handlers import landing
-# from tools.email import *
-from tools.orm import *
+from controllers.handlers import landing
+# from controllers.email import *
+from controllers.orm import *
 
 import os
 

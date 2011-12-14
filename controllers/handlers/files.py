@@ -11,10 +11,10 @@ from StringIO import StringIO
 import Image
 import ImageOps
 
-from tools.base import Base16, Base58
+from controllers.base import Base16, Base58
 from hashlib import sha1
 import uuid
-from tools.amazonaws import AmazonS3
+from controllers.amazonaws import AmazonS3
 from boto.s3.key import Key
 
 

@@ -2,7 +2,7 @@ from __future__ import division
 import re
 
 from base import *
-from helpers import fmt
+from controllers import fmt
 from models.user import User, UserPrefs
 from models.agreement import *
 from models.profile import Profile

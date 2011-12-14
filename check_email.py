@@ -1,7 +1,7 @@
 # Check for new signups
 
-from tools.orm import Database
-from tools.email import Email
+from controllers.orm import Database
+from controllers.email import Email
 from models.user import User
 import json
 import yaml
