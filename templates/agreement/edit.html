@@ -28,10 +28,27 @@
 			{% raw xsrf_form_html() %}
 
 			<h2>Recipient</h2>
-			<fieldset>
-				<label for="">Email Address or Name of Existing Contact</label>
-				<input type="text" name="email" id="client-suggest" />
-			</fieldset>
+			{% if data['state'] == 'DraftState' %}
+				<fieldset>
+					<label for="">Email Address or Name of Existing Contact</label>
+					<input type="text" name="email" id="client-suggest" />
+					<!-- instead of pre-filling this with the slug, can we populate the DOM? -->
+				</fieldset>
+			{% else %}
+				<div id="agreement-profile" class="data-table">
+					<table border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="meta">
+								<span><img src="{% raw data['client']['profileURL'][0] %}" width="50"></span>
+							</td>
+							<td>
+								<h3><a href="detail.html">{{ data['client']['fullName'] }}</a></h3>
+								<p>{{ data['client']['email'] }} {% if data['client']['telephone'] %} &mdash; {{ data['client']['telephone'] }}{% end %}</p>
+							</td>
+						</tr>
+					</table>
+				</div>
+			{% end %}
 
 			<h2>Title and Summary</h2>
 			<fieldset>

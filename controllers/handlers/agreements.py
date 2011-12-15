@@ -323,6 +323,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"client": None,
 				"vendor": None,
 				"phases": [],
+				"state": 'DraftState',
 				"actions": [ {
 					"id": "action-save",
 					"capture-id": "agreement-form",
@@ -794,7 +795,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						('details', fmt.List(fmt.Enforce(str))),
 						('estDateCompleted', fmt.List(fmt.Enforce(str))),
 						('date', fmt.List(fmt.Date()))
-						# ('phaseNumber', fmt.Enforce(int))
 					]
 				)
 			except fmt.HTTPErrorBetter as e:
@@ -852,7 +852,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				
 				if action == "send":
 					if client is None:
-						# @todo: this should be handled in the doTransition method...
+						# @todo: should this be handled in the doTransition method?
 						error = {
 							"domain": "application.consistency",
 							"display": (
@@ -883,21 +883,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 								r = bconn.put(msg)
 								logging.warn('Beanstalk: email_notification_queue#%d %s' % (r, msg))
 			
-			# if isinstance(currentState, EstimateState) and action == "mark_complete":
-				# if not args['phaseNumber']:
-				# 	error = {
-				# 		"domain": "web.request",
-				# 		"display": (
-				# 			"Something went wrong marking this agreement complete."
-				# 		),
-				# 		"debug": "missing required 'phaseNumber' parameter"
-				# 	}
-				# 	self.set_status(400)
-				# 	self.renderJSON(error)
-				# transitionData['phaseNumber'] = args['phaseNumber']
-				
-				# transactionData['phaseNumber'] = agreement.getCurrentPhase().phaseNumber
-				
 			if (isinstance(currentState, DraftState) or 
 					isinstance(currentState, EstimateState) or 
 					isinstance(currentState, DeclinedState)):
@@ -947,7 +932,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					optional=[
 						('summaryComments', fmt.Enforce(str)),
 						('phaseComments', fmt.List(fmt.Enforce(str))),
-						#('phaseNumber', fmt.Enforce(int))
 					]
 				)
 			except fmt.HTTPErrorBetter as e:
@@ -971,24 +955,11 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					if phase.phaseNumber < len(args['phaseComments']):
 						phase.comments = args['phaseComments'][phase.phaseNumber]
 						phase.save()
-			# elif isinstance(currentState, CompletedState) and action in ["dispute", "verify"]:
-				# if not args['phaseNumber']:
-				# 	error = {
-				# 		"domain": "web.request",
-				# 		"display": (
-				# 			"Something went wrong marking this agreement complete."
-				# 		),
-				# 		"debug": "missing required 'phaseNumber' parameter"
-				# 	}
-				# 	self.set_status(400)
-				# 	self.renderJSON(error)
-				# transitionData['phaseNumber'] = args['phaseNumber']
-				# transitionData['phaseNumber'] = agreement.getCurrentPhase().phaseNumber
 		
-		# currentState = currentState.doTransition(role, action)
 		try:
 			currentState.performTransition(role, action, unsavedRecords)
 		except StateTransitionError as e:
+			# @todo: This is where we would describe each of the possible errors
 			error = {
 				"domain": "application.consistency",
 				"display": (
@@ -1004,7 +975,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		for record in unsavedRecords:
 			logging.warn(record)
 			record.save()
-		# currentState.agreement.save()
 		
 		self.renderJSON(self.assembleDictionary(agreement))
 

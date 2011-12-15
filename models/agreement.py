@@ -475,8 +475,10 @@ class DraftState(AgreementState):
 		if role == 'vendor':
 			if action == 'update':
 				self.agreement.dateModified = datetime.now()
+				unsavedRecords.append(self.agreement)
 			elif action == 'send':
 				self.agreement.dateSent = datetime.now()
+				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
 		else:

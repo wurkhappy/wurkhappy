@@ -154,6 +154,10 @@ $(document).ready(function() {
 });
 
 successActions = {
+	'action-save': function (data, status, xhr) {
+		$('#action-save').hide();
+		alert('Successfully sent estimate');
+	},
 	'action-send': function (data, status, xhr) {
 		$('.action-button').hide();
 		alert('Successfully sent estimate');
