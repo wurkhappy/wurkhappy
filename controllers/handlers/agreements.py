@@ -657,10 +657,10 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						action='agreementInvite'
 					))
 					
-					# bconn.use('email_notification_queue')
-					bconn.use(self.application.configuration['notifications']['beanstalk_tube'])
+					tube = self.application.configuration['notifications']['beanstalk_tube']
+					bconn.use(tube)
 					r = bconn.put(msg)
-					logging.info('Beanstalk: email_notification_queue#%d %s' % (r, msg))
+					logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 			
 			agreement.dateSent = datetime.now()
 			agreement.save()
@@ -879,9 +879,10 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 									action='agreementInvite'
 								))
 								
-								bconn.use('email_notification_queue')
+								tube = self.application.configuration['notifications']['beanstalk_tube']
+								bconn.use(tube)
 								r = bconn.put(msg)
-								logging.warn('Beanstalk: email_notification_queue#%d %s' % (r, msg))
+								logging.warn('Beanstalk: tube#%d %s' % (r, msg))
 			
 			if (isinstance(currentState, DraftState) or 
 					isinstance(currentState, EstimateState) or 

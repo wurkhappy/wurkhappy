@@ -93,11 +93,14 @@ class PaymentHandler(Authenticated, BaseHandler):
 		if paymentPref:
 			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
 		else:
-			paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+			
+			if not paymentMethod:
+				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
 		
 		if not paymentMethod:
 			self.set_status(400)
-			self.write('boo')
+			self.write("There's no payment method on file.")
 			# @todo: actually handle this error
 			return
 		
