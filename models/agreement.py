@@ -1,7 +1,9 @@
 from controllers.orm import *
 from collections import OrderedDict
 from datetime import datetime
+from controllers.fmt import HTTPErrorBetter
 
+import json
 import bcrypt
 import hashlib
 import logging
@@ -180,14 +182,17 @@ class Agreement(MappedObj):
 			(ContestedState, dateAccepted and dateCompleted and dateContested),
 			(CompletedState, dateAccepted and dateCompleted and not dateContested),
 			(InProgressState, dateSent and dateAccepted),
-			(EstimateState, dateSent and not dateContested and not dateAccepted),
+			(EstimateState, dateSent and not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
+			# (EstimateState, not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined > dateSent))),
+			# (DeclinedState, not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent),
+			
 			(DeclinedState, dateSent and dateDeclined and not dateAccepted),
 			(DraftState, not dateSent),
 			(InvalidState, True)
 		]
 		
 		# like find-first
-		logging.info([s[0] for s in states if s[1]])
+		# logging.info("(%d) %s: %s" % (self.id, self.name, [s[0] for s in states if s[1]]))
 		subStateName = [s[0] for s in states if s[1]][0]
 		return subStateName(self)
 		
@@ -376,6 +381,7 @@ class AgreementState(object):
 		try:
 			return self._prepareFields(role, action, unsavedRecords)
 		except StateTransitionError as e:
+			# @todo: We need to separate this from model code. UGHHHH
 			error = {
 				"domain": "application.consistency",
 				"display": (
@@ -385,58 +391,10 @@ class AgreementState(object):
 				"debug": "state transition error"
 			}
 			
-			raise HTTPErrorBetter(409, 'state transition error', JSON.dumps(error))
+			raise HTTPErrorBetter(409, 'state transition error', json.dumps(error))
 		
 		return self.agreement.getCurrentState()
 	
-	@classmethod
-	def currentState(clz, agreementInstance, phaseList):
-		logging.warn('AGREEMENTSTATE.CURRENTSTATE IS DEPRECATED')
-		""" currentState : Agreement, [AgreementPhase] -> AgreementState """
-		
-		dateSent =  agreementInstance.dateSent
-		dateAccepted = agreementInstance.dateAccepted
-		dateDeclined = agreementInstance.dateDeclined
-		# dateCompleted = agreementInstance.dateCompleted
-		# dateVerified = agreementInstance.dateVerified
-		# dateContested = agreementInstance.dateContested
-		
-		# Get the first agreement phase that has been marked complete.
-		# @todo: this is a nasty hack, it should be easier to test these states
-		dateCompleted = None
-		dateVerified = None
-		dateContested = None
-		
-		for phase in phaseList:
-			if phase.dateCompleted:
-				dateCompleted = phase.dateCompleted
-				
-				if phase.dateContested or phase.dateVerified:
-					dateVerified = phase.dateVerified
-					dateContested = phase.dateContested
-				else:
-					dateVerified = None
-					dateContested = None
-			else:
-				break
-		
-		states = [
-			(PaidState, dateVerified),
-			(ContestedState, dateContested and dateAccepted and dateCompleted),
-			(CompletedState, (not dateContested) and dateAccepted and dateCompleted),
-			(DraftState, not dateSent),
-			(EstimateState, not dateContested and not dateAccepted and (not dateDeclined or dateSent and dateDeclined < dateSent)),
-			(DeclinedState, not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent),
-			(InProgressState, (not dateContested and dateAccepted and dateSent and dateAccepted > dateSent) \
- 				    or (dateContested and dateAccepted and dateSent and dateContested > dateSent and dateAccepted < dateSent)),
-			(InvalidState, True)
-		]
-		
-		# like find-first
-		logging.info([s[0] for s in states if s[1]])
-		subStateName = [s[0] for s in states if s[1]][0]
-		return subStateName(agreementInstance, phaseList)
-
 	@classmethod
 	def testCurrentState(clz):
 		agreementInstance = OrderedDict([
@@ -518,10 +476,10 @@ class DeclinedState(AgreementState):
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
-			if role == 'update':
+			if action == 'update':
 				self.agreement.dateModified = datetime.now()
 				unsavedRecords.append(self.agreement)
-			elif role == 'send':
+			elif action == 'send':
 				self.agreement.dateSent = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:

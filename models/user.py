@@ -3,6 +3,8 @@ from controllers.amazonaws import *
 from controllers.base import Base16, Base58
 from profile import Profile
 
+from controllers.fmt import HTTPErrorBetter
+import json
 import uuid
 import bcrypt
 from hashlib import sha1
@@ -205,7 +207,7 @@ class UserState(object):
 				"debug": "state transition error"
 			}
 			
-			raise HTTPErrorBetter(409, 'state transition error', JSON.dumps(error))
+			raise HTTPErrorBetter(409, 'state transition error', json.dumps(error))
 		
 		return UserState.currentState(self.user)
 	

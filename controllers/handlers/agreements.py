@@ -86,11 +86,11 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				"date": agr.dateCreated.strftime('%B %d, %Y'),
 				"amount": agr.getCostString(),
 				"profileURL": usr and (usr.profileSmallURL or '#'), # Default profile photo? Set during signup?
-				#"state": InProgressState.currentState(agr),
+				# "state": agr.getCurrentState(),
 			})
 		
 		for agreement in agreements:
-			stateClass = agreement.getCurrentState().__class__ # AgreementState.currentState(agreement, []).__class__
+			stateClass = agreement.getCurrentState().__class__
 			
 			if stateClass == 'InvalidState':
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
@@ -213,7 +213,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"capture-id": "agreement-form",
 					"name": "Save and Re-submit",
 					"action": "/agreement/%d/send.json" % agreement.id,
-					"method": "GET",
+					"method": "POST",
 					"params": { }
 				} ],
 				"client": []
@@ -356,7 +356,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if agreement.vendorID == user.id:
 			agreementType = 'Client'
 		elif agreement.clientID == user.id:
-			stateClass = agreement.getCurrentState().__class__ # AgreementState.currentState(agreement, phases).__class__
+			stateClass = agreement.getCurrentState().__class__
 			
 			if stateClass in [DraftState, InvalidState]:
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
@@ -460,7 +460,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		# Add the agreement phase data to the template dict
 		
-		currentState = agreement.getCurrentState() # AgreementState.currentState(agreement, phases)
+		currentState = agreement.getCurrentState()
 		currentPhase = agreement.getCurrentPhase()
 		
 		templateDict["phases"] = []
@@ -731,7 +731,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			"agreement": {
 				"id": agreement.id
 			},
-			"state": agreement.getCurrentState() # InProgressState.currentState(agreement)
+			"state": agreement.getCurrentState()
 		}
 		
 		self.renderJSON(stateDict)
@@ -763,7 +763,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(role)
 		logging.info(action)
 		
-		currentState = agreement.getCurrentState() # AgreementState.currentState(agreement)
+		currentState = agreement.getCurrentState()
 		logging.info(currentState.__class__.__name__)
 		
 		# In order to make sure records are not put in inconsistent states, a
