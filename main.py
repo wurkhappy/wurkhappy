@@ -9,6 +9,8 @@ from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
 
+import yaml
+
 from controllers.handlers import *
 from controllers.email import Email
 from controllers.orm import Database
@@ -97,8 +99,6 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	import yaml
-	
 	options.define("config", default="config.yaml", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)
