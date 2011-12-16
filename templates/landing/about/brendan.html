@@ -1,0 +1,44 @@
+{% extends "../base.html" %}
+{% set title = "Wurk Happy &ndash; Brendan Berg" %}
+
+{% block header %}
+	<div id="navigation" class="clear">
+		<div class="container">
+			<div class="column-one-half">
+				<p><a href="/">Wurk Happy</a></p>
+			</div>
+			<div class="column-one-half">
+				<ul>
+					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+{% end %}
+
+{% block main %}
+	<div id="internal" class="clear">
+		<div class="container">
+			<ul>
+				<li class="" id="about-button"><a href="/about">About Us</a></li>
+				<li class="" id="marcus-button"><a href="/about/marcus">Marcus Ellison</a></li>
+				<li class="current" id="brendan-button"><a href="/about/brendan">Brendan Berg</a></li>
+			</ul>
+		</div>
+	</div>
+	<div id="content" class="clear">
+		<div class="container">
+			
+			<h2><strong>Brendan Berg</strong> Co-Founder &amp; CTO</h2>
+			
+			<div class="column-one-half">
+				<p><img src="http://media.wurkhappy.com/images/brendan.jpg" alt="Brendan Berg" /></p>
+			</div>
+			
+			<div class="column-one-half">
+				<p>Brendan has over five years of experience creating web and mobile applications. Before joining Wurk Happy, he designed APIs and built cloud infrastructure as Socialbomb's Chief Software Architect. He has also built mobile applications for clients ranging from Technicolor to the online radio startup Jelli. He holds a BA in Computer Science and Sculpture from Bard College, where he focused on self-organizing systems, programming languages, and computer graphics. He is known as <a href="http://twitter.com/#!/brendn">@brendn</a> on Twitter.</p>
+			</div>
+			
+		</div>
+	</div>
+{% end %}

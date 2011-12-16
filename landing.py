@@ -29,8 +29,10 @@ class Application(web.Application):
 			(r'/', landing.RootHandler),
 			(r'/signup', landing.SignupHandler),
 			(r'/signup.json', landing.SignupJSONHandler),
-			(r'/about', landing.AboutHandler),
-			(r'/jobs', landing.JobsHandler),
+			(r'/about/?', landing.AboutHandler),
+			(r'/about/(\w+)/?', landing.AboutPersonHandler),
+			(r'/jobs/?', landing.JobsHandler),
+			(r'/techstars/?', landing.TechstarsHandler),
 		]
 		
 		settings = {

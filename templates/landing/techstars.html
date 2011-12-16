@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block header %}
+<div id="navigation" class="clear">
+	<div class="container">
+		<div class="column-one-half">
+			<p><a href="/">Wurk Happy</a></p>
+		</div>
+	</div>
+</div>
+{% end %}
+
+{% block main %}
+<div id="internal" class="clear">
+	<div class="container">
+		<ul>
+			<li class="tab current" id="team-button"><a href="#">Our Team</a></li>
+			<li class="tab" id="business-button"><a href="#">Our Business</a></li>
+		</ul>
+	</div>
+</div>
+
+<div id="content" class="clear">
+	<div class="container tab-content" id="team-container">
+		<video src="http://media.wurkhappy.com/movies/team.m4v" controls preload="auto" width="640" height="480" poster="http://media.wurkhappy.com/images/team.png" />
+	</div>
+	<div class="container tab-content hidden" id="business-container">
+		<video src="http://media.wurkhappy.com/movies/business.m4v" controls width="640" height="480" poster="http://media.wurkhappy.com/images/business.png" />
+	</div>
+</div>
+{% end %}
+
