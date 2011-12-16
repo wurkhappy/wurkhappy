@@ -4,12 +4,12 @@
 # Written by Brendan Berg
 # Copyright WurkHappy, 2011
 
+import yaml
+
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
-
-import yaml
 
 from controllers.handlers import *
 from controllers.email import Email
