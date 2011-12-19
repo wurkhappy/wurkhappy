@@ -194,7 +194,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				}, {
 					"id": "action-decline",
 					"capture-id": "comments-form",
-					"name": "Decline Estimate",
+					"name": "Request Changes",
 					"action": "/agreement/%d/decline.json" % agreement.id,
 					"method": "POST",
 					"params": { }
@@ -204,7 +204,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"vendor": [ {
 					"id": "action-save",
 					"capture-id": "agreement-form",
-					"name": "Save as Draft",
+					"name": "Save Changes",
 					"action": "/agreement/%d/update.json" % agreement.id,
 					"method": "POST",
 					"params": { }
@@ -221,7 +221,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			InProgressState : {
 				"vendor": [ {
 					"id": "action-markcomplete",
-					"name": "Mark Completed",
+					"name": "Mark Phase Complete",
 					"action": "/agreement/%d/mark_complete.json" % agreement.id,
 					"method": "POST",
 					"params": { }
@@ -258,16 +258,18 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				} ]
 			},
 			ContestedState : {
-				"vendor": [ {
-					"id": "action-save",
-					"capture-id": "agreement-form",
-					"name": "Update Agreement",
-					"action": "/agreement/%d/update.json" % agreement.id,
-					"method": "POST",
-					"params": { }
-				}, {
+				"vendor": [ 
+				# {
+				# 	"id": "action-save",
+				# 	"capture-id": "agreement-form",
+				# 	"name": "Update Agreement",
+				# 	"action": "/agreement/%d/update.json" % agreement.id,
+				# 	"method": "POST",
+				# 	"params": { }
+				# },
+				{
 					"id": "action-markcomplete",
-					"name": "Mark Completed",
+					"name": "Mark Phase Complete",
 					"action": "/agreement/%d/mark_complete.json" % agreement.id,
 					"method": "POST",
 					"params": { }

@@ -55,6 +55,11 @@
 				<label for="">Title</label>
 				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
 				<label for="summary">Summary</label>
+				{% if and data['state'] == 'DeclinedState' and data['summaryComments'] %}
+					<div class="notes">
+					  <p>{% raw escape(data['summaryComments']).replace('\n', '<br/>') %}</p>
+					</div>
+				{% end %}
 				<textarea name="summary" rows="3" cols="100">{% if data['summary'] and len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
 			</fieldset>
 
@@ -70,6 +75,11 @@
 							{% set datestamp = data["phases"][0]["estDateCompleted"] if len(data["phases"]) > 0 else None %}
 							{% module DatePicker('phase-one', name='date', datestamp=datestamp) %}
 							<label for="">Describe timeframe, services performed, and deliverables for phase one.</label>
+							{% if and data['state'] == 'DeclinedState' and data['summaryComments'] %}
+								<div class="notes">
+								  <p>{% raw escape(data['phases'][0]['comments']).replace('\n', '<br/>') %}</p>
+								</div>
+							{% end %}
 							<textarea name="details" rows="5" cols="100">{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["description"] }}{% end %}</textarea>
 							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
@@ -83,6 +93,11 @@
 							{% set datestamp = data["phases"][1]["estDateCompleted"] if len(data["phases"]) > 1 else None %}
 							{% module DatePicker('phase-two', name='date', datestamp=datestamp) %}
 							<label for="">Describe timeframe, services performed, and deliverables for phase two.</label>
+							{% if and data['state'] == 'DeclinedState' and data['summaryComments'] %}
+								<div class="notes">
+								  <p>{% raw escape(data['phases'][1]['comments']).replace('\n', '<br/>') %}</p>
+								</div>
+							{% end %}
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["description"] }}{% end %}</textarea>
 							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
@@ -96,6 +111,11 @@
 							{% set datestamp = data["phases"][2]["estDateCompleted"] if len(data["phases"]) > 2 else None %}
 							{% module DatePicker('phase-three', name='date', datestamp=datestamp) %}
 							<label for="">Describe timeframe, services performed, and deliverables for phase three.</label>
+							{% if and data['state'] == 'DeclinedState' and data['summaryComments'] %}
+								<div class="notes">
+								  <p>{% raw escape(data['phases'][2]['comments']).replace('\n', '<br/>') %}</p>
+								</div>
+							{% end %}
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["description"] }}{% end %}</textarea>
 							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
@@ -109,6 +129,11 @@
 							{% set datestamp = data["phases"][3]["estDateCompleted"] if len(data["phases"]) > 3 else None %}
 							{% module DatePicker('phase-four', name='date', datestamp=datestamp) %}
 							<label for="">Describe timeframe, services performed, and deliverables for phase four.</label>
+							{% if and data['state'] == 'DeclinedState' and data['summaryComments'] %}
+								<div class="notes">
+								  <p>{% raw escape(data['phases'][3]['comments']).replace('\n', '<br/>') %}</p>
+								</div>
+							{% end %}
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["description"] }}{% end %}</textarea>
 						</div>
 					</li>
