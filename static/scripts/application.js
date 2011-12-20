@@ -156,7 +156,7 @@ $(document).ready(function() {
 successActions = {
 	'action-save': function (data, status, xhr) {
 		$('#action-save').hide();
-		alert('Successfully sent estimate');
+		alert('Your changes have been saved');
 	},
 	'action-send': function (data, status, xhr) {
 		$('.action-button').hide();
@@ -176,7 +176,7 @@ successActions = {
 	},
 	'action-markcomplete': function (data, status, xhr) {
 		$('.action-button').hide();
-		alert('Successfully marked the work outlined in this agreement as complete');
+		alert('The work outlined in the current phase has been marked complete');
 	},
 	'action-dispute': function (data, status, xhr) {
 		$('.action-button').hide();
