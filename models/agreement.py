@@ -179,7 +179,7 @@ class Agreement(MappedObj):
 			(PaidState, dateVerified or not phase),
 			# If phase is null, all phases are paid and
 			# the agreement is in the final state.
-			(ContestedState, dateAccepted and dateCompleted and dateContested),
+			(ContestedState, dateAccepted and dateCompleted and dateContested and dateContested > dateCompleted),
 			(CompletedState, dateAccepted and dateCompleted and (not dateContested or dateContested < dateCompleted)),
 			(InProgressState, dateSent and dateAccepted),
 			(EstimateState, dateSent and not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
