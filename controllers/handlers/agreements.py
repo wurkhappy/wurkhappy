@@ -473,7 +473,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"amount": phase.getCostString(),
 				"description": phase.description,
 				"estDateCompleted": phase.estDateCompleted,
-				"dateCompleted": phase.dateCompleted
+				"dateCompleted": phase.dateCompleted,
+				"dateVerified": phase.dateVerified,
+				"dateContested": phase.dateContested
 			}
 			
 			if phase.comments:
