@@ -479,7 +479,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			if phase.comments:
 				phaseDict["comments"] = phase.comments
 			
-			if phase.id == currentPhase.id:
+			if currentPhase and phase.id == currentPhase.id:
 				phaseDict["isCurrent"] = True
 			
 			templateDict["phases"].append(phaseDict)
