@@ -270,8 +270,10 @@ successActions = {
 	}
 }
 
-$('.add.notes').click(function(e) {
-  if (!$(e.target).is('textarea')) {
-    $(this).children().toggle();
-  };
+$('.notes.toggle').click(function(e) {
+	if (!$(e.target).is('textarea')) {
+		$(this).children().toggle();
+		$(this).removeClass('toggle').unbind();
+	};
 });
+
