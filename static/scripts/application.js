@@ -125,6 +125,9 @@ $(document).ready(function() {
 						} else if (m['id'] === 'action-decline' && commentLength < 10) {
 							alert('Please add a few comments (reasons for declining, questions, etc.) regarding the estimate.');
 							return false;
+						} else if (m['id'] === 'action-dispute' && commentLength < 5) {
+							alert('Please add a few comments explaining why you think the work has not been completed.');
+							return false;
 						}
 						
 						$.ajax({
