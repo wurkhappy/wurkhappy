@@ -162,6 +162,10 @@ successActions = {
 		$('.action-button').hide();
 		alert('Successfully sent estimate');
 	},
+	'action-resend': function (data, status, xhr) {
+		$('.action-button').hide();
+		alert('Successfully sent estimate');
+	},
 	'action-edit': function (data, status, xhr) {
 		$('.action-button').hide();
 		alert('Successfully edited estimate');
@@ -172,7 +176,7 @@ successActions = {
 	},
 	'action-decline': function (data, status, xhr) {
 		$('.action-button').hide();
-		alert('Successfully declined estimate');
+		alert('Your request for changes has been sent');
 	},
 	'action-markcomplete': function (data, status, xhr) {
 		$('.action-button').hide();
