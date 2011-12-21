@@ -82,7 +82,7 @@ $(document).ready(function() {
 			// for AJAX requests.
 			options.url = $form.attr('action') + '.json';
 			options.dataType = "json";
-			
+
 			if ($form.attr('id')) {
 				// Set the success action based on the form's ID field,
 				// if there is one
@@ -118,6 +118,15 @@ $(document).ready(function() {
 							console.log(capture);
 						}
 
+						var commentLength = formValidator.checkCommentLength($('textarea'));
+						if (m['id'] === 'action-accept' && commentLength > 0) {
+							alert('By accepting the estimate, no additional comments are allowed so your notes will not be sent-- save them while you can!');
+							return false;
+						} else if (m['id'] === 'action-decline' && commentLength < 10) {
+							alert('Please add a few comments (reasons for declining, questions, etc.) regarding the estimate.');
+							return false;
+						}
+						
 						$.ajax({
 							url: m['action'],
 							data: [jQuery.param(data), capture].join('&'),
@@ -152,6 +161,19 @@ $(document).ready(function() {
 		}
 	}
 });
+
+
+var formValidator = {
+	checkCommentLength: function(commentFields) {
+		var commentsLength = 0;
+		for(var i=0, len=commentFields.length; i < len; i++) {
+			var comment = $(commentFields[i]).val();
+			commentsLength += comment.length;
+		}
+		return commentsLength;
+	}
+};
+
 
 successActions = {
 	'action-save': function (data, status, xhr) {
