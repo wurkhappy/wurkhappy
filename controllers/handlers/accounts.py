@@ -104,7 +104,6 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		
 		try:
 			args = fmt.Parser(self.request.arguments,
-				#TODO: Enforce email and telephone formats
 				optional=[
 					('firstName', fmt.Enforce(str)),
 					('lastName', fmt.Enforce(str)),

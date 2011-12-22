@@ -108,7 +108,7 @@ $(document).ready(function() {
 					// to bind the click function to the proper value
 					// from the iteration over buttonMaps.
 					
-					var captureAndSend = function() {
+					var captureAndSend = function(evt) {
 						var data = m['params'], capture = '';
 						data._xsrf = getCookie("_xsrf");
 						var string = jQuery.param(data);
@@ -141,30 +141,46 @@ $(document).ready(function() {
 								alert(error ? error.display : 'There was a problem of some sort');
 							}
 						});
+						return evt.preventDefault();
 					};
 					
-					return function() {
-						if (m['html']) {
-							console.log('Rendering HTML');
+					if (m['html']) {
+						var $popup = $(m['html']);
+						$popup.find('#verify-amount').html(slug['currentPhase']['amount']);
+						$popup.find('#verify-account').html(slug['account']);
+						
+						var action = function(evt) {
 							// Render the included HTML popup and then submit.
-							var popup = $(m['html']);
-							popup.children('#password-form').submit(function() {
-								console.log('clicked');
-								captureAndSend();
-								return false;
+							var $button = $(evt.target);
+							$button.unbind();
+							$button.addClass('cancel');
+							$button.html('Cancel');
+
+							$button.click(function (evt) {
+								$popup.slideUp(300);
+								var $button = $(evt.target);
+								$button.unbind();
+								$button.removeClass('cancel');
+								$button.html(m['name']);
+								$button.click(action);
+								return evt.preventDefault();
 							});
-							$('#content').prepend(popup);
-						} else {
-							captureAndSend();
-						}
-						return false;
+							
+							$popup.children('#password-form').submit(captureAndSend);
+							
+							$('#content').prepend($popup);
+							$popup.slideDown(300);
+							return evt.preventDefault();
+						};
+						return action;
+					} else {
+						return captureAndSend;
 					}
 				}(map));
 			}
 		}
 	}
 });
-
 
 var formValidator = {
 	checkCommentLength: function(commentFields) {
@@ -180,41 +196,41 @@ var formValidator = {
 
 successActions = {
 	'action-save': function (data, status, xhr) {
-		$('#action-save').hide();
+		$('#action-save').slideUp(300);
 		alert('Your changes have been saved');
 	},
 	'action-send': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('Successfully sent estimate');
 	},
 	'action-resend': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('Successfully sent estimate');
 	},
 	'action-edit': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('Successfully edited estimate');
 	},
 	'action-accept': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('Successfully accepted estimate');
 	},
 	'action-decline': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('Your request for changes has been sent');
 	},
 	'action-markcomplete': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('The work outlined in the current phase has been marked complete');
 	},
 	'action-dispute': function (data, status, xhr) {
-		$('.action-button').hide();
+		$('.action-button li').slideUp(300);
 		alert('Successfully disputed the work completed');
 	},
 	'action-verify': function (data, status, xhr) {
-		$('.action-button').hide();
-		$('#password-div').remove();
 		alert('Successfully verified the work completed');
+		$('.action-button li').slideUp(300);
+		$('#password-div').slideUp(300);
 	},
 	profile_update: function (data, status, xhr) {
 		$('#profile_preview').replaceWith('<div id="profile_preview">\

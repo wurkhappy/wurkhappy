@@ -236,10 +236,11 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 					"name": "Verify and Pay",
 					"capture-id": "password-form",
 					"html": (
-						'<div class="clear" style="background: #DDD;" id="password-div"><form id="password-form">'
-						'<label for="password">Enter your password to approve '
+						'<div class="clear prompt-box" id="password-div" style="display:none;"><form id="password-form" class="invisible">'
+						'<div class="column-three-fourth"><h3>Submitting payment of <span id="verify-amount">$0.00</span> from account ending in <span id="verify-account">----</span></h3>'
+						'<fieldset class="no-border"><label for="password">Enter your password to approve '
 						'and send payment.</label><br /><input type="password" name='
-						'"password" /><input type="submit" id="prompt-submit-button"></form></div>'
+						'"password" /></fieldset></div><div class="column-one-fourth"><fieldset class="submit-buttons no-border"><input type="submit" id="prompt-submit-button"></fieldset></div></form></div>'
 					),
 					# The verify and pay action should redirect to payment page.
 					# But we do this for now to prove it works.
@@ -488,6 +489,12 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		templateDict["amount"] = agreement.getCostString()
 		
+		if currentPhase:
+			templateDict["currentPhase"] = {
+				"amount": currentPhase.getCostString(),
+				"phaseNumber": currentPhase.phaseNumber,
+				"description": currentPhase.description
+			}
 		# Transactions are datetime properties of the agreement.
 		
 		transactions = [{
@@ -546,6 +553,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			logging.info(templateDict)
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
+			# Adding account info here because I'm a dumbass.
+			# @todo: figure out the right way to populate this info
+			templateDict['account'] = user.getDefaultPaymentMethod().publicDict()
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 
 

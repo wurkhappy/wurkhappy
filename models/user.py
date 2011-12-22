@@ -3,6 +3,7 @@ from controllers.amazonaws import *
 from controllers.base import Base16, Base58
 from profile import Profile
 
+from models.paymentmethod import PaymentMethod
 from controllers.fmt import HTTPErrorBetter
 import json
 import uuid
@@ -122,6 +123,19 @@ class User(MappedObj):
 	
 	def confirmationIsValid(self, confirmation):
 		return self.confirmationHash == bcrypt.hashpw(str(confirmation), self.confirmationHash)
+	
+	def getDefaultPaymentMethod(self):
+		paymentPref = UserPrefs.retrieveByUserIDAndName(self.id, 'preferredPaymentID')
+		
+		if paymentPref:
+			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
+		else:
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self.id)
+			
+			if not paymentMethod:
+				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self.id)
+		
+		return paymentMethod
 	
 	def publicDict(self):
 		return {

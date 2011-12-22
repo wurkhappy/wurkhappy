@@ -106,10 +106,9 @@ h2 {
 }
 
 h3 {
-	font-size: 16px;
+	font-size: 18px;
 	line-height: 20px;
 	margin: 20px 0 10px 0;
-	font-weight: 500;
 }
 
 .notes {
@@ -266,37 +265,63 @@ h3 {
 }
 
 #content form fieldset.submit-buttons {
+	border: none;
 	padding: 20px 0 0 0;
 }
 
-#content form fieldset.submit-buttons input[type=submit] {
+div.prompt-box h3 {
+	font-weight: 100;
+}
+
+div.prompt-box form input[type=submit] {
+	width: 100%;
+}
+
+#content form input[type=submit] {
+	cursor: pointer;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	border: none;
+	padding: 0 10px;
 	display: block;
-	float: left;
-	text-align: center;
-	padding: 0 20px;
 	font-weight: bold;
+	text-align: center;
 	color: rgb(255,255,255);
 	text-decoration: none;
 	line-height: 40px;
-	-webkit-border-radius: 5px;
-	   -moz-border-radius: 5px;
-	        border-radius: 5px;
-	text-shadow: 0 -1px 0 rgb(113,31,52);
-	-webkit-box-shadow: 0 1px 2px rgb(100,100,100);
-	   -moz-box-shadow: 0 1px 2px rgb(100,100,100);
-	        box-shadow: 0 1px 2px rgb(100,100,100);
+	-webkit-box-shadow: 0 0 3px rgba(0,0,0,.5);
+	   -moz-box-shadow: 0 0 3px rgba(0,0,0,.5);
+	        box-shadow: 0 0 3px rgba(0,0,0,.5);
+	text-shadow: 0 -1px 0 rgba(0,0,0,.5);
 	background-image: url(/static/images/shade-button.png);
 	background-repeat: repeat-x;
 	background-position: center;
+	-webkit-border-radius: 5px;
+	   -moz-border-radius: 5px;
+	border-radius: 5px;
 }
 
-#content form fieldset.submit-buttons input[type=submit] {
-	background-color: rgb(190,53,87);
+#content form input[type=submit] {
+	background-color: rgb(136,204,85);
 }
 
-#content form fieldset.submit-buttons input[type=submit]:hover,
-#content form fieldset.submit-buttons input[type=submit]:active {
-	background-color: rgb(151,42,69);
+#content form input[type=submit]:hover,
+#content form input[type=submit]:active {
+	background-color: rgb(122,183,76);
+}
+
+div.prompt-box {
+	background: #8C96A0 url(/static/images/shade-footer.png) repeat-x bottom;
+	border-top:1px solid white;
+	color: #FFF;
+}
+
+div.prompt-box h3 {
+	color: #FFF;
+}
+
+#content div.prompt-box fieldset {
+	margin: 20px 20px 20px 20px;
+	padding: 0 0 20px 0;
 }
 
 #agreement-form input, #agreement-form textarea {
@@ -424,22 +449,22 @@ h3 {
 
 #intro ul.action-button a:link,
 #intro ul.action-button a:visited {
-  background-color: rgb(136,204,85);
+	background-color: rgb(136,204,85);
 }
 
 #intro ul.action-button a:hover,
 #intro ul.action-button a:active {
-  background-color: rgb(122,183,76);
+	background-color: rgb(122,183,76);
 }
 
 #intro ul.action-button a.cancel:link,
 #intro ul.action-button a.cancel:visited {
-  background-color: rgb(190,53,87);
+	background-color: rgb(190,53,87);
 }
 
 #intro ul.action-button a.cancel:hover,
 #intro ul.action-button a.cancel:active {
-  background-color: rgb(151,42,69);
+	background-color: rgb(151,42,69);
 }
 
 

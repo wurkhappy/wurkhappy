@@ -6,7 +6,15 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": data['_xsrf'], "preFill": {}} %}
+{% set slug = { "_xsrf": data['_xsrf'], "preFill": {} } %}
+
+{% if 'currentPhase' in data %}
+	{% set slug['currentPhase'] = data['currentPhase'] %}
+{% end %}
+
+{% if 'account' in data %}
+	{% set slug['account'] = data['account']['display'] %}
+{% end %}
 
 {% module Slug(slug) %}
 
@@ -150,7 +158,7 @@
 
 			<ul class="action-button">
 			{% for action in data['actions'] %}
-				<li><a href="#" id="{{ action['id'] }}" class="top"><span>{{ action['name'] }}</span></a></li>
+				<li><a href="#" id="{{ action['id'] }}" class="top">{{ action['name'] }}</a></li>
 			{% end %}
 			</ul>
 

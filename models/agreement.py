@@ -293,6 +293,7 @@ class AgreementPhase (MappedObj):
 	
 	def publicDict(self):
 		return OrderedDict([
+			('phaseNumber', self.phaseNumber),
 			('amount', self.amount),
 			('estimatedCompletion', self.estDateCompleted),
 			('dateCompleted', self.dateCompleted),
