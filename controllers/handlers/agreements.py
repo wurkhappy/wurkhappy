@@ -548,7 +548,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name)
 		
-		if agreement.vendorID == user.id and templateDict['state'] in ['DraftState', 'EstimateState', 'DeclinedState']:
+		if agreement.vendorID == user.id and templateDict['state'] in ['DraftState', 'DeclinedState']:
 			templateDict['uri'] = self.request.uri
 			logging.info(templateDict)
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
