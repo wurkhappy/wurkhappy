@@ -240,7 +240,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 						'<div class="column-three-fourth"><h3>Submitting payment of <span id="verify-amount">$0.00</span> from account ending in <span id="verify-account">----</span></h3>'
 						'<fieldset class="no-border"><label for="password">Enter your password to approve '
 						'and send payment.</label><br /><input type="password" name='
-						'"password" /></fieldset></div><div class="column-one-fourth"><fieldset class="submit-buttons no-border"><input type="submit" id="prompt-submit-button"></fieldset></div></form></div>'
+						'"password" /></fieldset></div><div class="column-one-fourth"><fieldset class="submit-buttons no-border"><input type="submit" id="prompt-submit-button" value="Submit Payment"></fieldset></div></form></div>'
 					),
 					# The verify and pay action should redirect to payment page.
 					# But we do this for now to prove it works.

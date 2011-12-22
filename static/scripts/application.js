@@ -196,36 +196,36 @@ var formValidator = {
 
 successActions = {
 	'action-save': function (data, status, xhr) {
-		$('#action-save').slideUp(300);
 		alert('Your changes have been saved');
+		$('#action-save').slideUp(300);
 	},
 	'action-send': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('Successfully sent estimate');
+		$('.action-button li').slideUp(300);
 	},
 	'action-resend': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('Successfully sent estimate');
+		$('.action-button li').slideUp(300);
 	},
 	'action-edit': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('Successfully edited estimate');
+		$('.action-button li').slideUp(300);
 	},
 	'action-accept': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('Successfully accepted estimate');
+		$('.action-button li').slideUp(300);
 	},
 	'action-decline': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('Your request for changes has been sent');
+		$('.action-button li').slideUp(300);
 	},
 	'action-markcomplete': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('The work outlined in the current phase has been marked complete');
+		$('.action-button li').slideUp(300);
 	},
 	'action-dispute': function (data, status, xhr) {
-		$('.action-button li').slideUp(300);
 		alert('Successfully disputed the work completed');
+		$('.action-button li').slideUp(300);
 	},
 	'action-verify': function (data, status, xhr) {
 		alert('Successfully verified the work completed');
