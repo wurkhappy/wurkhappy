@@ -71,7 +71,7 @@
 			{% end %}
 
 			{% if data['self'] == 'client' and data['state'] == 'EstimateState' %}
-				<div class="add notes">
+				<div class="add notes toggle">
 					<p>Add comments and feedback on the agreement here.</p>
 					<textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
 				</div>
@@ -100,7 +100,7 @@
 				<p>{{ phase['description'] }}</p>
 
 				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or (data['state'] == 'CompletedState' and 'isCurrent' in phase)) %}
-					<div class="add notes">
+					<div class="add notes toggle">
 						<p>Add comments and feedback on the agreement here.</p>
 						<textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
 					</div>

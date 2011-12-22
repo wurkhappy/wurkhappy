@@ -3,10 +3,16 @@ var Accordion = {
 		$('#phases').accordion({
 			header: 'h2'
 		});
+
 		$('#phases .add-phase').click(function(e) {
-			e.preventDefault();
-			var nextPhase = $(this).parents('li').next('li');
-			$(this).remove();  
+			e.preventDefault();		
+			var phasesToAdd = $(this).parents('li').siblings().filter(':hidden');
+			var nextPhase = phasesToAdd.first();
+			
+			if (phasesToAdd.length === 1) {
+				$('#phases .add-phase').remove();
+			}
+			
 			Accordion.addPane(nextPhase);
 		});
 	},

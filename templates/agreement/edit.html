@@ -66,7 +66,7 @@
 			<fieldset id="phases">
 				<!-- write code to dynamically generate this -->
 				<ul>
-					<li>
+					<li{% if len(data["phases"]) > 0 %} class="has-content"{% end %}>
 						<h2>Phase One</h2>
 						<div>
 							<label for="">Deposit</label>
@@ -84,7 +84,7 @@
 							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
 					</li>
-					<li>
+					<li{% if len(data["phases"]) > 1 %} class="has-content"{% end %}>
 						<h2>Phase Two</h2>
 						<div>
 							<label for="">Amount Due on Completion</label>
@@ -102,7 +102,7 @@
 							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
 					</li>
-					<li>
+					<li{% if len(data["phases"]) > 2 %} class="has-content"{% end %}>
 						<h2>Phase Three</h2>
 						<div>
 							<label for="">Amount Due on Completion</label>
@@ -120,7 +120,7 @@
 							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
 					</li>
-					<li>
+					<li{% if len(data["phases"]) > 3 %} class="has-content"{% end %}>
 						<h2>Phase Four</h2>
 						<div>
 							<label for="">Amount Due on completion</label>
