@@ -24,7 +24,7 @@
 	{% end %}
 
 	<div id="content" class="clear">
-		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action" id="agreement-form">
+		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action agreements" id="agreement-form">
 			{% raw xsrf_form_html() %}
 
 			<h2>Recipient</h2>
