@@ -1,0 +1,39 @@
+{% extends "../base.html" %}
+
+
+
+### Redefine the main block
+{% block main %}
+
+<div class="container">
+
+	{% block header %}
+	{% end %}
+
+	<div id="content" class="clear">
+
+	{% module Footer() %}
+</div>
+
+{% end %}
+
+
+### Component blocks included from above
+
+{% block navigation %}
+	{% module Navigation(data) %}
+{% end %}
+
+
+
+{% block header %}
+	<div id="intro" class="clear">
+
+		<div class="column-three-fourth">
+		</div>
+
+		<div class="column-one-fourth">
+		</div>
+
+	</div>
+{% end %}
