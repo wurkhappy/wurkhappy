@@ -66,7 +66,8 @@ class Application(web.Application):
 			# JSON handler to initiate a new payment
 			(r'/payment/new\.json', payments.PaymentHandler),
 
-			(r'/agreement/request', requests.RequestAgreementHandler),
+			(r'/agreement/request/?', requests.RequestAgreementHandler),
+			(r'/agreement/request.json', requests.RequestAgreementJSONHandler),
 		]
 
 		settings = {

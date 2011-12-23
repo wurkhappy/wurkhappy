@@ -342,25 +342,6 @@ class AgreementState(object):
 	def __init__(self, agreementInstance):#, phaseList):
 		assert isinstance(agreementInstance, Agreement)
 		self.agreement = agreementInstance
-		# self.phaseList = phaseList
-		# 
-		# # Calculate which phase is currently in progress.
-		# # @todo: THIS SHOULD BE WAY CLEANER
-		# phaseNum = None
-		# 
-		# for phase in phaseList:
-		# 	phaseNum = phase.phaseNumber
-		# 	
-		# 	if phase.dateCompleted:				
-		# 		if phase.dateContested:
-		# 			phaseNum = phase.phaseNumber
-		# 		else:
-		# 			break
-		# 	else:
-		# 		break
-		# 
-		# self.inProgressPhaseNumber = phaseNum
-		
 		self.actions = {"vendor": {}, "client" : {}}
 	
 	def addAction(self, role, actionName):
