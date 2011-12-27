@@ -6,6 +6,7 @@ from controllers.verification import Verification
 from datetime import datetime
 import logging
 from controllers import fmt
+from random import randint
 
 
 class RequestBase(BaseHandler):
