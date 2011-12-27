@@ -12,18 +12,18 @@ from random import randint
 class RequestBase(BaseHandler):
 	def assembleDictionary(self, request):
 		requestDict = request.publicDict()
-		
+
 		client = User.retrieveByID(request.clientID)
 		requestDict["client"] = client.publicDict()
-		
+
 		vendor = User.retrieveByID(request.vendorID)
 		requestDict['vendor'] = vendor.publicDict()
-		
+
 		del(requestDict['clientID'])
 		del(requestDict['vendorID'])
-		
+
 		return requestDict
-		
+
 class RequestAgreementHandler(BaseHandler):
 	def get(self):
 		empty = {
@@ -42,14 +42,7 @@ class RequestAgreementHandler(BaseHandler):
 				"action": "/agreement/request.json",
 				"method": "POST",
 				"params": { }
-			}, {
-				"id": "action-cancel",
-				"capture-id": "request-form",
-				"name": "Cancel Request",
-				"action": "/agreement/request.json",
-				"method": "POST",
-				"params": { }
-			} ],
+			}],
 			"self": "client"
 		}
 
@@ -59,7 +52,7 @@ class RequestAgreementHandler(BaseHandler):
 class RequestAgreementJSONHandler(Authenticated, RequestBase):
 	def post(self):
 		user = self.current_user
-		
+
 		try:
 			args = fmt.Parser(self.request.arguments,
 				optional=[
@@ -73,7 +66,7 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 			self.set_status(e.status_code)
 			self.write(e.body_content)
 			return
-		
+
 		if args['vendorID']:
 			vendor = User.retrieveByID(args['vendorID'])
 
@@ -131,20 +124,20 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 				),
 				"debug": "missing 'vendorID' and 'email' parameters"
 			}
-			
+
 			self.set_status(400)
 			self.renderJSON(error)
 			return
-		
+
 		request = Request.initWithDict(dict(
 			clientID=user.id,
 			vendorID=vendor.id,
 			message=args['message']
 		))
-		
+
 		request.save()
 		request.refresh()
-		
+
 		self.set_status(201)
 		self.renderJSON(self.assembleDictionary(request))
 		return

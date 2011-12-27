@@ -312,6 +312,10 @@ successActions = {
 		$('.action-button li').slideUp(300);
 		$('#password-div').slideUp(300);
 	},
+	'action-request': function(data, status, xhr) {
+		alert('Successfully sent your request');
+		$('.action-button li').slideUp(300);
+	},	
 	profile_update: function (data, status, xhr) {
 		$('#profile_preview').replaceWith('<div id="profile_preview">\
 			<h2>Profile Preview</h2>\
