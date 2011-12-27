@@ -44,7 +44,7 @@ $(document).ready(function() {
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
 		selectedItemProp: "fullName",
 		selectedValuesProp: "id",
-		inputName: "clientID",
+		inputName: slug['autosuggestCapture'], //"clientID",
 		searchObjProps: "fullName,email",
 		startText: "",
 		resultsHighlight: false,
@@ -62,10 +62,13 @@ $(document).ready(function() {
 			return data.contacts;
 		},
 		selectionAdded: function(elem, data) {
+			// Figure out how to specify what the user ID attribute is named in the hidden field
+			// for the create agreement page it's "clientID", but it needs to be "vendorID" for
+			// the request agreement form
 			if (data['id'] === "") {
 				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="email" value="'+data.fullName+'" />');
 			} else {
-				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="clientID" value="'+data.id+'" />');
+				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="'+slug['autosuggestCapture']+'" value="'+data.id+'" />');
 			}
 		},
 		selectionRemoved: function(elem) {
@@ -181,6 +184,83 @@ $(document).ready(function() {
 		}
 	}
 });
+
+
+
+// var wh = { };
+// 
+// wh.autoSuggest = {
+// 	// AutoSuggest boxes need some prep work before they'll work. We need to
+// 	// specify a data source, a selected item name, <<and some other shit.>>
+// 	
+// 	// wh.autoSuggest.init(
+// 	// 	'/path/to/data',
+// 	// 	'selectionName', ...
+// 	// )($('selected-items'));
+// 	
+// 	/* 
+// 	dataSource = {
+// 		url: "/user/me/contacts.json",
+// 		indexPath: "contacts",
+// 		searchProperties: ['fullName', 'email'],
+// 		tokenDisplayProperty: "fullName",
+// 		tokenValueProperty: "id",
+// 		unmatchedTokenValueProperty: "email",
+// 		defaultTokens: slug['defaultTokens']
+// 	}
+// 	*/
+// 	init: function (dataSource, inputName) {
+// 		var defaults = this.pluginDefaults;
+// 		defaults.inputName = inputName;
+// 		defaults.
+// 		
+// 		return function ($element) {
+// 			$element.autoSuggest(dataSource, defaults);
+// 		}
+// 	},
+// 	
+// 	createDefaults: function () {
+// 		var inputName = null;
+// 		return {
+// 			selectedItemProp: "fullName",
+// 			selectedValuesProp: "id",
+// 			inputName: inputName, // Override in init()
+// 			searchObjProps: "fullName,email",
+// 			startText: "",
+// 			resultsHighlight: false,
+// 			neverSubmit: true,
+// 			selectionLimit: 1,
+// 			preFill: slug['preFill'],
+// 		
+// 			// See if we can't muck around with internals here and add an email
+// 			// address to the internal data structure if that's what is typed, 
+// 			// and set the data object accordingly... We can handle the hidden 
+// 			// input based on the data, e.g.
+// 			// {"id": null, "name": "joe@example.org", "email": "joe@example.org"}
+// 		
+// 			retrieveComplete: function(data) {
+// 				return data.contacts;
+// 			},
+// 		
+// 			selectionAdded: function(elem, data) {
+// 				// Figure out how to specify what the user ID attribute is named in the hidden field
+// 				// for the create agreement page it's "clientID", but it needs to be "vendorID" for
+// 				// the request agreement form
+// 				if (data['id'] === "") {
+// 					$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="email" value="'+data.fullName+'" />');
+// 				} else {
+// 					$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="clientID" value="'+data.id+'" />');
+// 				}
+// 			};
+// 		},
+// 		
+// 		selectionRemoved: function(elem) {
+// 			elem.remove();
+// 			$('#wh-'+elem.attr('id')).remove();
+// 		}
+// 	}
+// };
+
 
 var formValidator = {
 	checkCommentLength: function(commentFields) {

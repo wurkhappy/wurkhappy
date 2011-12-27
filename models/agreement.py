@@ -150,9 +150,9 @@ class Agreement(MappedObj):
 		#     |     |     |     |     |     |     |     |     |
 		#     |  x ==> o ==> o ---.   |     |     |     |     |
 		#     |     |     |     |  |  |     |     |     |     |
-		#     |   ,---------------/   |     |     |     |     |
-		#     |  |  |     |     |     |     |     |     |     |
-		#     |   \--> o ========> 1 ==> 1 ==> 1 ---.   |     |
+		#   ,---------------------/   |     |     |     |     |
+		#  |  |     |     |     |     |     |     |     |     |
+		#   \--> o ==> o ========> 1 ==> 1 ==> 1 ---.   |     |
 		#     |     |     |     |     |     |     |  |  |     |
 		#     |     |     |   ,---------------------/   |     |
 		#     |     |     |  |  |     |     |     |     |     |
@@ -174,8 +174,9 @@ class Agreement(MappedObj):
 		dateVerified = phase and phase.dateVerified
 		dateContested = phase and phase.dateContested
 		
-		# @todo: Unit test these against some example cases.
+		# @todo: Unit test these against some example cases. Also make this look more like the diagram above.
 		states = [
+			# (FinalState, not phase),
 			(PaidState, dateVerified or not phase),
 			# If phase is null, all phases are paid and
 			# the agreement is in the final state.
@@ -183,11 +184,10 @@ class Agreement(MappedObj):
 			(CompletedState, dateAccepted and dateCompleted and (not dateContested or dateContested < dateCompleted)),
 			(InProgressState, dateSent and dateAccepted),
 			(EstimateState, dateSent and not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
-			# (EstimateState, not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined > dateSent))),
-			# (DeclinedState, not dateContested and not dateAccepted and dateDeclined and dateSent and dateDeclined > dateSent),
+			#                        ^-------------------^ Do we need this?
 			
 			(DeclinedState, dateSent and dateDeclined and not dateAccepted),
-			(DraftState, not dateSent),
+			(DraftState, not dateSent), # The following will break shit, but we need to figure out how to do it: or (dateDeclined and dateDeclined > dateSent)),
 			(InvalidState, True)
 		]
 		

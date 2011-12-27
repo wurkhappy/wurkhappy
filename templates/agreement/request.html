@@ -5,12 +5,33 @@
 ### Redefine the main block
 {% block main %}
 
+{% set slug = { "_xsrf": data['_xsrf'], "autosuggestCapture": "vendorID" } %}
+
+{% if data['self'] == 'vendor' and data['client'] %}
+	{% set slug['preFill'] = [{"fullName": data['client']['fullName'], "id": data['client']['id']}] %}
+{% else %}
+	{% set slug['preFill'] = {} %}
+{% end %}
+
+{% module Slug(slug) %}
+
 <div class="container">
+	{% module Navigation(data) %}
 
 	{% block header %}
 	{% end %}
 
 	<div id="content" class="clear">
+		<form action="/agreement/request.json" method="POST" class="js-replace-action agreements" id="request-form">
+			<h2>Recipient</h2>
+			<fieldset>
+				<label for="client-suggest">Email Address or Name of Existing Contact</label>
+				<input type="text" name="email" id="client-suggest" />
+				<label for="message">Personal Message in Notification Email (optional)</label>
+				<textarea id="message" name="email-message" rows="5" cols="100" ></textarea>
+			</fieldset>
+		</form>
+	</div>
 
 	{% module Footer() %}
 </div>
@@ -18,21 +39,43 @@
 {% end %}
 
 
-### Component blocks included from above
+### Overridden blocks
 
-{% block navigation %}
-	{% module Navigation(data) %}
+{% block styles-custom %}
+	<link rel="stylesheet" type="text/css" href="{{ static_url("css/autosuggest.css") }}" media="screen" />
 {% end %}
 
 
+{% block scripts-custom %}
+	<script language="javascript">
+		var buttonMaps = [
+	{% for action in data['actions'] %}
+		{% raw action %},
+	{% end %}];
+	</script>
+	<script src="{{ static_url("scripts/libs/jquery-autosuggest-1.4.js") }}" type="text/javascript"></script>
+	<script src="{{ static_url("scripts/application.js") }}" type="text/javascript"></script>
+{% end %}
+
+
+
+### Component blocks included from above
 
 {% block header %}
 	<div id="intro" class="clear">
 
 		<div class="column-three-fourth">
+			<h1>Request Vendor Agreement</h1>
 		</div>
 
 		<div class="column-one-fourth">
+
+			<ul class="action-button">
+			{% for action in data['actions'] %}
+				<li><a href="#" id="{{ action['id'] }}" class="top">{{ action['name'] }}</a></li>
+			{% end %}
+			</ul>
+
 		</div>
 
 	</div>

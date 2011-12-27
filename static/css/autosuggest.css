@@ -3,7 +3,7 @@
 ul.as-selections {
 	list-style-type: none;
   border: 1px solid #969696;
-	padding: 3px 0 3px 3px;
+	padding: 3px;
 	margin: 0;
 	overflow: auto;
 	background-color: #fff;

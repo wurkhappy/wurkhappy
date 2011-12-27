@@ -6,7 +6,7 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": data['_xsrf']} %}
+{% set slug = { "_xsrf": data['_xsrf'], "autosuggestCapture": "clientID" } %}
 
 {% if data['self'] == 'vendor' and data['client'] %}
 	{% set slug['preFill'] = [{"fullName": data['client']['fullName'], "id": data['client']['id']}] %}
@@ -24,7 +24,7 @@
 	{% end %}
 
 	<div id="content" class="clear">
-		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action" id="agreement-form">
+		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action agreements" id="agreement-form">
 			{% raw xsrf_form_html() %}
 
 			<h2>Recipient</h2>
