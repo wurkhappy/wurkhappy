@@ -221,7 +221,7 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		if not (user and user.passwordIsValid(args['old_password'])):
+		if not (user and user.passwordIsValid(args['currentPassword'])):
 			# User wasn't found, or password is wrong, display error
 			#TODO: Exponential back-off when user enters incorrect password.
 			#TODO: Flag accounds if passwords change too often.
@@ -232,7 +232,7 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			self.set_status(401)
 			self.renderJSON(error)
 		else:
-			user.setPasswordHash(args['new_password'])
+			user.setPasswordHash(args['newPassword'])
 			user.save()
 			self.write(json.dumps({"success": True}))
 
