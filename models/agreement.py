@@ -53,7 +53,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def costStringWithVendorID(clz, vendorID):
 		amount = clz.amountWithVendorID(vendorID)
-		return "${:,}".format(amount / 100) if amount else ""
+		return "${:,f}".format(amount // 100) if amount else ""
 	
 	@classmethod
 	def amountWithVendorID(clz, vendorID):
@@ -70,7 +70,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def costStringWithClientID(clz, clientID):
 		amount = clz.amountWithClientID(clientID)
-		return "${:,}".format(amount / 100) if amount else ""
+		return "${:,f}".format(amount // 100) if amount else ""
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
@@ -115,7 +115,7 @@ class Agreement(MappedObj):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self.id)
 			amount = cursor.fetchone()['SUM(amount)']
-			return "${:,}".format(amount / 100) if amount else ""
+			return "${:,.2f}".format(amount / 100) if amount else ""
 	
 	def getCurrentPhase(self):
 		with Database() as (conn, cursor):
@@ -289,7 +289,7 @@ class AgreementPhase (MappedObj):
 			return clz.initWithDict(cursor.fetchone())
 	
 	def getCostString(self):
-		return "${:,}".format(self.amount / 100) if self.amount else ""
+		return "${:,.2f}".format(self.amount / 100) if self.amount else ""
 	
 	def publicDict(self):
 		return OrderedDict([

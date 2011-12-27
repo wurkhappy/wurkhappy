@@ -211,8 +211,8 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			args = fmt.Parser(self.request.arguments,
 				optional=[],
 				required=[
-					('old_password', fmt.Enforce(str)),
-					('new_password', fmt.Enforce(str)),
+					('currentPassword', fmt.Enforce(str)),
+					('newPassword', fmt.Enforce(str)),
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
