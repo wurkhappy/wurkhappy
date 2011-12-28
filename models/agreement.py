@@ -462,6 +462,21 @@ class DeclinedState(AgreementState):
 				self.agreement.dateModified = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
+				# If the agreement has been declined, reset previous comments
+				# before re-sending the updated agreement. This also applies
+				# to all of the agreement's phases.
+				
+				if self.agreement.dateDeclined:
+					summary = AgreementSummary.retrieveByAgreementID(self.agreement.id)
+					summary.comments = None
+					unsavedRecords.append(summary)
+					#self.agreement.comments = None
+				
+				for phase in AgreementPhase.iteratorWithAgreementID(self.agreement.id):
+					if phase.comments:
+						phase.comments = None
+						unsavedRecords.append(phase)
+				
 				self.agreement.dateSent = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
@@ -525,6 +540,10 @@ class ContestedState(AgreementState):
 				unsavedRecords.append(self.agreement)
 			elif action == 'mark_complete':
 				phase = self.agreement.getCurrentPhase()
+				
+				# Remove previous comments when re-sending
+				phase.comments = None
+				
 				logging.warn(phase)
 				phase.dateCompleted = datetime.now()
 				unsavedRecords.append(phase)

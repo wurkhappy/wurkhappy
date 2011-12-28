@@ -65,17 +65,17 @@
 		<div class="column-three-fourth">
 			<h2>Summary</h2>
 			{% if data['summary'] %}
-				<p>{{ data['summary'] }}</p>
+				<p>{% raw escape(data['summary']).replace('\n', '<br />') %}</p>
 			{% else %}
 				<p>&mdash;</p>
 			{% end %}
-
+			
 			{% if data['self'] == 'client' and data['state'] == 'EstimateState' %}
 				<div class="add notes toggle">
 					<p>Add comments and feedback on the agreement here.</p>
 					<textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
 				</div>
-			{% elif data['self'] == 'vendor' and data['state'] == 'EstimateState' and data['summaryComments'] %}
+			{% elif data['state'] == 'DeclinedState' and data['summaryComments'] %}
 				<div class="notes">
 				  <p>{% raw escape(data['summaryComments']).replace('\n', '<br/>') %}</p>
 				</div>
@@ -97,14 +97,14 @@
 					{% end %}
 				</h2>
 
-				<p>{{ phase['description'] }}</p>
+				<p>{% raw escape(phase['description']).replace('\n', '<br />') %}</p>
 
 				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or (data['state'] == 'CompletedState' and 'isCurrent' in phase)) %}
 					<div class="add notes toggle">
 						<p>Add comments and feedback on the agreement here.</p>
 						<textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
 					</div>
-				{% elif data['self'] == 'vendor' and (data['state'] == 'EstimateState' or (data['state'] == 'CompletedState' and 'isCurrent' in phase)) and 'comments' in phase %}
+				{% elif data['state'] == 'DeclinedState' or (data['state'] == 'ContestedState' and 'comments' in phase) %}
 					<div class="notes">
 						<p>{% raw escape(phase['comments']).replace('\n', '<br/>') %}</p>
 					</div>

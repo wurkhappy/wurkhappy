@@ -957,7 +957,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				self.write(e.body_content)
 				return
 
-			if isinstance(currentState, EstimateState) and action in ["accept", "decline"]:
+			if isinstance(currentState, EstimateState) and action == 'decline':
 				agreementSummary = AgreementSummary.retrieveByAgreementID(agreement.id)
 
 				if not agreementSummary:
@@ -967,12 +967,15 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 				agreementSummary.comments = args['summaryComments']
 				agreementSummary.save()
-
+				
 				for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
 					if phase.phaseNumber < len(args['phaseComments']):
 						phase.comments = args['phaseComments'][phase.phaseNumber]
 						phase.save()
-
+			elif isinstance(currentState, CompletedState) and action == 'dispute':
+				phase = agreement.getCurrentPhase()
+				phase.comments = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
+				phase.save()
 		try:
 			currentState.performTransition(role, action, unsavedRecords)
 		except StateTransitionError as e:
