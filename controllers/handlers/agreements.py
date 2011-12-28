@@ -178,14 +178,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"client": []
 			},
 			EstimateState : {
-				"vendor": [ {
-					"id": "action-save",
-					"capture-id": "agreement-form",
-					"name": "Save Changes",
-					"action": "/agreement/%d/update.json" % agreement.id,
-					"method": "POST",
-					"params": { }
-				} ],
+				"vendor": [],
 				"client": [ {
 					"id": "action-accept",
 					"capture-id": "comments-form",
@@ -261,16 +254,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				} ]
 			},
 			ContestedState : {
-				"vendor": [
-				# {
-				# 	"id": "action-save",
-				# 	"capture-id": "agreement-form",
-				# 	"name": "Update Agreement",
-				# 	"action": "/agreement/%d/update.json" % agreement.id,
-				# 	"method": "POST",
-				# 	"params": { }
-				# },
-				{
+				"vendor": [ {
 					"id": "action-markcomplete",
 					"name": "Mark Phase Complete",
 					"action": "/agreement/%d/mark_complete.json" % agreement.id,
@@ -307,17 +291,24 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			# agreement = token and Agreement.retrieveByFingerprint(fingerprint)
 
 			if not (agreement and agreement.tokenIsValid(token)):
-				self.set_status(403)
-				self.write("forbidden")
-				# @todo: Properly handle the case
+				# This is what the @tornado.web.authenticated decorator does
+				url = self.get_login_url()
+				if "?" not in url:
+					if urlparse.urlsplit(url).scheme:
+						# if login url is absolute, make next absolute too
+						next_url = self.request.full_url()
+					else:
+						next_url = self.request.uri
+					url += "?" + urllib.urlencode(dict(next=next_url))
+				self.redirect(url)
 				return
-
+			
 			user = User.retrieveByID(agreement.clientID)
-
+		
 		if not agreementID:
 			# Must have been routed from /agreement/new
 			title = "New Agreement &ndash; Wurk Happy"
-
+			
 			empty = {
 				"_xsrf": self.xsrf_token,
 				"id": None,
