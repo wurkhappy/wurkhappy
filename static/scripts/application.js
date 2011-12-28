@@ -325,6 +325,8 @@ successActions = {
 		$('.action-button li').slideUp(300);
 	},	
 	profile_update: function (data, status, xhr) {
+		// @todo: Manually check the status code
+		data.telephone = data.telephone || '';
 		$('#profile_preview').replaceWith('<div id="profile_preview">\
 			<h2>Profile Preview</h2>\
 			<div class="data-table">\
