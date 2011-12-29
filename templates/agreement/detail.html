@@ -12,7 +12,7 @@
 	{% set slug['currentPhase'] = data['currentPhase'] %}
 {% end %}
 
-{% if 'account' in data %}
+{% if 'account' in data and data['account'] %}
 	{% set slug['account'] = data['account']['display'] %}
 {% end %}
 
@@ -157,8 +157,8 @@
 		<div class="column-one-fourth">
 
 			<ul class="action-button">
-			{% for action in data['actions'] %}
-				<li><a href="#" id="{{ action['id'] }}" class="top">{{ action['name'] }}</a></li>
+			{% for (id, label) in data['actions'] %}
+				<li><a href="#" id="{{ id }}" class="top">{{ label }}</a></li>
 			{% end %}
 			</ul>
 
@@ -168,14 +168,10 @@
 {% end %}
 
 {% block scripts-custom %}
-	<script language="javascript">
-		var buttonMaps = [
-{% for action in data['actions'] %}
-			{% raw json(action) %},
-{% end %}];
-	</script>
 	<script src="{{ static_url("scripts/libs/jquery-autosuggest-1.4.js") }}" type="text/javascript"></script>
-	<script src="{{ static_url("scripts/application.js") }}"></script>
+	<script src="{{ static_url("scripts/application.js") }}" type="text/javascript"></script>
+	<script src="{{ static_url("scripts/agreements.js") }}" type="text/javascript"></script>
+	
 {% end %}
 
 
