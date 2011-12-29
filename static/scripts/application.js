@@ -101,7 +101,7 @@ $(document).ready(function() {
 		}
 	});
 	
-	if (buttonMaps) {
+	if (typeof buttonMaps !== 'undefined') {
 		for (var i = 0, len = buttonMaps.length; i < len; i++) {
 			if (buttonMaps.hasOwnProperty(i)) {
 				var map = buttonMaps[i];
@@ -110,7 +110,7 @@ $(document).ready(function() {
 					// Doing a function application on a closure here
 					// to bind the click function to the proper value
 					// from the iteration over buttonMaps.
-					
+
 					var captureAndSend = function(evt) {
 						var data = m['params'], capture = '';
 						data._xsrf = getCookie("_xsrf");
@@ -132,11 +132,11 @@ $(document).ready(function() {
 							alert('Please add a few comments explaining why you think the work has not been completed.');
 							return false;
 						}
-						
+
 						$.ajax({
 							url: m['action'],
 							data: [jQuery.param(data), capture].join('&'),
-							dataType: "text",
+							dataType: "json",
 							type: m['method'],
 							success: successActions[m['id']],
 							error: function (jqXHR, textStatus, errorThrown) {
@@ -277,6 +277,14 @@ var formValidator = {
 successActions = {
 	'action-save': function (data, status, xhr) {
 		alert('Your changes have been saved');
+		for (var i = 0, len = buttonMaps.length; i < len; i++) {
+			if (buttonMaps.hasOwnProperty(i)) {
+				var map = buttonMaps[i];
+				if (map.id === 'action-send') {
+					map.action = '/agreement/' + data.id + '/send.json';
+				}
+			}
+		}
 		$('#action-save').slideUp(300);
 	},
 	'action-send': function (data, status, xhr) {
@@ -317,6 +325,8 @@ successActions = {
 		$('.action-button li').slideUp(300);
 	},	
 	profile_update: function (data, status, xhr) {
+		// @todo: Manually check the status code
+		data.telephone = data.telephone || '';
 		$('#profile_preview').replaceWith('<div id="profile_preview">\
 			<h2>Profile Preview</h2>\
 			<div class="data-table">\
