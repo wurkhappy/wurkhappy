@@ -101,6 +101,13 @@ $(document).ready(function() {
 		}
 	});
 	
+	
+	// Hook up button handlers to each element with the appropriate class
+	$('.js-button').each(function (idx, elt) {
+		var btn = new Button(elt);
+	});
+	
+	
 	if (typeof buttonMaps !== 'undefined') {
 		for (var i = 0, len = buttonMaps.length; i < len; i++) {
 			if (buttonMaps.hasOwnProperty(i)) {
@@ -186,6 +193,13 @@ $(document).ready(function() {
 });
 
 
+var Button = function(elt) {
+	this.state = 'default';
+	this.$elt = $(elt);
+	this.$elt.click(function(evt) {
+		console.log($(evt.target).attr('id'));
+	});
+};
 
 // var wh = { };
 // 
