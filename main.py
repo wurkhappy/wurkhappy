@@ -60,8 +60,8 @@ class Application(web.Application):
 			# JSON handlers to create & update agreements and change their state
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
 			(r'/agreement/([0-9]+)/status\.json', agreements.AgreementStatusJSONHandler),
-			(r'/agreement/([0-9]+)/(update|send|accept|decline|mark_complete|verify|dispute)\.json', agreements.AgreementActionJSONHandler),
-			(r'/agreement/(new|send)\.json', agreements.NewAgreementJSONHandler),
+			(r'/agreement/([0-9]+)/(save|send|accept|decline|mark_complete|verify|dispute)\.json', agreements.AgreementActionJSONHandler),
+			(r'/agreement/(save|send)\.json', agreements.NewAgreementJSONHandler),
 
 			# JSON handler to initiate a new payment
 			(r'/payment/new\.json', payments.PaymentHandler),

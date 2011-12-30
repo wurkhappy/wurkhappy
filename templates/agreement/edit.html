@@ -6,7 +6,7 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": data['_xsrf'], "autosuggestCapture": "clientID" } %}
+{% set slug = { "_xsrf": data['_xsrf'], "autosuggestCapture": "clientID", 'agreementID': data['id'] } %}
 
 {% if data['self'] == 'vendor' and data['client'] %}
 	{% set slug['preFill'] = [{"fullName": data['client']['fullName'], "id": data['client']['id']}] %}
@@ -24,7 +24,7 @@
 	{% end %}
 
 	<div id="content" class="clear">
-		<form action="/agreement/{% if data['id'] %}{{ data['id'] }}{% else %}new{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action agreements" id="agreement-form">
+		<form action="/agreement{% if data['id'] %}/{{ data['id'] }}{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action agreements" id="agreement-form">
 			{% raw xsrf_form_html() %}
 
 			<h2>Recipient</h2>
@@ -56,7 +56,7 @@
 				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
 				<label for="summary">Summary</label>
 				<textarea name="summary" rows="3" cols="100">{% if data['summary'] and len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
-				{% if data['state'] == 'DeclinedState' and 'summaryComments' in data %}
+				{% if data['state'] == 'DeclinedState' and data['summaryComments'] %}
 					<div class="notes">
 					  <p>{% raw escape(data['summaryComments']).replace('\n', '<br/>') %}</p>
 					</div>

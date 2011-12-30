@@ -43,7 +43,14 @@ class PaymentHandler(Authenticated, BaseHandler):
 			# @todo: Flag accounds if incorrect password is presented too often.
 			error = {
 				"domain": "web.request",
-				"debug": "please validate authentication credentials"
+				"debug": "please validate authentication credentials",
+				"display": (
+					"The password you entered does not match the one we have "
+					"on record. Did you mistype? Is caps lock turned off?\n\n"
+					"If you've forgotten your password, you can reset it "
+					"by clicking the 'Reset Password' link in the Password "
+					"tab of the Accounts page."
+				)
 			}
 			self.set_status(401)
 			self.renderJSON(error)
@@ -99,9 +106,16 @@ class PaymentHandler(Authenticated, BaseHandler):
 				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
 		
 		if not paymentMethod:
+			error = {
+				'domain': 'application.not_found',
+				'display': (
+					"There's no payment method on file. Please add bank "
+					"account or credit card information to continue."
+				),
+				'debug': 'no payment method on file'
+			}
 			self.set_status(400)
-			self.write("There's no payment method on file.")
-			# @todo: actually handle this error
+			self.renderJSON(error)
 			return
 		
 		transaction = Transaction.initWithDict(dict(

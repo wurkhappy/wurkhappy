@@ -89,7 +89,7 @@ $(document).ready(function() {
 			if ($form.attr('id')) {
 				// Set the success action based on the form's ID field,
 				// if there is one
-				options.success = successActions[$form.attr('id')];
+				options.success = buttonActions[$form.attr('id')];
 			}
 			
 			if ($form.attr('method') === 'DELETE') {
@@ -106,98 +106,67 @@ $(document).ready(function() {
 	$('.js-button').each(function (idx, elt) {
 		var btn = new Button(elt);
 	});
-	
-	
-	if (typeof buttonMaps !== 'undefined') {
-		for (var i = 0, len = buttonMaps.length; i < len; i++) {
-			if (buttonMaps.hasOwnProperty(i)) {
-				var map = buttonMaps[i];
-				
-				$("#" + map['id']).click(function(m) {
-					// Doing a function application on a closure here
-					// to bind the click function to the proper value
-					// from the iteration over buttonMaps.
-
-					var captureAndSend = function(evt) {
-						var data = m['params'], capture = '';
-						data._xsrf = getCookie("_xsrf");
-						var string = jQuery.param(data);
-						
-						if (m['capture-id']) {
-							var capture = $('#' + m['capture-id']).serialize(data);
-							console.log(capture);
-						}
-
-						var commentLength = formValidator.checkCommentLength($('textarea'));
-						if (m['id'] === 'action-accept' && commentLength > 0) {
-							alert('By accepting the estimate, no additional comments are allowed so your notes will not be sent-- save them while you can!');
-							return false;
-						} else if (m['id'] === 'action-decline' && commentLength < 10) {
-							alert('Please add a few comments (reasons for declining, questions, etc.) regarding the estimate.');
-							return false;
-						} else if (m['id'] === 'action-dispute' && commentLength < 5) {
-							alert('Please add a few comments explaining why you think the work has not been completed.');
-							return false;
-						}
-
-						$.ajax({
-							url: m['action'],
-							data: [jQuery.param(data), capture].join('&'),
-							dataType: "json",
-							type: m['method'],
-							success: successActions[m['id']],
-							error: function (jqXHR, textStatus, errorThrown) {
-								error = jQuery.parseJSON(jqXHR.responseText);
-								alert(error ? error.display : 'There was a problem of some sort');
-							}
-						});
-						return evt.preventDefault();
-					};
-					
-					if (m['html']) {
-						var $popup = $(m['html']);
-						$popup.find('#verify-amount').html(slug['currentPhase']['amount']);
-						$popup.find('#verify-account').html(slug['account']);
-						
-						var action = function(evt) {
-							// Render the included HTML popup and then submit.
-							var $button = $(evt.target);
-							$button.unbind();
-							$button.addClass('cancel');
-							$button.html('Cancel');
-
-							$button.click(function (evt) {
-								$popup.slideUp(300);
-								var $button = $(evt.target);
-								$button.unbind();
-								$button.removeClass('cancel');
-								$button.html(m['name']);
-								$button.click(action);
-								return evt.preventDefault();
-							});
-							
-							$popup.children('#password-form').submit(captureAndSend);
-							
-							$('#content').prepend($popup);
-							$popup.slideDown(300);
-							return evt.preventDefault();
-						};
-						return action;
-					} else {
-						return captureAndSend;
-					}
-				}(map));
-			}
-		}
-	}
 });
 
 
+// var SubmitButton = function(elt) {
+// 	var self = this;
+// 	
+// 	this.$elt = $(elt);
+// 	this.successAction = buttonActions[this.$elt.attr('id')];
+// 	
+// 	this.$elt.ajaxForm({
+// 		data: {'_xsrf': slug['_xsrf']},
+// 		beforeSubmit: function (arr, $form, options) {
+// 			return self.successAction(self, arr, $form, options);
+// 		}
+// 	});
+// };
+
+
+
 var Button = function(elt) {
+	var self = this;
+	
 	this.state = 'default';
 	this.$elt = $(elt);
+	
+	this.actions = buttonActions[this.$elt.attr('id')];
+	
 	this.$elt.click(function(evt) {
-		console.log($(evt.target).attr('id'));
+		return self.actions[self.state](self, evt);
+	});
+};
+
+Button.prototype.collapseButtons = function () {
+	$('.action-button li').slideUp(300);
+};
+
+Button.prototype.errorHandler = function (jqXHR, textStatus, errorThrown) {
+	var error = jQuery.parseJSON(jqXHR.responseText);
+	alert(error ? error.display : 'There was a problem of some sort');
+};
+
+Button.prototype.serialize = function(captureID, data) {
+	var data = data || { };
+	data._xsrf = getCookie("_xsrf");
+	var capture = jQuery.param(data);
+	
+	if (captureID) {
+		capture += '&' + $('#' + captureID).serialize();
+	}
+	
+	return capture;
+};
+
+Button.prototype.jsonHTTPRequest = function(url, method, data, success, error) {
+	$.ajax({
+		url: url,
+		data: data,
+		dataType: "json",
+		type: method,
+		success: success,
+		error: error
 	});
 };
 
@@ -286,117 +255,6 @@ var formValidator = {
 		return commentsLength;
 	}
 };
-
-
-successActions = {
-	'action-save': function (data, status, xhr) {
-		alert('Your changes have been saved');
-		for (var i = 0, len = buttonMaps.length; i < len; i++) {
-			if (buttonMaps.hasOwnProperty(i)) {
-				var map = buttonMaps[i];
-				if (map.id === 'action-send') {
-					map.action = '/agreement/' + data.id + '/send.json';
-				}
-			}
-		}
-		$('#action-save').slideUp(300);
-	},
-	'action-send': function (data, status, xhr) {
-		alert('Successfully sent estimate');
-		$('.action-button li').slideUp(300);
-	},
-	'action-resend': function (data, status, xhr) {
-		alert('Successfully sent estimate');
-		$('.action-button li').slideUp(300);
-	},
-	'action-edit': function (data, status, xhr) {
-		alert('Successfully edited estimate');
-		$('.action-button li').slideUp(300);
-	},
-	'action-accept': function (data, status, xhr) {
-		alert('Successfully accepted estimate');
-		$('.action-button li').slideUp(300);
-	},
-	'action-decline': function (data, status, xhr) {
-		alert('Your request for changes has been sent');
-		$('.action-button li').slideUp(300);
-	},
-	'action-markcomplete': function (data, status, xhr) {
-		alert('The work outlined in the current phase has been marked complete');
-		$('.action-button li').slideUp(300);
-	},
-	'action-dispute': function (data, status, xhr) {
-		alert('Successfully disputed the work completed');
-		$('.action-button li').slideUp(300);
-	},
-	'action-verify': function (data, status, xhr) {
-		alert('Successfully verified the work completed');
-		$('.action-button li').slideUp(300);
-		$('#password-div').slideUp(300);
-	},
-	'action-request': function(data, status, xhr) {
-		alert('Successfully sent your request');
-		$('.action-button li').slideUp(300);
-	},	
-	profile_update: function (data, status, xhr) {
-		// @todo: Manually check the status code
-		data.telephone = data.telephone || '';
-		$('#profile_preview').replaceWith('<div id="profile_preview">\
-			<h2>Profile Preview</h2>\
-			<div class="data-table">\
-				<table border="0" cellspacing="0" cellpadding="0">\
-					<tr>\
-						<td class="meta">\
-							<span><img src="' + data.profileURL[0] + '" alt="Profile photo" width="50" height="50" /></span>\
-						</td>\
-						<td>\
-							<h3><a href="/user/me/profile">' + data.fullName + '</a></h3>\
-							<p>' + data.email + '</p>\
-							<p>' + data.telephone + '</p>\
-						</td>\
-					</tr>\
-				</table>\
-			</div>\
-		</div>');
-	},
-	card_update: function (data, status, xhr) {
-		// @todo: Clear the form fields!
-		$('#stored-card').remove();
-		$('#card-container').prepend('<div id="stored-card">\
-			<h2>Stored Credit Card</h2>\
-			<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; ' + data.display + '</h3>\
-			<p>Expires ' + data.cardExpires + '</p>\
-			<!--<p>Billing ZIP: </p>-->\
-			<form action="/user/me/paymentmethod/' + data.id + '" method="DELETE" class="js-replace-action clear">\
-				<fieldset class="submit-buttons">\
-					<input type="submit" value="Delete This Card" />\
-				</fieldsest>\
-			</form>\
-		</div>');
-	},
-	card_delete: function (data, status, xhr) {
-		$('#stored-card').remove();
-	},
-	bank_update: function (data, status, xhr) {
-		// @todo: Clear the form fields!
-		$('#stored-bank').remove();
-		$('#bank-container').prepend('<div id="stored-bank">\
-			<h2>Stored Bank Account</h2>\
-			<p>Routing Number</p>\
-			<h3>&bull;&bull;&bull;&bull;&bull;&bull;' + data.abaDisplay + '</h3>\
-			<p>Account Number</p>\
-			<h3>&bull;&bull;&bull;&bull; &bull;&bull;' + data.display + '</h3>\
-			<form action="/user/me/paymentmethod/' + data.id + '" method="DELETE" class="js-replace-action clear" id="bank_delete">\
-				<fieldset class="submit-buttons">\
-					<input type="submit" value="Delete This Card" />\
-				</fieldsest>\
-			</form>\
-		</div>');
-	},
-	bank_delete: function (data, status, xhr) {
-		$('#stored-bank').remove();
-	}
-}
 
 $('.notes.toggle').click(function(e) {
 	if (!$(e.target).is('textarea')) {

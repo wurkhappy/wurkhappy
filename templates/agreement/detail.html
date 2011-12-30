@@ -6,7 +6,7 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": data['_xsrf'], "preFill": {} } %}
+{% set slug = { "_xsrf": data['_xsrf'], "preFill": {}, 'agreementID': data['id'] } %}
 
 {% if 'currentPhase' in data %}
 	{% set slug['currentPhase'] = data['currentPhase'] %}
@@ -104,7 +104,7 @@
 						<p>Add comments and feedback on the agreement here.</p>
 						<textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
 					</div>
-				{% elif data['state'] == 'DeclinedState' or (data['state'] == 'ContestedState' and 'comments' in phase) %}
+				{% elif 'comments' in phase and data['state'] in ['DeclinedState', 'ContestedState'] %}
 					<div class="notes">
 						<p>{% raw escape(phase['comments']).replace('\n', '<br/>') %}</p>
 					</div>

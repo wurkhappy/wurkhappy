@@ -333,7 +333,7 @@ class StateTransitionError(Exception):
 class AgreementState(object):
 	""" AgreementState """
 	
-	transitionNames = ["send", "update", "accept", "decline", "mark_complete", "dispute", "verify"]
+	transitionNames = ["send", "save", "accept", "decline", "mark_complete", "dispute", "verify"]
 	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
 	actionMap = dict(zip(transitionNames, fieldNames))
 	
@@ -408,12 +408,12 @@ class AgreementState(object):
 class DraftState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
-		self.addAction('vendor', "update")
+		self.addAction('vendor', "save")
 		self.addAction('vendor', "send")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
-			if action == 'update':
+			if action == 'save':
 				self.agreement.dateModified = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
@@ -427,13 +427,13 @@ class DraftState(AgreementState):
 class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
-		self.addAction('vendor', "update")
+		self.addAction('vendor', "save")
 		self.addAction('client', "accept")
 		self.addAction('client', "decline")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
-			if action == 'update':
+			if action == 'save':
 				self.agreement.dateModified = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
@@ -453,12 +453,12 @@ class EstimateState(AgreementState):
 class DeclinedState(AgreementState):
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
-		self.addAction('vendor', "update")
+		self.addAction('vendor', "save")
 		self.addAction('vendor', "send")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
-			if action == 'update':
+			if action == 'save':
 				self.agreement.dateModified = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
@@ -530,12 +530,12 @@ class CompletedState(AgreementState):
 class ContestedState(AgreementState):
 	def __init__(self, agreement):
 		super(ContestedState, self).__init__(agreement)
-		self.addAction('vendor', 'update')
+		self.addAction('vendor', 'save')
 		self.addAction('vendor', 'send')
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
-			if action == 'update':
+			if action == 'save':
 				self.agreement.dateModified = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'mark_complete':
