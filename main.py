@@ -53,6 +53,9 @@ class Application(web.Application):
 			# Wurk Happy contact directory for current user
 			(r'/user/me/contacts\.json', users.ContactsJSONHandler),
 
+			# Comet handler for site notifications
+			(r'/user/me/notifications\.json', notifications.NotificationHandler),
+			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
 			(r'/agreement/new/?', agreements.AgreementHandler),

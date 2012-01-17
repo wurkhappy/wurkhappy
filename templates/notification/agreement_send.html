@@ -6,17 +6,15 @@
 	
 	<h1 style="font-weight: bold; font-size: 24px; line-height: 32px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ data['vendor']['fullName'] }} just sent you a new agreement proposal.</h1>
 	
-	<h2 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;"><a href="http://www.wurkhappy.com/agreement/{{ data['agreement']['id'] }}?t={{ data['agreement']['token'] }}" style="text-decoration: none; color: #0099DD;">{{ data['agreement']['name'] }}</a></h2>
+	<h2 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;"><a href="http://www.wurkhappy.com/agreement/{{ data['agreement']['id'] }} }}" style="text-decoration: none; color: #0099DD;">{{ data['agreement']['name'] }}</a></h2>
 	
 	{% set num = len(data['agreement']['phases']) %}
 	<p style="font-size: 12px; font-style: italic; color: #999999; margin: 0; padding: 5px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ num }} Payment{% if num != 1 %}s{% end %} Totalling {{ data['agreement']['costString'] }}</p>
 	
-	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Wurk Happy is an online platform that makes managing work with vendors easy and painless. You can review estimates, approve work orders and pay vendors with one click.</p>
-	
 	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Please take a moment to look over the details of the services provided, refund policies and payment schedule to confirm that's what you want to do and you're comfortable with the agreement.</p>
+	
 	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 10px 10px 20px 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Then just accept the terms, make any requested payments, and {{ data['vendor']['fullName'] }} will get started!</p>
 	
-	<p style="background-color: #DFF5FF; border-top: 1px solid #DDDDDD; font-size: 12px; line-height: 16px; margin: 0; padding: 10px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">To see this proposal and estimate will need to <a href="" style="text-decoration: none; color: #0099DD;">create an account</a>. It's free and only takes a few seconds.</p>
 	<p style="background-color: #DFF5FF; font-size: 12px; line-height: 16px; margin: 0; padding: 10px 10px 10px 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Powered by <a href="" style="text-decoration: none; color: #0099DD;">Wurk Happy</a> &mdash; The simplest way to do business.</p>
 </body>
 </html>

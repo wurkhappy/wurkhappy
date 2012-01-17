@@ -533,21 +533,28 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			clientState = UserState.currentState(client)
 
 			if isinstance(clientState, InvitedUserState):
+				# @todo: Whoa! What's going on here?
 				data = {"confirmationHash": "foo"}
 				clientState.doTransition("send_verification", data)
+				
+				msg = json.dumps(dict(
+					userID=client.id,
+					agreementID=agreement.id,
+					action='agreementInvite'
+				))
+			elif isinstance(clientState, VerifiedUserState):
+				msg = json.dumps(dict(
+					userID=client.id,
+					agreementID=agreement.id,
+					action='agreementSent'
+				))
+			with Beanstalk() as bconn:
 
-				with Beanstalk() as bconn:
-					msg = json.dumps(dict(
-						userID=client.id,
-						agreementID=agreement.id,
-						action='agreementInvite'
-					))
-
-					tube = self.application.configuration['notifications']['beanstalk_tube']
-					bconn.use(tube)
-					r = bconn.put(msg)
-					logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
-
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(msg)
+				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
+			
 			agreement.dateSent = datetime.now()
 			agreement.save()
 			agreement.refresh()
@@ -628,6 +635,8 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 	@web.authenticated
 	def post(self, agreementID, action):
+		'''POST handler for /agreement/([0-9]+)/(save|send|accept|decline|mark_complete|verify|dispute)\.json'''
+		
 		user = self.current_user
 
 		agreement = Agreement.retrieveByID(agreementID)
@@ -750,25 +759,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						self.set_status(400)
 						self.renderJSON(error)
 						return
-					else:
-						clientState = UserState.currentState(client)
-
-						if isinstance(clientState, InvitedUserState):
-							data = {"confirmationHash": "foo"}
-							clientState.doTransition("send_verification", data)
-
-							# @todo: also defer this to after the transition is successful?
-							with Beanstalk() as bconn:
-								msg = json.dumps(dict(
-									userID=client.id,
-									agreementID=agreement.id,
-									action='agreementInvite'
-								))
-
-								tube = self.application.configuration['notifications']['beanstalk_tube']
-								bconn.use(tube)
-								r = bconn.put(msg)
-								logging.warn('Beanstalk: tube#%d %s' % (r, msg))
 
 			if (isinstance(currentState, DraftState) or
 					isinstance(currentState, EstimateState) or
@@ -846,8 +836,42 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				phase = agreement.getCurrentPhase()
 				phase.comments = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
 				phase.save()
+		
 		try:
 			currentState.performTransition(role, action, unsavedRecords)
+			
+			actionMap = {
+				'send': 'agreementSent',
+				'accept': 'agreementAccepted',
+				'decline': 'agreementDeclined',
+				'mark_complete': 'agreementWorkCompleted',
+				'verify': 'agreementPaid',
+				'dispute': 'agreementDisputed'
+			}
+			
+			if action in actionMap:
+				recipient = User.retrieveByID(
+					agreement.vendorID if role == 'client' else agreement.clientID
+				)
+			
+				# The message's 'userID' field should really be called 'recipientID'
+				msg = dict(agreementID=agreement.id, userID=recipient.id)
+			
+				clientState = UserState.currentState(client)
+				if isinstance(clientState, InvitedUserState):
+					data = {"confirmationHash": "foo"}
+					clientState.doTransition("send_verification", data)
+					msg['action'] = 'agreementInvite'
+				else:
+					msg['action'] = actionMap[action]
+			
+				with Beanstalk() as bconn:
+					tube = self.application.configuration['notifications']['beanstalk_tube']
+					bconn.use(tube)
+					msgJSON = json.dumps(msg)
+					r = bconn.put(msgJSON)
+					logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		
 		except StateTransitionError as e:
 			# @todo: This is where we would describe each of the possible errors
 			error = {

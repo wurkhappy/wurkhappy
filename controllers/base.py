@@ -121,5 +121,6 @@ class Base58(BaseTranscoder):
 		' ': '',
 		'I': '1',
 		'l': '1',
-		'O': '0'
+		'O': 'o',
+		'0': 'o'
 	}

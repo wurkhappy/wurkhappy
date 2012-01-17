@@ -93,7 +93,7 @@ class SignupHandler(BaseHandler):
 				"debug": "specified email address is already registered"
 			}
 			
-			self.set_status(e.status_code)
+			self.set_status(400)
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
 			# self.redirect("/signup?err=email_exists")
 

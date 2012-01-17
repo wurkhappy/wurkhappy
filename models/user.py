@@ -137,6 +137,30 @@ class User(MappedObj):
 		
 		return paymentMethod
 	
+	def getCurrentState(self):
+		""" getCurrentState : () -> UserState """
+		
+		dateCreated = self.dateCreated
+		email = self.email
+		invitedBy = self.invitedBy
+		confirmationCode = self.confirmationCode
+		confirmationHash = self.confirmationHash
+		password = self.password
+		dateVerified = self.dateVerified
+		
+		states = [
+			(ActiveUserState, password and dateVerified and email),
+			(PendingUserState, confirmationCode and confirmationHash and email and dateCreated),
+			(NewUserState, dateCreated and email and password),
+			(InvitedUserState, dateCreated and email and invitedBy),
+			(BetaUserState, dateCreated and email),
+			(InvalidUserState, True)
+		]
+		
+		# logging.info([s[0] for s in states if s[1]])
+		state = [s[0] for s in states if s[1]][0]
+		return state(self)
+		
 	def publicDict(self):
 		return {
 			'id': self.id,

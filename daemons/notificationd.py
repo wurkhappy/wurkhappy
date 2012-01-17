@@ -36,7 +36,14 @@ class MailController (object):
 		
 		self.handlers = {
 			'invite': notifications.InviteHandler,
-			'agreementInvite': notifications.AgreementInviteHandler
+			'agreementInvite': notifications.AgreementInviteHandler,
+			'agreementSent': notifications.AgreementSentHandler,
+			'agreementAccepted': notifications.AgreementAcceptedHandler,
+			'agreementDeclined': notifications.AgreementDeclinedHandler,
+			# 'agreementUpdated': notifications.AgreementUpdatedHandler,
+			'agreementWorkCompleted': notifications.AgreementWorkCompletedHandler,
+			'agreementPaid': notifications.AgreementPaidHandler,
+			'agreementDisputed': notifications.AgreementDisputedHandler
 		}
 	
 	def start(self):
