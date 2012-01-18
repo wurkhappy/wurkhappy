@@ -2,9 +2,10 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
-from models.agreement import *
+from models.agreement import Agreement, CompletedState
 from models.paymentmethod import PaymentMethod
 from models.transaction import Transaction
+from controllers.beanstalk import Beanstalk
 from controllers import fmt
 
 import json
@@ -135,6 +136,22 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		try:
 			agreementState.performTransition('client', 'verify', unsavedRecords)
+			
+			# The message's 'userID' field should really be called 'recipientID'
+			msg = dict(
+				agreementID=agreement.id,
+				transactionID=transaction.id,
+				userID=agreement.vendorID,
+				action='agreementPaid'
+			)
+			
+			with Beanstalk() as bconn:
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				msgJSON = json.dumps(msg)
+				r = bconn.put(msgJSON)
+				logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		
 		except StateTransitionError as e:
 			error = {
 				"domain": "application.consistency",

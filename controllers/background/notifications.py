@@ -1,5 +1,6 @@
 from models.user import User
 from models.agreement import Agreement, AgreementPhase
+from models.transaction import Transaction
 from controllers.email import Email
 from controllers.orm import ORMJSONEncoder
 from controllers.verification import Verification
@@ -287,7 +288,7 @@ class AgreementDeclinedHandler(QueueHandler):
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client.email),
+			# 'to': (vendor.getFullName(), vendor.email),
 			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -308,28 +309,29 @@ class AgreementDeclinedHandler(QueueHandler):
 class AgreementWorkCompletedHandler(QueueHandler):
 	def receive(self, body):
 		client = User.retrieveByID(body['userID'])
-		agreement = Agreement.retrieveByID(body['agreementID'])
 		
 		if not client:
 			raise Exception("No such user")
 		
+		agreement = Agreement.retrieveByID(body['agreementID'])
+		
 		if not agreement:
 			raise Exception("No such agreement")
 		
+		phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
 		vendor = User.retrieveByID(agreement.vendorID)
 		
 		data = {
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phase': phase.publicDict()
 		}
-		
-		data['agreement']['currentPhase'] = agreement.getCurrentPhase()
 		
 		t = self.loader.load('agreement_work_complete.html')
 		htmlString = t.generate(data=data)
 		
-		subject = "%s just completed a phase of work on your agreement on Wurk Happy" % client.getFullName()
+		subject = "%s just completed a phase of work on your agreement on Wurk Happy" % vendor.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
@@ -358,21 +360,25 @@ class AgreementWorkCompletedHandler(QueueHandler):
 
 class AgreementPaidHandler(QueueHandler):
 	def receive(self, body):
-		client = User.retrieveByID(body['userID'])
-		agreement = Agreement.retrieveByID(body['agreementID'])
+		vendor = User.retrieveByID(body['userID'])
 		
-		if not client:
+		if not vendor:
 			raise Exception("No such user")
+		
+		agreement = Agreement.retrieveByID(body['agreementID'])
 		
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		vendor = User.retrieveByID(agreement.vendorID)
+		client = User.retrieveByID(agreement.clientID)
+		transaction = Transaction.retrieveByID(body['transactionID'])
+		phase = AgreementPhase.retrieveByID(transaction.agreementPhaseID)
 		
 		data = {
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phase': phase.publicDict()
 		}
 		
 		t = self.loader.load('agreement_pay.html')
@@ -383,12 +389,12 @@ class AgreementPaidHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = client.email if client.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = vendor.email if vendor.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(vendor.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client.email),
-			'to': (client.getFullName(), recipientAddress),
+			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
+			# 'to': (vendor.getFullName(), vendor.email),
+			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -410,24 +416,26 @@ class AgreementDisputedHandler(QueueHandler):
 		vendor = User.retrieveByID(body['userID'])
 		agreement = Agreement.retrieveByID(body['agreementID'])
 		
-		if not client:
+		if not vendor:
 			raise Exception("No such user")
 		
 		if not agreement:
 			raise Exception("No such agreement")
 		
 		client = User.retrieveByID(agreement.clientID)
+		phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
 		
 		data = {
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phase': phase.publicDict()
 		}
 		
-		t = self.loader.load('agreement_new_user.html')
+		t = self.loader.load('agreement_dispute.html')
 		htmlString = t.generate(data=data)
 		
-		subject = "%s just accepted your proposed agreement on Wurk Happy" % client.getFullName()
+		subject = "%s needs more information about the work you completed" % client.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
@@ -436,7 +444,7 @@ class AgreementDisputedHandler(QueueHandler):
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client.email),
+			# 'to': (vendor.getFullName(), vendor.email),
 			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [

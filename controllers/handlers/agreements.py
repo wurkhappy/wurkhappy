@@ -659,6 +659,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(action)
 
 		currentState = agreement.getCurrentState()
+		phase = agreement.getCurrentPhase()
 		logging.info(currentState.__class__.__name__)
 
 		# In order to make sure records are not put in inconsistent states, a
@@ -833,7 +834,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						phase.comments = args['phaseComments'][phase.phaseNumber]
 						phase.save()
 			elif isinstance(currentState, CompletedState) and action == 'dispute':
-				phase = agreement.getCurrentPhase()
+				# phase = agreement.getCurrentPhase()
 				phase.comments = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
 				phase.save()
 		
@@ -845,7 +846,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				'accept': 'agreementAccepted',
 				'decline': 'agreementDeclined',
 				'mark_complete': 'agreementWorkCompleted',
-				'verify': 'agreementPaid',
 				'dispute': 'agreementDisputed'
 			}
 			
@@ -853,18 +853,31 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				recipient = User.retrieveByID(
 					agreement.vendorID if role == 'client' else agreement.clientID
 				)
-			
-				# The message's 'userID' field should really be called 'recipientID'
-				msg = dict(agreementID=agreement.id, userID=recipient.id)
-			
-				clientState = UserState.currentState(client)
-				if isinstance(clientState, InvitedUserState):
-					data = {"confirmationHash": "foo"}
-					clientState.doTransition("send_verification", data)
-					msg['action'] = 'agreementInvite'
+				
+				msg = dict(agreementID=agreement.id, action=actionMap[action])
+				
+				if role == 'vendor':
+					recipient = User.retrieveByID(agreement.clientID)
+					clientState = UserState.currentState(recipient)
+					
+					# For users that have not yet signed up on the platform,
+					# create the necessary confirmation codes and perform a
+					# user state transition. Override the 'agreementSent'
+					# action to say 'agreementInvite'.
+					if isinstance(clientState, InvitedUserState):
+						# @todo: use a real value here
+						data = {"confirmationHash": "foo"}
+						clientState.doTransition("send_verification", data)
+						msg['action'] = 'agreementInvite'
 				else:
-					msg['action'] = actionMap[action]
-			
+					recipient = User.retrieveByID(agreement.vendorID)
+				
+				if action in ['mark_complete', 'dispute']:
+					msg['agreementPhaseID'] = phase.id
+				
+				# The message's 'userID' field should really be called 'recipientID'
+				msg['userID'] = recipient.id
+				
 				with Beanstalk() as bconn:
 					tube = self.application.configuration['notifications']['beanstalk_tube']
 					bconn.use(tube)
