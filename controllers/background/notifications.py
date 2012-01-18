@@ -404,8 +404,8 @@ class AgreementPaidHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client.id,
-			"clientEmail": client.email,
+			"vendorID": vendor.id,
+			"vendorEmail": vendor.email,
 			"agreementID": agreement.id
 		}))
 
