@@ -170,6 +170,61 @@ Button.prototype.jsonHTTPRequest = function(url, method, data, success, error) {
 	});
 };
 
+
+
+var Popup = function (parent) {
+	var self = this;
+	var $container = null;
+	
+	if (arguments[1]) {
+		$container = arguments[1];
+	} else {
+		$container = $(
+		'<div class="clear prompt-box" id="popup-div" style="display:none;">\
+			<div class="column-three-fourth">\
+				<h3><span id="popup-label"></span></h3>\
+			</div>\
+			<div class="column-one-fourth">\
+				<a href="#" class="js-close-btn">close</a>\
+			</div>\
+		</div>');
+	}
+	
+	this.state = 'closed';
+	this.$elt = $container; 
+	$(parent).prepend(this.$elt);
+	
+	this.$elt.find('.js-close-btn').click(function(evt) {
+		self.$elt.slideUp(300);
+		return evt.preventDefault();
+	});
+};
+
+Popup.prototype.setLabel = function(label) {
+	this.$elt.find('#popup-label').html(label);
+	return this;
+};
+
+Popup.prototype.open = function() {
+	if (this.state == 'open') {
+		return this;
+	}
+	
+	this.$elt.slideDown(300);
+	this.state = 'closed';
+	return this;
+};
+
+Popup.prototype.close = function() {
+	if (this.state == 'closed') {
+		return this;
+	}
+	
+	this.$elt.slideUp(300);
+	this.state = 'open';
+	return this;
+};
+
 // var wh = { };
 // 
 // wh.autoSuggest = {

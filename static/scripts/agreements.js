@@ -9,13 +9,15 @@ var buttonActions = {
 			var capture = self.serialize('agreement-form');
 			var formAction = $('#agreement-form').attr('action');
 			
+			var popup = new Popup('#content');
+			
 			$.ajax({
 				url: formAction + '/save.json',
 				data: capture,
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('Your changes have been saved');
+					popup.setLabel('Your changes have been saved').open();
 					// Only disable the button until the form has been modified
 					$('#agreement-form').attr('action', '/agreement/' + data.id);
 					$('#action-save').slideUp(300);
@@ -31,6 +33,7 @@ var buttonActions = {
 		default: function (self, evt) {
 			var capture = self.serialize('agreement-form');
 			var formAction = $('#agreement-form').attr('action');
+			var popup = new Popup('#content');
 			
 			$.ajax({
 				url: formAction + '/send.json',
@@ -38,7 +41,7 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('Successfully sent estimate');
+					popup.setLabel('Successfully sent estimate').open();
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -51,13 +54,15 @@ var buttonActions = {
 	'action-resend': {
 		default: function (self, evt) {
 			var capture = self.serialize('agreement-form');
+			var popup = new Popup('#content');
+			
 			$.ajax({
 				url: '/agreement/' + slug['agreementID'] + '/send.json',
 				data: capture,
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('Successfully sent estimate');
+					popup.setLabel('Successfully sent estimate').open();
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -70,7 +75,10 @@ var buttonActions = {
 	'action-accept': {
 		default: function (self, evt) {
 			var commentLength = formValidator.checkCommentLength($('textarea'));
+			var popup = new Popup('#content');
+			
 			if (commentLength > 0) {
+				// @todo: Don't allow comments? Figure this out...
 				alert('By accepting the estimate, no additional comments are allowed so your notes will not be sent-- save them while you can!');
 				return evt.preventDefault();
 			}
@@ -83,7 +91,7 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('Successfully accepted estimate');
+					popup.setLabel('Successfully accepted estimate').open();
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -96,7 +104,10 @@ var buttonActions = {
 	'action-decline': {
 		default: function (self, evt) {
 			var commentLength = formValidator.checkCommentLength($('textarea'));
+			var popup = new Popup('#content');
+			
 			if (commentLength < 10) {
+				// @todo: Better UI here please, thank you.
 				alert('Please add a few comments (reasons for declining, questions, etc.) regarding the estimate.');
 				return evt.preventDefault();
 			}
@@ -109,7 +120,7 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('Your request for changes has been sent');
+					popup.setLabel('Your request for chages has been sent').open();
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -122,13 +133,15 @@ var buttonActions = {
 	'action-markcomplete': {
 		default: function (self, evt) {
 			var bodyString = self.serialize();
+			var popup = new Popup('#content');
+			
 			$.ajax({
 				url: '/agreement/' + slug['agreementID'] + '/mark_complete.json',
 				data: bodyString,
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('The work outlined in the current phase has been marked complete');
+					popup.setLabel('The work outlined in the current phase has been marked complete').open();
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -167,7 +180,7 @@ var buttonActions = {
 	'action-request': {
 		default: function (self, evt) {
 			// validate...
-			
+			var popup = new Popup('#content');
 			var bodyString = self.serialize('form');
 			$.ajax({
 				url: '/agreement/request.json',
@@ -175,6 +188,7 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
+					popup.setLabel('Successfully sent your request').open();
 					alert('Successfully sent your request');
 					$('.action-button li').slideUp(300);
 				},
