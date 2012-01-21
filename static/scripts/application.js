@@ -182,10 +182,9 @@ var Popup = function (parent) {
 		$container = $(
 		'<div class="clear prompt-box" id="popup-div" style="display:none;">\
 			<div class="column-three-fourth">\
-				<h3><span id="popup-label"></span></h3>\
+				<h3><span style="font-size: 30px; margin-right: 10px;"><a href="#" class="js-close-btn" style="color:#EEE; text-shadow: 1px 1px #333">&#x2297;</a></span> <span id="popup-label"></span></h3>\
 			</div>\
 			<div class="column-one-fourth">\
-				<a href="#" class="js-close-btn">close</a>\
 			</div>\
 		</div>');
 	}

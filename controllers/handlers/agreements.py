@@ -142,12 +142,12 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 	buttonTable = {
 		'vendor': defaultdict(lambda: [], {
 			DraftState: [
-				('action-save', 'Save Draft'),
-				('action-send', 'Send Estimate')
+				('action-save', 'Save as Draft'),
+				('action-send', 'Send Agreement')
 			],
 			DeclinedState: [
 				('action-save', 'Save Changes'),
-				('action-resend', 'Save and Re-submit')
+				('action-resend', 'Save & Re-send Agreement')
 			],
 			InProgressState: [
 				('action-markcomplete', 'Mark Phase Complete')
@@ -158,7 +158,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		}),
 		'client': defaultdict(lambda: [], {
 			EstimateState: [
-				('action-accept', 'Accept Estimate'),
+				('action-accept', 'Accept Agreement'),
 				('action-decline', 'Request Changes')
 			],
 			CompletedState: [
@@ -216,7 +216,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"state": 'DraftState',
 				"actions": [
 					('action-save', 'Save as Draft'),
-					('action-send', 'Send Estimate')
+					('action-send', 'Send Agreement')
 				],
 				"self": "vendor"
 			}

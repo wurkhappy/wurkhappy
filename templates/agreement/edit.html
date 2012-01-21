@@ -81,7 +81,6 @@
 								  <p>{% raw escape(data['phases'][0]['comments']).replace('\n', '<br/>') %}</p>
 								</div>
 							{% end %}
-							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
 					</li>
 					<li{% if len(data["phases"]) > 1 %} class="has-content"{% end %}>
@@ -99,7 +98,6 @@
 								  <p>{% raw escape(data['phases'][1]['comments']).replace('\n', '<br/>') %}</p>
 								</div>
 							{% end %}
-							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
 					</li>
 					<li{% if len(data["phases"]) > 2 %} class="has-content"{% end %}>
@@ -117,7 +115,6 @@
 								  <p>{% raw escape(data['phases'][2]['comments']).replace('\n', '<br/>') %}</p>
 								</div>
 							{% end %}
-							<a class="add-phase" href="#">+ Add a phase</a>
 						</div>
 					</li>
 					<li{% if len(data["phases"]) > 3 %} class="has-content"{% end %}>
@@ -138,6 +135,7 @@
 						</div>
 					</li>
 				</ul>
+				<h3 style="padding-left: 0px; font-weight: 100;"><a href="#" id="add-phase-btn">+ Add a phase</a></h3>
 			</fieldset>
 		</form>
 	</div>
@@ -176,7 +174,7 @@
 		<div class="column-three-fourth">
 
 			{% if not data['id'] %}
-				<h1>New Estimate</h1>
+				<h1>Create Client Agreement</h1>
 			{% else %}
 				<h1>Edit Client Agreement</h1>
 			{% end %}

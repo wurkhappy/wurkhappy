@@ -4,13 +4,13 @@ var Accordion = {
 			header: 'h2'
 		});
 
-		$('#phases .add-phase').click(function(e) {
+		$('#add-phase-btn').click(function(e) {
 			e.preventDefault();		
-			var phasesToAdd = $(this).parents('li').siblings().filter(':hidden');
+			var phasesToAdd = $(this).parent().siblings('ul').children('li').filter(':hidden');
 			var nextPhase = phasesToAdd.first();
 			
 			if (phasesToAdd.length === 1) {
-				$('#phases .add-phase').remove();
+				$('#add-phase-btn').remove();
 			}
 			
 			Accordion.addPane(nextPhase);

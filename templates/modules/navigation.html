@@ -1,21 +1,21 @@
 <div id="navigation" class="clear">
 
-	<div class="column-one-half">
+	<div class="column-three-fourth">
 
 		<ul class="clear">
-			<li{% if 'self' in data and data['self'] == 'vendor' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Client Agreements</strong></a></li>
-			<li{% if 'self' in data and data['self'] == 'client' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Vendor Agreements</strong></a></li>
-			<li><a href="#"><strong>People</strong></a></li>
+			<li{% if 'self' in data and data['self'] == 'vendor' %} class="current"{% end %}><a href="/agreements/with/clients"><strong>Agreements with Clients</strong></a></li>
+			<li{% if 'self' in data and data['self'] == 'client' %} class="current"{% end %}><a href="/agreements/with/vendors"><strong>Agreements with Contractors</strong></a></li>
+			<!--<li><a href="/templates">Templates</a></li>-->
 		</ul>
 
 	</div>
 
-	<div class="column-one-half">
+	<div class="column-one-fourth">
 
 		<ul id="admin" class="clear">
 			<li><a href="/logout">Log Out</a></li>
 			<li{% if 'self' in data and data['self'] == 'account' %} class="current"{% end %}><a href="/user/me/account">Account</a></li>
-			<li><a href="#">Preferences</a></li>
+			<!--<li><a href="#">Preferences</a></li>-->
 		</ul>
 
 	</div>
