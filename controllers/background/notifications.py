@@ -373,12 +373,14 @@ class AgreementPaidHandler(QueueHandler):
 		client = User.retrieveByID(agreement.clientID)
 		transaction = Transaction.retrieveByID(body['transactionID'])
 		phase = AgreementPhase.retrieveByID(transaction.agreementPhaseID)
+		paymentMethod = PaymentMethod.retrieveByID(transaction.paymentMethodID)
 		
 		data = {
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
-			'phase': phase.publicDict()
+			'phase': phase.publicDict(),
+			'paymentMethod': paymentMethod.publicDict()
 		}
 		
 		t = self.loader.load('agreement_pay.html')

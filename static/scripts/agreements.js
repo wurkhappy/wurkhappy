@@ -79,7 +79,7 @@ var buttonActions = {
 			
 			if (commentLength > 0) {
 				// @todo: Don't allow comments? Figure this out...
-				alert('By accepting the estimate, no additional comments are allowed so your notes will not be sent-- save them while you can!');
+				alert('By accepting the estimate, no additional comments are allowed so your notes will not be sent&mdash;save them while you can!');
 				return evt.preventDefault();
 			}
 			
@@ -159,6 +159,7 @@ var buttonActions = {
 				return evt.preventDefault();
 			}
 			
+			var popup = new Popup('#content');
 			var bodyString = self.serialize('comments-form');
 			console.log(bodyString);
 			$.ajax({
@@ -167,7 +168,7 @@ var buttonActions = {
 				dataType: "json",
 				type: 'POST',
 				success: function (data, status, xhr) {
-					alert('Successfully disputed the work completed');
+					popup.setLabel('Successfully disputed the work completed').open();
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -189,7 +190,6 @@ var buttonActions = {
 				type: 'POST',
 				success: function (data, status, xhr) {
 					popup.setLabel('Successfully sent your request').open();
-					alert('Successfully sent your request');
 					$('.action-button li').slideUp(300);
 				},
 				error: self.errorHandler
@@ -229,16 +229,18 @@ var buttonActions = {
 				self.$popup.find('#verify-account').html(slug['account']);
 				self.$popup.children('#password-form').submit(function(evt) {
 					var capture = self.serialize('password-form', {'agreementID': slug['agreementID']});
-					console.log(capture);
+					var popup = new Popup('#content');
+					
+					//console.log(capture);
 					$.ajax({
 						url: '/payment/new.json',
 						data: capture,
 						dataType: 'json',
 						type: 'POST',
 						success: function(data, status, xhr) {
-							alert('Successfully verified the work completed');
 							$('.action-button li').slideUp(300);
 							$('#password-div').slideUp(300);
+							setTimeout(function() { popup.setLabel('Successfully verified the work completed').open(); }, 300);
 						},
 						error: self.errorHandler
 					});
