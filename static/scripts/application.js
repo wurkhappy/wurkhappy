@@ -80,10 +80,10 @@ $(document).ready(function() {
 	$(".js-replace-action").ajaxForm({
 		data: {'_xsrf': slug['_xsrf']},
 		beforeSubmit: function (arr, $form, options) {
-			// @todo: This should only append if it's not already there.
 			// We add the .json extension to the form action URL
 			// for AJAX requests.
-			options.url = $form.attr('action') + '.json';
+			var action = $form.attr('action');
+			options.url = action + (action.match(/\.json$/) ? '' : '.json');
 			options.dataType = "json";
 
 			if ($form.attr('id')) {
@@ -107,21 +107,6 @@ $(document).ready(function() {
 		var btn = new Button(elt);
 	});
 });
-
-
-// var SubmitButton = function(elt) {
-// 	var self = this;
-// 	
-// 	this.$elt = $(elt);
-// 	this.successAction = buttonActions[this.$elt.attr('id')];
-// 	
-// 	this.$elt.ajaxForm({
-// 		data: {'_xsrf': slug['_xsrf']},
-// 		beforeSubmit: function (arr, $form, options) {
-// 			return self.successAction(self, arr, $form, options);
-// 		}
-// 	});
-// };
 
 
 
@@ -311,9 +296,10 @@ var formValidator = {
 };
 
 $('.notes.toggle').click(function(e) {
-	if (!$(e.target).is('textarea')) {
-		$(this).children().toggle();
-		$(this).removeClass('toggle').unbind();
+	var $textArea = $(this).children('textarea');
+	if (!$(e.target).is('textarea') && ($textArea.is(':hidden') || $textArea.val() === '')) {
+		$(this).children('textarea').toggle();
+		//$(this).removeClass('toggle').unbind();
 	};
 });
 

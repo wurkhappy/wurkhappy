@@ -147,7 +147,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			],
 			DeclinedState: [
 				('action-save', 'Save Changes'),
-				('action-resend', 'Save & Re-send Agreement')
+				('action-resend', 'Re-send Agreement')
 			],
 			InProgressState: [
 				('action-markcomplete', 'Mark Phase Complete')
@@ -531,7 +531,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 
 			clientState = UserState.currentState(client)
-
+			logging.info(clientState)
 			if isinstance(clientState, InvitedUserState):
 				# @todo: Whoa! What's going on here?
 				data = {"confirmationHash": "foo"}
@@ -542,14 +542,14 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					agreementID=agreement.id,
 					action='agreementInvite'
 				))
-			elif isinstance(clientState, VerifiedUserState):
+			elif isinstance(clientState, ActiveUserState):
 				msg = json.dumps(dict(
 					userID=client.id,
 					agreementID=agreement.id,
 					action='agreementSent'
 				))
+			
 			with Beanstalk() as bconn:
-
 				tube = self.application.configuration['notifications']['beanstalk_tube']
 				bconn.use(tube)
 				r = bconn.put(msg)

@@ -93,6 +93,7 @@ var buttonActions = {
 				success: function (data, status, xhr) {
 					popup.setLabel('Successfully accepted estimate').open();
 					$('.action-button li').slideUp(300);
+					$('.add.notes').slideUp(300);
 				},
 				error: self.errorHandler
 			});
@@ -122,6 +123,16 @@ var buttonActions = {
 				success: function (data, status, xhr) {
 					popup.setLabel('Your request for chages has been sent').open();
 					$('.action-button li').slideUp(300);
+					$('.add.notes').each(function(index) {
+						var $textArea = $(this).children('textarea');
+						var content = $textArea.val();
+						if (content !== '') {
+							$textArea.slideUp(300);
+							$(this).children('p').html(content);
+						} else {
+							$(this).slideUp(300);
+						}
+					});
 				},
 				error: self.errorHandler
 			});

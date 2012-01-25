@@ -128,7 +128,7 @@ h3 {
 	font-style: italic;
 }
 
-.add.notes textarea {
+#content form .add.notes textarea {
 	display: none;
 	width: 585px;
 }
@@ -510,6 +510,15 @@ div.prompt-box h3 {
 .js-close-btn {
 	color:#EEE;
 	text-shadow: 1px 1px #333;
+}
+
+.no-select {
+	-webkit-user-select: none;
+	 -khtml-user-select: none;
+	   -moz-user-select: none;
+	    -ms-user-select: none;
+	     -o-user-select: none;
+	        user-select: none;
 }
 
 /* CONTENT
