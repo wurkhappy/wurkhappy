@@ -93,40 +93,34 @@ class MappedObj(object):
 		with Database() as (conn, cursor):
 			keys = []
 			values = []
-		
+			
 			for k, v in self.__dict__.iteritems():
 				if k != 'id':
 				#if k not in self.immutableFields():
 					keys += [k]
 					values += [v]
-		
+			
 			if self.id:
 				values += [self.id]
-			
+				
 				atom = "%s = %%s"
 				setClause = ", ".join([atom] * len(keys))
 				setClause = setClause % tuple(keys)
-			
+				
 				updateStatement = "UPDATE %s SET %s WHERE id = %%s LIMIT 1" % (self.tableName(), setClause)
-							
-				# print setClause + "\n"
-				# print updateStatement + "\n"
-			
+				
 				cursor.execute(updateStatement, tuple(values))
 				conn.commit()
 			else:
 				atom = "%s"
-			
+				
 				keyClause = ", ".join(keys)
 				valueClause = ", ".join([atom] * len(keys))
-			
-				# print keyClause + "\n"
-				# print valueClause + "\n"
-			
+				
 				insertStatement = "INSERT INTO %s (%s) VALUES (%s)" % (self.tableName(), keyClause, valueClause)
 				cursor.execute(insertStatement, tuple(values))
 				self.id = cursor.lastrowid
-			
+				
 				conn.commit()
 	
 	def refresh(self):

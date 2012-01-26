@@ -183,7 +183,8 @@ class Agreement(MappedObj):
 			(ContestedState, dateAccepted and dateCompleted and dateContested and dateContested > dateCompleted),
 			(CompletedState, dateAccepted and dateCompleted and (not dateContested or dateContested < dateCompleted)),
 			(InProgressState, dateSent and dateAccepted),
-			(EstimateState, dateSent and not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
+			(EstimateState, dateSent                       and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
+			#                        and not dateContested
 			#                       |---------------------|  Do we need this?
 			
 			(DeclinedState, dateSent and dateDeclined and not dateAccepted),

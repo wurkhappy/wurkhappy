@@ -121,7 +121,7 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					popup.setLabel('Your request for chages has been sent').open();
+					popup.setLabel('Your request for changes has been sent').open();
 					$('.action-button li').slideUp(300);
 					$('.add.notes').each(function(index) {
 						var $textArea = $(this).children('textarea');

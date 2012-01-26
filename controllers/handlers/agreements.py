@@ -900,8 +900,10 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.renderJSON(error)
 
 		for record in unsavedRecords:
-			logging.warn(record)
+			logging.warn('saving %s', record)
 			record.save()
+			record.refresh()
+			logging.warn('       %s', record)
 
 		self.renderJSON(self.assembleDictionary(agreement))
 
