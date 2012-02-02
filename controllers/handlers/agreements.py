@@ -548,6 +548,8 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					agreementID=agreement.id,
 					action='agreementSent'
 				))
+			else:
+				msg = json.dumps(dict())
 			
 			with Beanstalk() as bconn:
 				tube = self.application.configuration['notifications']['beanstalk_tube']
@@ -796,8 +798,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					phase.save()
 
 				summary.save()
-				agreement.save()
-
+		
 		# Clients can accept or decline an estimate, in which case the comment
 		# fields in the agreement summary and agreement phase records get
 		# updated; or they can dispute or verify a completed agreement, in
@@ -900,10 +901,8 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.renderJSON(error)
 
 		for record in unsavedRecords:
-			logging.warn('saving %s', record)
 			record.save()
 			record.refresh()
-			logging.warn('       %s', record)
 
 		self.renderJSON(self.assembleDictionary(agreement))
 
