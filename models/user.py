@@ -20,28 +20,28 @@ import logging
 # -------------------------------------------------------------------
 
 class User(MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.email = None
-		self.confirmationCode = None
-		self.confirmationHash = None
-		self.invitedBy = None
-		# self.confirmed = None # @todo: Delete field from schema
-		# self.subscriberStatus = 0 # @todo: Delete field from schema
-		self.firstName = None
-		self.lastName = None
-		self.telephone = None
-		self.password = None
-		self.accessToken = None
-		self.accessTokenSecret = None
-		self.accessTokenExpiration = None
-		self.profileOrigURL = None
-		self.profileSmallURL = None
-		self.profileLargeURL = None
-		self.dateCreated = None
-		self.dateVerified = None
-	
+	tableName = 'user'
+	columns = {
+		'id': None,
+		'email': None,
+		'confirmationCode': None,
+		'confirmationHash': None,
+		'invitedBy': None,
+		# 'confirmed': None, # @todo: Delete field from schema
+		# 'subscriberStatus': 0, # @todo: Delete field from schema
+		'firstName': None,
+		'lastName': None,
+		'telephone': None,
+		'password': None,
+		'accessToken': None,
+		'accessTokenSecret': None,
+		'accessTokenExpiration': None,
+		'profileOrigURL': None,
+		'profileSmallURL': None,
+		'profileLargeURL': None,
+		'dateCreated': None,
+		'dateVerified': None,
+	}
 	@classmethod
 	def tableName(clz):
 		return "user"
@@ -95,58 +95,58 @@ class User(MappedObj):
 			k.key = name
 			k.set_contents_from_string(data, headers)
 			k.make_public()
-		self.profileOrigURL = 'http://media.wurkhappy.com/%s' % name
+		self['profileOrigURL'] = 'http://media.wurkhappy.com/%s' % name
 		self.save()
 	
 	
 	def getProfile(self):
-		return Profile.retrieveByUserID(self.id)
+		return Profile.retrieveByUserID(self['id'])
 	
 	def getFullName(self):
-		return " ".join([str(self.firstName or ""), str(self.lastName or "")]).strip() or self.email
+		return " ".join([str(self['firstName'] or ""), str(self['lastName'] or "")]).strip() or self['email']
 	
 	def setPasswordHash(self, password):
-		self.password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+		self['password'] = bcrypt.hashpw(str(password), bcrypt.gensalt())
 	
 	def passwordIsValid(self, password):
-		if self.password is None:
+		if self['password'] is None:
 			logging.warn(json.dumps({
 				"domain": "model.consistency",
 				"message": "This user is missing a valid 'password' record.",
-				"userID": self.id
+				"userID": self['id']
 			}))
 			return False
-		return self.password == bcrypt.hashpw(str(password), self.password)
+		return self['password'] == bcrypt.hashpw(str(password), self['password'])
 	
 	def setConfirmationHash(self, confirmation):
-		self.confirmationHash = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
+		self['confirmationHash'] = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
 	
 	def confirmationIsValid(self, confirmation):
-		return self.confirmationHash == bcrypt.hashpw(str(confirmation), self.confirmationHash)
+		return self['confirmationHash'] == bcrypt.hashpw(str(confirmation), self['confirmationHash'])
 	
 	def getDefaultPaymentMethod(self):
-		paymentPref = UserPrefs.retrieveByUserIDAndName(self.id, 'preferredPaymentID')
+		paymentPref = UserPrefs.retrieveByUserIDAndName(self['id'], 'preferredPaymentID')
 		
 		if paymentPref:
 			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
 		else:
-			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self.id)
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self['id'])
 			
 			if not paymentMethod:
-				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self.id)
+				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self['id'])
 		
 		return paymentMethod
 	
 	def getCurrentState(self):
 		""" getCurrentState : () -> UserState """
 		
-		dateCreated = self.dateCreated
-		email = self.email
-		invitedBy = self.invitedBy
-		confirmationCode = self.confirmationCode
-		confirmationHash = self.confirmationHash
-		password = self.password
-		dateVerified = self.dateVerified
+		dateCreated = self['dateCreated']
+		email = self['email']
+		invitedBy = self['invitedBy']
+		confirmationCode = self['confirmationCode']
+		confirmationHash = self['confirmationHash']
+		password = self['password']
+		dateVerified = self['dateVerified']
 		
 		states = [
 			(ActiveUserState, password and dateVerified and email),
@@ -163,15 +163,15 @@ class User(MappedObj):
 		
 	def publicDict(self):
 		return {
-			'id': self.id,
+			'id': self['id'],
 			'fullName': self.getFullName(),
-			'email': self.email,
-			'telephone': self.telephone,
+			'email': self['email'],
+			'telephone': self['telephone'],
 			'profileURL': [
-				self.profileSmallURL or '#',
-				self.profileLargeURL or '#'
+				self['profileSmallURL'] or '#',
+				self['profileLargeURL'] or '#'
 			],
-			'dateCreated': self.dateCreated
+			'dateCreated': self['dateCreated']
 		}
 
 
@@ -181,21 +181,18 @@ class User(MappedObj):
 # -------------------------------------------------------------------
 
 class UserPrefs(MappedObj):
-
-	def __init__(self):
-		self.id = None
-		self.userID = None
-		self.name = None
-		self.value = None
-	
-	@classmethod
-	def tableName(clz):
-		return "userPrefs"
+	tableName = 'userPrefs'
+	columns = {
+		'id': None,
+		'userID': None,
+		'name': None,
+		'value': None
+	}
 	
 	@classmethod
 	def iteratorWithUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName(), userID)
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName, userID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -204,14 +201,14 @@ class UserPrefs(MappedObj):
 	@classmethod
 	def retrieveByUserIDAndName(clz, userID, name):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s AND name = %%s" % clz.tableName(), (userID, name))
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s AND name = %%s" % clz.tableName, (userID, name))
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
 	def publicDict(self):
 		return {
-			"name": self.name,
-			"value": self.value
+			"name": self['name'],
+			"value": self['value']
 		}
 
 
@@ -230,7 +227,7 @@ class UserState(object):
 		assert type(user) == User
 		self.user = user
 	
-	def doTransition(self, action, data):
+	def performTransition(self, action, data):
 		""" currentState : string, dict -> UserState """
 		
 		try:
@@ -321,12 +318,12 @@ class PendingUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "confirm":
-			if not self.user.password and 'password' not in data:
+			if not self.user['password'] and 'password' not in data:
 				raise StateTransitionError("missing required password field")
 			else:
 				self.user.setPasswordHash(data['password'])
 			
-			self.user.dateVerified = datetime.now()
+			self.user['dateVerified'] = datetime.now()
 		else:
 			raise StateTransitionError()
 

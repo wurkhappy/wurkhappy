@@ -5,7 +5,6 @@ __all__ = [
 	"authhandlers",
 	"notifications",
 	"payments",
-	"profilehandlers",
 	"requests",
 	"root",
 	"users",

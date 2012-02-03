@@ -6,7 +6,7 @@
 			<h1>Project Name <input type="text" name="name" {% if project and project.name %}value="{{ escape(project.name) }}"{% end %}/></h1>
 		</p>
 		<p>
-			Client ID <input type="text" name="client_id" {% if client %}value="{{ client.id }}"{% end %}/><br />
+			Client ID <input type="text" name="client_id" {% if client %}value="{{ client['id'] }}"{% end %}/><br />
 		</p>
 		<ul>{% for invoice in invoices %}
 			<li><a href="#">{{ invoice.dateCreated }}</a></li>{% end %}

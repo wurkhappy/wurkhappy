@@ -21,7 +21,7 @@ class NotificationHandler(BaseHandler):
 		user = self.current_user
 		
 		with Beanstalk() as bconn:
-			bconn.listen('user:{0}'.format(user.id))
+			bconn.listen('user:{0}'.format(user['id']))
 			bconn.reserve(callback=self.beanstalkDidReserveJob)
 	
 	def beanstalkDidReserveJob(self, msg):

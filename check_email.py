@@ -27,11 +27,11 @@ if __name__ == "__main__":
 		newUsers.extend(User.initWithDict(x) for x in cursor.fetchall())
 		
 		query = "UPDATE %s SET subscriberStatus = 1 WHERE id = %%s" % User.tableName()
-		cursor.executemany(query, [user.id for user in newUsers])
+		cursor.executemany(query, [user['id'] for user in newUsers])
 		conn.commit()
 	
 	if len(newUsers) > 0:
 		subject = "New sign-ups"
-		msgString = "The following people requested more information:\n\n%s" % "\n".join(user.email for user in newUsers)
+		msgString = "The following people requested more information:\n\n%s" % "\n".join(user['email'] for user in newUsers)
 
 		Email.sendmail('contact@wurkhappy.com', 'Subscription Manager', 'contact@wurkhappy.com', subject, msgString)

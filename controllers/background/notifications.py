@@ -68,9 +68,9 @@ class InviteHandler(QueueHandler):
 		if user:
 			logging.info(json.dumps({
 				"message": "Test hook recieved user",
-				"userID": user.id,
+				"userID": user['id'],
 				"userName": user.getFullName(),
-				"userEmail": user.email
+				"userEmail": user['email']
 			}))
 		else:
 			raise Exception("No such user")
@@ -88,15 +88,15 @@ class AgreementInviteHandler(QueueHandler):
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		if agreement.tokenFingerprint:
+		if agreement['tokenFingerprint']:
 			raise Exception("We already did this agreement")
 		
 		verify = Verification()
 		
-		agreement.tokenFingerprint = hashlib.md5(verify.hashDigest).hexdigest()
+		agreement['tokenFingerprint'] = hashlib.md5(verify.hashDigest).hexdigest()
 		agreement.setTokenHash(verify.hashDigest)
 		
-		vendor = User.retrieveByID(agreement.vendorID)
+		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
 			'client': client.publicDict(),
@@ -104,7 +104,7 @@ class AgreementInviteHandler(QueueHandler):
 			'agreement': agreement.publicDict()
 		}
 		
-		data['agreement']['phases'] = [p for p in AgreementPhase.iteratorWithAgreementID(agreement.id)]
+		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		data['agreement']['token'] = verify.hashDigest
 		
 		t = self.loader.load('agreement_new_user.html')
@@ -116,8 +116,8 @@ class AgreementInviteHandler(QueueHandler):
 		
 		with Email() as (server):
 			senderName = "Wurk Happy Community"
-			# @todo: Replace this line with "recipientAddress = client.email" for production deployment
-			recipientAddress = client.email if client.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+			# @todo: Replace this line with "recipientAddress = client['email']" for production deployment
+			recipientAddress = client['email'] if client['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 			
 			# Create message container - the correct MIME type is multipart/alternative.
 			msg = MIMEMultipart('alternative')
@@ -147,9 +147,9 @@ class AgreementInviteHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client.id,
-			"clientEmail": client.email,
-			"agreementID": agreement.id
+			"clientID": client['id'],
+			"clientEmail": client['email'],
+			"agreementID": agreement['id']
 		}))
 
 
@@ -165,7 +165,7 @@ class AgreementSentHandler(QueueHandler):
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		vendor = User.retrieveByID(agreement.vendorID)
+		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
 			'client': client.publicDict(),
@@ -173,7 +173,7 @@ class AgreementSentHandler(QueueHandler):
 			'agreement': agreement.publicDict()
 		}
 		
-		data['agreement']['phases'] = [p for p in AgreementPhase.iteratorWithAgreementID(agreement.id)]
+		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		
 		t = self.loader.load('agreement_send.html')
 		htmlString = t.generate(data=data)
@@ -183,11 +183,11 @@ class AgreementSentHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = client.email if client.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = client['email'] if client['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(vendor.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client.email),
+			# 'to': (client.getFullName(), client['email']),
 			'to': (client.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -197,13 +197,13 @@ class AgreementSentHandler(QueueHandler):
 		})
 		
 		agreement.save()
-		agreement.refresh()
+		#agreement.refresh()
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client.id,
-			"clientEmail": client.email,
-			"agreementID": agreement.id
+			"clientID": client['id'],
+			"clientEmail": client['email'],
+			"agreementID": agreement['id']
 		}))
 
 
@@ -219,7 +219,7 @@ class AgreementAcceptedHandler(QueueHandler):
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		client = User.retrieveByID(agreement.clientID)
+		client = User.retrieveByID(agreement['clientID'])
 		
 		data = {
 			'client': client.publicDict(),
@@ -235,11 +235,11 @@ class AgreementAcceptedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = vendor.email if vendor.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client.email),
+			# 'to': (client.getFullName(), client['email']),
 			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -250,9 +250,9 @@ class AgreementAcceptedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"vendorID": vendor.id,
-			"vendorEmail": vendor.email,
-			"agreementID": agreement.id
+			"vendorID": vendor['id'],
+			"vendorEmail": vendor['email'],
+			"agreementID": agreement['id']
 		}))
 
 
@@ -268,7 +268,7 @@ class AgreementDeclinedHandler(QueueHandler):
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		client = User.retrieveByID(agreement.clientID)
+		client = User.retrieveByID(agreement['clientID'])
 		
 		data = {
 			'client': client.publicDict(),
@@ -284,11 +284,11 @@ class AgreementDeclinedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = vendor.email if vendor.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (vendor.getFullName(), vendor.email),
+			# 'to': (vendor.getFullName(), vendor['email']),
 			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -299,9 +299,9 @@ class AgreementDeclinedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"vendorID": vendor.id,
-			"vendorEmail": vendor.email,
-			"agreementID": agreement.id
+			"vendorID": vendor['id'],
+			"vendorEmail": vendor['email'],
+			"agreementID": agreement['id']
 		}))
 
 
@@ -319,7 +319,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 			raise Exception("No such agreement")
 		
 		phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
-		vendor = User.retrieveByID(agreement.vendorID)
+		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
 			'client': client.publicDict(),
@@ -336,11 +336,11 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = client.email if client.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = client['email'] if client['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(vendor.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client.email),
+			# 'to': (client.getFullName(), client['email']),
 			'to': (client.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -351,9 +351,9 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client.id,
-			"clientEmail": client.email,
-			"agreementID": agreement.id
+			"clientID": client['id'],
+			"clientEmail": client['email'],
+			"agreementID": agreement['id']
 		}))
 
 
@@ -370,10 +370,10 @@ class AgreementPaidHandler(QueueHandler):
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		client = User.retrieveByID(agreement.clientID)
+		client = User.retrieveByID(agreement['clientID'])
 		transaction = Transaction.retrieveByID(body['transactionID'])
-		phase = AgreementPhase.retrieveByID(transaction.agreementPhaseID)
-		paymentMethod = PaymentMethod.retrieveByID(transaction.paymentMethodID)
+		phase = AgreementPhase.retrieveByID(transaction['agreementPhaseID'])
+		paymentMethod = PaymentMethod.retrieveByID(transaction['paymentMethodID'])
 		
 		data = {
 			'client': client.publicDict(),
@@ -391,11 +391,11 @@ class AgreementPaidHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = vendor.email if vendor.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (vendor.getFullName(), vendor.email),
+			# 'to': (vendor.getFullName(), vendor['email']),
 			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -406,9 +406,9 @@ class AgreementPaidHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"vendorID": vendor.id,
-			"vendorEmail": vendor.email,
-			"agreementID": agreement.id
+			"vendorID": vendor['id'],
+			"vendorEmail": vendor['email'],
+			"agreementID": agreement['id']
 		}))
 
 
@@ -424,7 +424,7 @@ class AgreementDisputedHandler(QueueHandler):
 		if not agreement:
 			raise Exception("No such agreement")
 		
-		client = User.retrieveByID(agreement.clientID)
+		client = User.retrieveByID(agreement['clientID'])
 		phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
 		
 		data = {
@@ -442,11 +442,11 @@ class AgreementDisputedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
 		
-		recipientAddress = vendor.email if vendor.email.endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
 		
 		self.sendEmail({
 			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (vendor.getFullName(), vendor.email),
+			# 'to': (vendor.getFullName(), vendor['email']),
 			'to': (vendor.getFullName(), recipientAddress),
 			'subject': subject,
 			'multipart': [
@@ -457,7 +457,7 @@ class AgreementDisputedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"vendorID": vendor.id,
-			"vendorEmail": vendor.email,
-			"agreementID": agreement.id
+			"vendorID": vendor['id'],
+			"vendorEmail": vendor['email'],
+			"agreementID": agreement['id']
 		}))

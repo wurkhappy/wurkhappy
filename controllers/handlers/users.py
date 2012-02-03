@@ -39,8 +39,8 @@ class ContactsJSONHandler(Authenticated, BaseHandler):
 		if len(query) < 2:
 			contacts = []
 		else:
-			iterator = User.iteratorWithContactsForID(user.id)
-			condition = lambda x: x.getFullName().lower().find(query) > -1 or x.email.lower().find(query) > -1
+			iterator = User.iteratorWithContactsForID(user['id'])
+			condition = lambda x: x.getFullName().lower().find(query) > -1 or x['email'].lower().find(query) > -1
 			
 			contacts = [user.publicDict() for user in iterator if condition(user)]
 		
@@ -65,10 +65,10 @@ class PreferencesHandler(Authenticated, BaseHandler):
 			"refund_template": ""
 		}
 		
-		for pref in UserPrefs.iteratorWithUserID(user.id):
-			prefs[pref.name] = pref.value
+		for pref in UserPrefs.iteratorWithUserID(user['id']):
+			prefs[pref['name']] = pref['value']
 		
-		self.render('user/preferences.html', title="My Preferences &ndash; Wurk Happy", bag=prefs, user_id=user.id)
+		self.render('user/preferences.html', title="My Preferences &ndash; Wurk Happy", bag=prefs, user_id=user['id'])
 	
 class PreferencesJSONHandler(Authenticated, BaseHandler):
 	@web.authenticated
@@ -78,8 +78,8 @@ class PreferencesJSONHandler(Authenticated, BaseHandler):
 		userDict = user.publicDict()
 		userDict['prefs'] = {}
 		
-		for pref in UserPrefs.iteratorWithUserID(user.id):
-			userDict['prefs'][pref.name] = pref.value
+		for pref in UserPrefs.iteratorWithUserID(user['id']):
+			userDict['prefs'][pref['name']] = pref['value']
 		
 		self.set_header("Content-Type", "application/json")
 		self.renderJSON(userDict)
@@ -88,18 +88,21 @@ class PreferencesJSONHandler(Authenticated, BaseHandler):
 	def post(self, userID):
 		user = self.current_user
 		
+		prefs = []
+		
 		for arg, value in self.request.arguments.iteritems():
 			if arg.startswith('_'):
 				continue
 			
-			userPref = UserPrefs.retrieveByUserIDAndName(user.id, arg)
+			userPref = UserPrefs.retrieveByUserIDAndName(user['id'], arg)
 			
 			if not userPref:
 				userPref = UserPrefs()
-				userPref.userID = user.id
-				userPref.name = arg
+				userPref['userID'] = user['id']
+				userPref['name'] = arg
 			
-			userPref.value = value[0]
+			userPref['value'] = value[0]
 			userPref.save()
+			prefs.append(userPref)
 		
-		self.write(json.dumps({"success": True}))
+		self.renderJSON(prefs) # write(json.dumps({"success": True}))

@@ -39,25 +39,25 @@ class AccountHandler(Authenticated, BaseHandler):
 		
 		userDict = {
 			'_xsrf': self.xsrf_token,
-			'id': user.id,
-			'firstName': user.firstName,
-			'lastName': user.lastName,
+			'id': user['id'],
+			'firstName': user['firstName'],
+			'lastName': user['lastName'],
 			'fullName': user.getFullName(),
-			'email': user.email,
-			'telephone': user.telephone or '',
+			'email': user['email'],
+			'telephone': user['telephone'] or '',
 			'profileURL': [
-				user.profileSmallURL or '#',
-				user.profileLargeURL or '#'
+				user['profileSmallURL'] or '#',
+				user['profileLargeURL'] or '#'
 			],
 			'self': 'account'
 		}
 		
-		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
 		
 		if paymentMethod:
 			userDict['storedBank'] = paymentMethod.publicDict()
 		
-		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
 		
 		if paymentMethod:
 			userDict['storedCard'] = paymentMethod.publicDict()
@@ -133,10 +133,14 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		# 	'debug': "'email' parameter value must be well-formed"
 		# }
 		
-		user.email = args['email'] or user.email
-		user.firstName = args['firstName'] or user.firstName
-		user.lastName = args['lastName'] or user.lastName
-		user.telephone = args['telephone'] or user.telephone
+		if args['email']:
+			user.email = args['email']
+		if args['firstName']:
+			user.firstName = args['firstName']
+		if args['lastName']:
+			user.lastName = args['lastName']
+		if args['telephone']:
+			user.telephone = args['telephone']
 		
 		# @todo: This needs refactoring
 		if 'profilePhoto' in self.request.files:
@@ -189,7 +193,7 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 					k.set_contents_from_string(imgData.getvalue(), headers)
 					k.make_public()
 					
-					user.__dict__[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
+					user[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
 		
 		user.save()
 		logging.warn(user.publicDict())
@@ -274,7 +278,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 		paymentMethod = None
 		
 		if args['routingNumber'] and args['accountNumber']:
-			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
 		
 			# @todo: this is hackety until we actually verify this info through
 			# a payment gateway
@@ -284,20 +288,20 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 		
 			if paymentMethod:
 				# Mark any existing payment method unused
-				paymentMethod.dateDeleted = datetime.now()
+				paymentMethod['dateDeleted'] = datetime.now()
 				paymentMethod.save()
 		
 			paymentMethod = PaymentMethod.initWithDict(dict(
-				userID=user.id,
+				userID=user['id'],
 				display=accountDisplay,
 				abaDisplay=abaDisplay
 			))
 		elif args['cardNumber'] and args['verification']:
-			paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+			paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
 		
 			if paymentMethod:
 				# Mark any existing payment method unused
-				paymentMethod.dateDeleted = datetime.now()
+				paymentMethod['dateDeleted'] = datetime.now()
 				paymentMethod.save()
 		
 			# @todo: this is hackety until we actually verify this info through
@@ -323,7 +327,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 		
 		
 			paymentMethod = PaymentMethod.initWithDict(dict(
-				userID=user.id,
+				userID=user['id'],
 				display=displayString,
 				cardExpires=cardExpiration
 			))
@@ -339,11 +343,10 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 			return
 		
 		paymentMethod.save()
-		paymentMethod.refresh()
 		
 		result = paymentMethod.publicDict()
 		locationStr = 'http://%s/user/me/paymentmethod/%d.json' % (
-			self.request.host, paymentMethod.id
+			self.request.host, paymentMethod['id']
 		)
 		
 		self.set_status(201)
@@ -364,7 +367,7 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 		user = self.current_user
 		paymentMethod = PaymentMethod.retrieveByID(paymentMethodID)
 		
-		if paymentMethod.userID != user.id:
+		if paymentMethod['userID'] != user['id']:
 			# The user is not authorized to see it
 			error = {
 				"domain": "application.resource.not_found",
@@ -392,7 +395,7 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 			self.set_status(400)
 			self.renderJSON(error)
 		
-		paymentMethod.dateDeleted = datetime.now()
+		paymentMethod['dateDeleted'] = datetime.now()
 		paymentMethod.save()
 		
 		self.renderJSON([True])

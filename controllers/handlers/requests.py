@@ -13,10 +13,10 @@ class RequestBase(BaseHandler):
 	def assembleDictionary(self, request):
 		requestDict = request.publicDict()
 
-		client = User.retrieveByID(request.clientID)
+		client = User.retrieveByID(request['clientID'])
 		requestDict["client"] = client.publicDict()
 
-		vendor = User.retrieveByID(request.vendorID)
+		vendor = User.retrieveByID(request['vendorID'])
 		requestDict['vendor'] = vendor.publicDict()
 
 		del(requestDict['clientID'])
@@ -70,7 +70,7 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 		if args['vendorID']:
 			vendor = User.retrieveByID(args['vendorID'])
 
-			if vendor and vendor.id == user.id:
+			if vendor and vendor['id'] == user['id']:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't request estimates from yourself. Please choose a different vendor.",
@@ -92,7 +92,7 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 		elif args['email']:
 			vendor = User.retrieveByEmail(args['email'])
 
-			if vendor and vendor.id == user.id:
+			if vendor and vendor['id'] == user['id']:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't request estimates from yourself. Please choose a different vendor.",
@@ -107,13 +107,12 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 				vendor = User.initWithDict(
 					dict(
 						email=args['email'],
-						invitedBy=user.id,
+						invitedBy=user['id'],
 						profileSmallURL=profileURL
 					)
 				)
 
 				vendor.save()
-				vendor.refresh()
 		else:
 			error = {
 				"domain": "web.request",
@@ -130,13 +129,12 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 			return
 
 		request = Request.initWithDict(dict(
-			clientID=user.id,
-			vendorID=vendor.id,
+			clientID=user['id'],
+			vendorID=vendor['id'],
 			message=args['message']
 		))
 
 		request.save()
-		request.refresh()
 
 		self.set_status(201)
 		self.renderJSON(self.assembleDictionary(request))

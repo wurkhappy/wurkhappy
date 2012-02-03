@@ -5,13 +5,13 @@ from controllers.orm import *
 # -------------------------------------------------------------------
 
 class ForgotPassword(MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.userID = None
-		self.code = None
-		self.validUntil = None
-		self.active = 0
+	columns = {
+		'id': None,
+		'userID': None,
+		'code': None,
+		'validUntil': None,
+		'active': 0
+	}
 	
 	@classmethod
 	def tableName(clz):

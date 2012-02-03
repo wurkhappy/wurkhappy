@@ -2,24 +2,20 @@ from collections import OrderedDict
 from controllers.orm import Database, MappedObj
 
 class Request(MappedObj):
-	table_name = "request"
-	
-	def __init__(self):
-		self.id = None
-		self.clientID = None
-		self.vendorID = None
-		self.dateCreated = None
-		self.message = None
-	
-	@classmethod
-	def tableName(clz):
-		return clz.table_name
+	tableName = 'request'
+	columns = {
+		'id': None,
+		'clientID': None,
+		'vendorID': None,
+		'dateCreated': None,
+		'message': None
+	}
 	
 	@classmethod
 	def iteratorWithClientIDAndVendorID(clz, clientID, vendorID):
 		with Database() as (conn, cursor):
 			query = "SELECT * FROM %s WHERE clientID = %%s AND vendorID = %%s"
-			cursor.execute(query % clz.table_name, clientID, vendorID)
+			cursor.execute(query % clz.tableName, clientID, vendorID)
 			result = cursor.fetchone()
 			
 			while result:
@@ -28,9 +24,9 @@ class Request(MappedObj):
 	
 	def publicDict(self):
 		return OrderedDict([
-			('id', self.id),
-			('clientID', self.clientID),
-			('vendorID', self.vendorID),
-			('dateCreated', self.dateCreated),
-			('message', self.message)
+			('id', self['id']),
+			('clientID', self['clientID']),
+			('vendorID', self['vendorID']),
+			('dateCreated', self['dateCreated']),
+			('message', self['message'])
 		])
