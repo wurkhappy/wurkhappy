@@ -5,6 +5,7 @@ from controllers.orm import *
 # -------------------------------------------------------------------
 
 class ForgotPassword(MappedObj):
+	tableName = 'forgotPassword'
 	columns = {
 		'id': None,
 		'userID': None,
@@ -14,13 +15,9 @@ class ForgotPassword(MappedObj):
 	}
 	
 	@classmethod
-	def tableName(clz):
-		return "forgot_password"
-	
-	@classmethod
 	def retrieveByUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s LIMIT 1" % clz.tableName(), userID)
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s LIMIT 1" % clz.tableName, userID)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -28,7 +25,7 @@ class ForgotPassword(MappedObj):
 	@classmethod
 	def retrieveByCode(clz, code):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE code = %%s LIMIT 1" % clz.tableName(), code)
+			cursor.execute("SELECT * FROM %s WHERE code = %%s LIMIT 1" % clz.tableName, code)
 			result = cursor.fetchone()
 
 		return clz.initWithDict(result)

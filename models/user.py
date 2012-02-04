@@ -42,14 +42,11 @@ class User(MappedObj):
 		'dateCreated': None,
 		'dateVerified': None,
 	}
-	@classmethod
-	def tableName(clz):
-		return "user"
 	
 	@classmethod
 	def retrieveByEmail(clz, email):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE email = %%s LIMIT 1" % clz.tableName(), email)
+			cursor.execute("SELECT * FROM %s WHERE email = %%s LIMIT 1" % clz.tableName, email)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -57,7 +54,7 @@ class User(MappedObj):
 	@classmethod
 	def retrieveByAccessToken(clz, token):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE accessToken = %%s LIMIT 1" % clz.tableName(), token)
+			cursor.execute("SELECT * FROM %s WHERE accessToken = %%s LIMIT 1" % clz.tableName, token)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -65,7 +62,7 @@ class User(MappedObj):
 	@classmethod
 	def retrieveByUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName(), userID)
+			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName, userID)
 			result = cursor.fetchone()
 
 		return clz.initWithDict(result)
@@ -73,11 +70,11 @@ class User(MappedObj):
 	@classmethod
 	def iteratorWithContactsForID(clz, userID):
 		with Database() as (conn, cursor):
-			query = """SELECT %s.* FROM %s 
+			query = """SELECT {0}.* FROM {0}
 				LEFT JOIN agreement AS a ON user.id = a.clientID
 				LEFT JOIN agreement AS b ON user.id = b.vendorID
-				WHERE b.clientID = %%s OR a.vendorID = %%s
-				GROUP BY user.id""" % (clz.tableName(), clz.tableName())
+				WHERE b.clientID = %s OR a.vendorID = %s
+				GROUP BY user.id""".format(clz.tableName)
 			
 			cursor.execute(query, (userID, userID))
 			result = cursor.fetchone()
@@ -168,8 +165,8 @@ class User(MappedObj):
 			'email': self['email'],
 			'telephone': self['telephone'],
 			'profileURL': [
-				self['profileSmallURL'] or '#',
-				self['profileLargeURL'] or '#'
+				self['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
+				self['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
 			],
 			'dateCreated': self['dateCreated']
 		}
@@ -250,13 +247,13 @@ class UserState(object):
 	def currentState(clz, user):
 		""" currentState : User -> UserState """
 		
-		dateCreated = user.dateCreated
-		email = user.email
-		invitedBy = user.invitedBy
-		confirmationCode = user.confirmationCode
-		confirmationHash = user.confirmationHash
-		password = user.password
-		dateVerified = user.dateVerified
+		dateCreated = user['dateCreated']
+		email = user['email']
+		invitedBy = user['invitedBy']
+		confirmationCode = user['confirmationCode']
+		confirmationHash = user['confirmationHash']
+		password = user['password']
+		dateVerified = user['dateVerified']
 		
 		states = [
 			(ActiveUserState, password and dateVerified and email),

@@ -69,7 +69,7 @@ class MappedObj(object):
 		
 		instance = clz()
 		for key, value in dictionary.iteritems():
-			instance[key] = value
+			instance.fields[key] = value
 		return instance
 	
 	@classmethod
@@ -81,8 +81,9 @@ class MappedObj(object):
 		return clz.initWithDict(result)
 	
 	def __init__(self):
+		self.fields = {}
 		for name, value in self.columns.iteritems():
-			self[name] = value
+			self.fields[name] = value
 		self.dirty = []
 	
 	def __getitem__(self, name):
@@ -114,8 +115,8 @@ class MappedObj(object):
 				keys.append(k)
 				values.append(self[k])
 			
-			if self.id:
-				values += [self.id]
+			if self['id']:
+				values += [self['id']]
 				
 				atom = "%s = %%s"
 				setClause = ", ".join([atom] * len(keys))
@@ -133,7 +134,7 @@ class MappedObj(object):
 				
 				insertStatement = "INSERT INTO %s (%s) VALUES (%s)" % (self.tableName, keyClause, valueClause)
 				cursor.execute(insertStatement, tuple(values))
-				self.id = cursor.lastrowid
+				self['id'] = cursor.lastrowid
 				
 				conn.commit()
 		self.refresh()
@@ -141,7 +142,7 @@ class MappedObj(object):
 	def refresh(self):
 		with Database() as (conn, cursor):
 			refreshStatement = "SELECT * FROM %s WHERE id = %%s LIMIT 1" % self.tableName
-			cursor.execute(refreshStatement, self.id)
+			cursor.execute(refreshStatement, self['id'])
 			result = cursor.fetchone()
 			
 			for key, value in result.iteritems():

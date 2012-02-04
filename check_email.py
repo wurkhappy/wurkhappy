@@ -21,12 +21,12 @@ if __name__ == "__main__":
 	newUsers = []
 	
 	with Database() as (conn, cursor):
-		query = "SELECT * FROM %s WHERE subscriberStatus = 0" % User.tableName()
+		query = "SELECT * FROM %s WHERE subscriberStatus = 0" % User.tableName
 		cursor.execute(query)
 		
 		newUsers.extend(User.initWithDict(x) for x in cursor.fetchall())
 		
-		query = "UPDATE %s SET subscriberStatus = 1 WHERE id = %%s" % User.tableName()
+		query = "UPDATE %s SET subscriberStatus = 1 WHERE id = %%s" % User.tableName
 		cursor.executemany(query, [user['id'] for user in newUsers])
 		conn.commit()
 	

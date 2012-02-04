@@ -46,8 +46,8 @@ class AccountHandler(Authenticated, BaseHandler):
 			'email': user['email'],
 			'telephone': user['telephone'] or '',
 			'profileURL': [
-				user['profileSmallURL'] or '#',
-				user['profileLargeURL'] or '#'
+				user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
+				user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
 			],
 			'self': 'account'
 		}
@@ -291,11 +291,11 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 				paymentMethod['dateDeleted'] = datetime.now()
 				paymentMethod.save()
 		
-			paymentMethod = PaymentMethod.initWithDict(dict(
-				userID=user['id'],
-				display=accountDisplay,
-				abaDisplay=abaDisplay
-			))
+			paymentMethod = PaymentMethod()
+			paymentMethod['userID'] = user['id']
+			paymentMethod['display'] = accountDisplay
+			paymentMethod['abaDisplay'] = abaDisplay
+		
 		elif args['cardNumber'] and args['verification']:
 			paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
 		
@@ -326,11 +326,11 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 			][args['expirationMonth'] - 1], args['expirationYear'])
 		
 		
-			paymentMethod = PaymentMethod.initWithDict(dict(
-				userID=user['id'],
-				display=displayString,
-				cardExpires=cardExpiration
-			))
+			paymentMethod = PaymentMethod()
+			paymentMethod['userID'] = user['id']
+			paymentMethod['display'] = displayString
+			paymentMethod['cardExpires'] = cardExpiration
+		
 		else:
 			# @todo: Handle this error. there were not proper args
 			error = {

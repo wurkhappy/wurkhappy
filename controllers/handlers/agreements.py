@@ -88,7 +88,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				"other_name": usr and usr.getFullName(),
 				"date": agr['dateCreated'].strftime('%B %d, %Y'),
 				"amount": agr.getCostString(),
-				"profileURL": usr and (usr['profileSmallURL'] or '#'), # Default profile photo? Set during signup?
+				"profileURL": usr and (usr['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'), # Default profile photo? Set during signup?
 				# "state": agr.getCurrentState(),
 			})
 
@@ -350,7 +350,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"dateContested": phase['dateContested']
 			}
 
-			if phase.comments:
+			if phase['comments']:
 				phaseDict["comments"] = phase['comments']
 
 			if currentPhase and phase['id'] == currentPhase['id']:
@@ -417,7 +417,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
 
-		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name)
+		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
 		
 		if agreement['vendorID'] == user['id'] and templateDict['state'] in ['DraftState', 'DeclinedState']:
 			templateDict['uri'] = self.request.uri
@@ -439,8 +439,9 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 		logging.warn(self.request.arguments)
 
-		agreement = Agreement.initWithDict(dict(vendorID=user['id']))
-
+		agreement = Agreement()
+		agreement['vendorID'] = user['id']
+		
 		agreementText = None
 
 		try:
@@ -462,7 +463,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write(e.body_content)
 			return
 
-		agreement.name = args['title']
+		agreement['name'] = args['title']
 
 		if args['clientID']:
 			client = User.retrieveByID(args['clientID'])
@@ -501,19 +502,17 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 			if not client:
 				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
-				client = User.initWithDict(
-					dict(
-						email=args['email'],
-						invitedBy=user['id'],
-						profileSmallURL=profileURL
-					)
-				)
-
+				client = User()
+				client['email'] = args['email']
+				client['invitedBy'] = user['id']
+				client['profileSmallURL'] = profileURL
+				
 				client.save()
 		else:
 			client = None
 
 		agreement['clientID'] = client and client['id']
+		logging.warn(agreement)
 		agreement.save()
 
 		if action == "send":
@@ -558,7 +557,8 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			agreement['dateSent'] = datetime.now()
 			agreement.save()
 
-		summary = AgreementSummary.initWithDict(dict(agreementID=agreement['id']))
+		summary = AgreementSummary()
+		summary['agreementID'] = agreement['id']
 		summary['summary'] = args['summary']
 
 		summary.save()
@@ -571,7 +571,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			phase['description'] = descr
 			phase['estDateCompleted'] = date
 			phase.save()
-
+		logging.warn(agreement)
 		self.set_status(201)
 		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement['id']) + '.json')
 		self.renderJSON(self.assembleDictionary(agreement))
@@ -732,14 +732,10 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 					if not client:
 						profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
-						client = User.initWithDict(
-							dict(
-								email=args['email'],
-								invitedBy=user['id'],
-								profileSmallURL=profileURL
-							)
-						)
-
+						client = User()
+						client['email'] = args['email']
+						client['invitedBy'] = user['id']
+						client['profileSmallURL'] = profileURL
 						client.save()
 					agreement['clientID'] = client['id']
 
@@ -767,10 +763,9 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				summary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 				if not summary:
-					summary = AgreementSummary.initWithDict(
-						dict(agreementID=agreement['id'])
-					)
-
+					summary = AgreementSummary()
+					summary['agreementID'] = agreement['id']
+				
 				summary['summary'] = args['summary'] or summary['summary']
 
 				# @todo: Defer phase saves until state transition is complete
@@ -778,20 +773,20 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement['id'], num)
 
 					if not phase:
-						phase = AgreementPhase.initWithDict(
-							dict(agreementID=agreement['id'], phaseNumber=num)
-						)
-
+						phase = AgreementPhase()
+						phase['agreementID'] = agreement['id']
+						phase['phaseNumber'] = num
+					
 					if cost:
 						phase['amount'] = cost
-
+					
 					if descr:
 						phase['description'] = descr
-
+					
 					if date:
 						phase['estDateCompleted'] = date
 					phase.save()
-
+				
 				summary.save()
 		
 		# Clients can accept or decline an estimate, in which case the comment
@@ -818,10 +813,9 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				agreementSummary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 				if not agreementSummary:
-					agreementSummary = AgreementSummary.initWithDict(
-						dict(agreementID=agreement['id'])
-					)
-
+					agreementSummary = AgreementSummary()
+					agreementSummary['agreementID'] = agreement['id']
+				
 				agreementSummary['comments'] = args['summaryComments']
 				agreementSummary.save()
 				

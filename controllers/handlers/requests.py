@@ -104,14 +104,11 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 
 			if not vendor:
 				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
-				vendor = User.initWithDict(
-					dict(
-						email=args['email'],
-						invitedBy=user['id'],
-						profileSmallURL=profileURL
-					)
-				)
-
+				vendor = User()
+				vendor['email'] = args['email']
+				vendor['invitedBy'] = user['id']
+				vendor['profileSmallURL'] = profileURL
+				
 				vendor.save()
 		else:
 			error = {
@@ -128,14 +125,13 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 			self.renderJSON(error)
 			return
 
-		request = Request.initWithDict(dict(
-			clientID=user['id'],
-			vendorID=vendor['id'],
-			message=args['message']
-		))
-
+		request = Request()
+		request['clientID'] = user['id']
+		request['vendorID'] = vendor['id']
+		request['message'] = args['message']
+		
 		request.save()
-
+		
 		self.set_status(201)
 		self.renderJSON(self.assembleDictionary(request))
 		return

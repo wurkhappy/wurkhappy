@@ -45,7 +45,7 @@ class SignupHandler(BaseHandler):
 		if not user:
 			user = User()
 			user['email'] = email
-			user['confirmed'] = 0
+			# user['confirmed'] = 0
 			# user.invited = 0
 			user['dateCreated'] = datetime.now()
 			verifier = Verification()
@@ -93,7 +93,7 @@ class SignupJSONHandler(BaseHandler):
 		if not user:
 			user = User()
 			user['email'] = email
-			user['confirmed'] = 0
+			# user['confirmed'] = 0
 			# user.invited = 0
 			user['dateCreated'] = datetime.now()
 			verifier = Verification()

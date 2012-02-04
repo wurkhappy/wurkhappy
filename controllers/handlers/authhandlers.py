@@ -65,7 +65,7 @@ class SignupHandler(BaseHandler):
 		if not user:
 			user = User()
 			user['email'] = args['email']
-			user['confirmed'] = 0
+			# user['confirmed'] = 0
 			user['dateCreated'] = datetime.now()
 			verifier = Verification()
 			user['confirmationCode'] = verifier.code

@@ -119,13 +119,12 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 			return
 		
-		transaction = Transaction.initWithDict(dict(
-			agreementPhaseID=phase['id'],
-			senderID=user['id'],
-			recipientID=agreement['vendorID'],
-			paymentMethodID=paymentMethod['id'],
-			amount=phase['amount']
-		))
+		transaction = Transaction()
+		transaction['agreementPhaseID'] = phase['id']
+		transaction['senderID'] = user['id']
+		transaction['recipientID'] = agreement['vendorID']
+		transaction['paymentMethodID'] = paymentMethod['id']
+		transaction['amount'] = phase['amount']
 		
 		transaction.save()
 		
