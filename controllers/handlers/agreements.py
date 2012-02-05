@@ -24,10 +24,10 @@ class AgreementBase(object):
 
 		agreementDict = agreement.publicDict()
 
-		client = User.retrieveByID(agreement.clientID) if agreement.clientID else None
-		agreementDict["client"] = client and client.publicDict()
+		client = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
+		agreementDict['client'] = client and client.publicDict()
 
-		vendor = User.retrieveByID(agreement.vendorID)
+		vendor = User.retrieveByID(agreement['vendorID'])
 		agreementDict['vendor'] = vendor.publicDict()
 
 		del(agreementDict['clientID'])
@@ -35,7 +35,7 @@ class AgreementBase(object):
 
 		agreementDict['phases'] = []
 
-		for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
+		for phase in AgreementPhase.iteratorWithAgreementID(agreement['id']):
 			agreementDict['phases'].append(phase.publicDict())
 
 		return agreementDict
@@ -54,20 +54,20 @@ class AgreementListHandler(Authenticated, BaseHandler):
 
 		templateDict = {
 			"_xsrf": self.xsrf_token,
-			"userID": user.id
+			"userID": user['id']
 		}
 
 		if withWhom.lower() == 'clients':
 			agreementType = 'Client'
-			agreements = Agreement.iteratorWithVendorID(user.id)
-			templateDict['agreementCount'] = Agreement.countWithVendorID(user.id)
-			templateDict['aggregateCost'] = Agreement.costStringWithVendorID(user.id)
+			agreements = Agreement.iteratorWithVendorID(user['id'])
+			templateDict['agreementCount'] = Agreement.countWithVendorID(user['id'])
+			templateDict['aggregateCost'] = Agreement.costStringWithVendorID(user['id'])
 			templateDict['self'] = 'vendor'
 		elif withWhom.lower() == 'vendors':
 			agreementType = 'Vendor'
-			agreements = Agreement.iteratorWithClientID(user.id)
-			templateDict['agreementCount']  = Agreement.countWithClientID(user.id)
-			templateDict['aggregateCost']  = Agreement.costStringWithClientID(user.id)
+			agreements = Agreement.iteratorWithClientID(user['id'])
+			templateDict['agreementCount']  = Agreement.countWithClientID(user['id'])
+			templateDict['aggregateCost']  = Agreement.costStringWithClientID(user['id'])
 			templateDict['self'] = 'client'
 		else:
 			self.set_status(403)
@@ -82,13 +82,13 @@ class AgreementListHandler(Authenticated, BaseHandler):
 
 		def appendAgreement(lst, agr, usr):
 			lst.append({
-				"id": agr.id,
-				"name": agr.name,
-				"other_id": usr and usr.id,
+				"id": agr['id'],
+				"name": agr['name'],
+				"other_id": usr and usr['id'],
 				"other_name": usr and usr.getFullName(),
-				"date": agr.dateCreated.strftime('%B %d, %Y'),
+				"date": agr['dateCreated'].strftime('%B %d, %Y'),
 				"amount": agr.getCostString(),
-				"profileURL": usr and (usr.profileSmallURL or '#'), # Default profile photo? Set during signup?
+				"profileURL": usr and (usr['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'), # Default profile photo? Set during signup?
 				# "state": agr.getCurrentState(),
 			})
 
@@ -97,11 +97,11 @@ class AgreementListHandler(Authenticated, BaseHandler):
 
 			if stateClass == 'InvalidState':
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
-						agreement.id, agreement.vendorID, agreement.clientID
+						agreement['id'], agreement['vendorID'], agreement['clientID']
 					)
 				)
 			if agreementType == 'Client':
-				other = User.retrieveByID(agreement.clientID) if agreement.clientID else None
+				other = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
 
 				if stateClass in [DraftState, DeclinedState, ContestedState]:
 					appendAgreement(actionItems, agreement, other)
@@ -112,7 +112,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				elif stateClass in [PaidState]:
 					templateDict['agreementCount'] -= 1
 			else:
-				other = User.retrieveByID(agreement.vendorID)
+				other = User.retrieveByID(agreement['vendorID'])
 
 				if stateClass in [EstimateState, CompletedState]:
 					appendAgreement(actionItems, agreement, other)
@@ -142,12 +142,12 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 	buttonTable = {
 		'vendor': defaultdict(lambda: [], {
 			DraftState: [
-				('action-save', 'Save Draft'),
-				('action-send', 'Send Estimate')
+				('action-save', 'Save as Draft'),
+				('action-send', 'Send Agreement')
 			],
 			DeclinedState: [
 				('action-save', 'Save Changes'),
-				('action-resend', 'Save and Re-submit')
+				('action-resend', 'Re-send Agreement')
 			],
 			InProgressState: [
 				('action-markcomplete', 'Mark Phase Complete')
@@ -158,7 +158,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		}),
 		'client': defaultdict(lambda: [], {
 			EstimateState: [
-				('action-accept', 'Accept Estimate'),
+				('action-accept', 'Accept Agreement'),
 				('action-decline', 'Request Changes')
 			],
 			CompletedState: [
@@ -197,7 +197,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				self.redirect(url)
 				return
 			
-			user = User.retrieveByID(agreement.clientID)
+			user = User.retrieveByID(agreement['clientID'])
 		
 		if not agreementID:
 			# Must have been routed from /agreement/new
@@ -216,7 +216,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"state": 'DraftState',
 				"actions": [
 					('action-save', 'Save as Draft'),
-					('action-send', 'Send Estimate')
+					('action-send', 'Send Agreement')
 				],
 				"self": "vendor"
 			}
@@ -225,21 +225,21 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			return
 
 		agreement = agreement or Agreement.retrieveByID(agreementID)
-		phases = list(AgreementPhase.iteratorWithAgreementID(agreement.id))
+		phases = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 
 		if not agreement:
 			self.set_status(404)
 			self.write("Not Found")
 			return
 
-		if agreement.vendorID == user.id:
+		if agreement['vendorID'] == user['id']:
 			agreementType = 'Client'
-		elif agreement.clientID == user.id:
+		elif agreement['clientID'] == user['id']:
 			stateClass = agreement.getCurrentState().__class__
 
 			if stateClass in [DraftState, InvalidState]:
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
-						agreement.id, agreement.vendorID, agreement.clientID
+						agreement['id'], agreement['vendorID'], agreement['clientID']
 					)
 				)
 				self.set_status(404)
@@ -303,29 +303,29 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 		templateDict = {
 			"_xsrf": self.xsrf_token,
-			"id": agreement.id,
-			"name": agreement.name,
-			"date": agreement.dateCreated.strftime('%B %d, %Y'),
+			"id": agreement['id'],
+			"name": agreement['name'],
+			"date": agreement['dateCreated'].strftime('%B %d, %Y'),
 			"amount": agreement.getCostString(),
 		}
 
-		summary = AgreementSummary.retrieveByAgreementID(agreement.id)
+		summary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 		if summary:
-			templateDict['summary'] = summary.summary or ''
-			templateDict['summaryComments'] = summary.comments or ''
+			templateDict['summary'] = summary['summary'] or ''
+			templateDict['summaryComments'] = summary['comments'] or ''
 		else:
 			templateDict['summary'] = None
 			templateDict['summaryComments'] = ''
 
 		if agreementType == 'Client':
-			client = User.retrieveByID(agreement.clientID) if agreement.clientID else None
+			client = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
 			templateDict["client"] = client and client.publicDict()
 			templateDict["vendor"] = user.publicDict()
 			templateDict["self"] = "vendor"
 			templateDict["other"] = "client"
 		else:
-			vendor = User.retrieveByID(agreement.vendorID)
+			vendor = User.retrieveByID(agreement['vendorID'])
 			templateDict["client"] = user.publicDict()
 			templateDict["vendor"] = vendor.publicDict()
 			templateDict["self"] = "client"
@@ -343,17 +343,17 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 			phaseDict = {
 				"amount": phase.getCostString(),
-				"description": phase.description,
-				"estDateCompleted": phase.estDateCompleted,
-				"dateCompleted": phase.dateCompleted,
-				"dateVerified": phase.dateVerified,
-				"dateContested": phase.dateContested
+				"description": phase['description'],
+				"estDateCompleted": phase['estDateCompleted'],
+				"dateCompleted": phase['dateCompleted'],
+				"dateVerified": phase['dateVerified'],
+				"dateContested": phase['dateContested']
 			}
 
-			if phase.comments:
-				phaseDict["comments"] = phase.comments
+			if phase['comments']:
+				phaseDict["comments"] = phase['comments']
 
-			if currentPhase and phase.id == currentPhase.id:
+			if currentPhase and phase['id'] == currentPhase['id']:
 				phaseDict["isCurrent"] = True
 
 			templateDict["phases"].append(phaseDict)
@@ -363,50 +363,50 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if currentPhase:
 			templateDict["currentPhase"] = {
 				"amount": currentPhase.getCostString(),
-				"phaseNumber": currentPhase.phaseNumber,
-				"description": currentPhase.description
+				"phaseNumber": currentPhase['phaseNumber'],
+				"description": currentPhase['description']
 			}
 		# Transactions are datetime properties of the agreement.
 
 		transactions = [{
 			"type": "Sent by ",
 			"user": "vendor",
-			"date": agreement.dateCreated.strftime('%B %d, %Y')
+			"date": agreement['dateCreated'].strftime('%B %d, %Y')
 		}]
 
-		if agreement.dateDeclined:
+		if agreement['dateDeclined']:
 			transactions.append({
 				"type": "Declined by ",
 				"user": "client",
-				"date": agreement.dateDeclined.strftime('%B %d, %Y')
+				"date": agreement['dateDeclined'].strftime('%B %d, %Y')
 			})
 
-		if agreement.dateModified:
+		if agreement['dateModified']:
 			transactions.append({
 				"type": "Modified by ",
 				"user": "vendor",
-				"date": agreement.dateModified.strftime('%B %d, %Y')
+				"date": agreement['dateModified'].strftime('%B %d, %Y')
 			})
 
-		if agreement.dateAccepted:
+		if agreement['dateAccepted']:
 			transactions.append({
 				"type": "Accepted by ",
 				"user": "client",
-				"date": agreement.dateAccepted.strftime('%B %d, %Y')
+				"date": agreement['dateAccepted'].strftime('%B %d, %Y')
 			})
 
-		if currentPhase and currentPhase.dateCompleted:
+		if currentPhase and currentPhase['dateCompleted']:
 			transactions.append({
 				"type": "Completed by ",
 				"user": "vendor",
-				"date": currentPhase.dateCompleted.strftime('%B %d, %Y')
+				"date": currentPhase['dateCompleted'].strftime('%B %d, %Y')
 			})
 
-		if currentPhase and currentPhase.dateVerified:
+		if currentPhase and currentPhase['dateVerified']:
 			transactions.append({
 				"type": "Verified and paid by ",
 				"user": "client",
-				"date": currentPhase.dateVerified.strftime('%B %d, %Y')
+				"date": currentPhase['dateVerified'].strftime('%B %d, %Y')
 			})
 
 		templateDict['transactions'] = transactions
@@ -417,9 +417,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
 
-		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement.name)
+		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
 		
-		if agreement.vendorID == user.id and templateDict['state'] in ['DraftState', 'DeclinedState']:
+		if agreement['vendorID'] == user['id'] and templateDict['state'] in ['DraftState', 'DeclinedState']:
 			templateDict['uri'] = self.request.uri
 			logging.info(templateDict)
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
@@ -439,8 +439,9 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 		logging.warn(self.request.arguments)
 
-		agreement = Agreement.initWithDict(dict(vendorID=user.id))
-
+		agreement = Agreement()
+		agreement['vendorID'] = user['id']
+		
 		agreementText = None
 
 		try:
@@ -462,12 +463,12 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write(e.body_content)
 			return
 
-		agreement.name = args['title']
+		agreement['name'] = args['title']
 
 		if args['clientID']:
 			client = User.retrieveByID(args['clientID'])
 
-			if client and client.id == user.id:
+			if client and client['id'] == user['id']:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't send estimates to yourself. Please choose a different client.",
@@ -489,7 +490,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 		elif args['email']:
 			client = User.retrieveByEmail(args['email'])
 
-			if client and client.id == user.id:
+			if client and client['id'] == user['id']:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't send estimates to yourself. Please choose a different client.",
@@ -501,25 +502,21 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 			if not client:
 				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
-				client = User.initWithDict(
-					dict(
-						email=args['email'],
-						invitedBy=user.id,
-						profileSmallURL=profileURL
-					)
-				)
-
+				client = User()
+				client['email'] = args['email']
+				client['invitedBy'] = user['id']
+				client['profileSmallURL'] = profileURL
+				
 				client.save()
-				client.refresh()
 		else:
 			client = None
 
-		agreement.clientID = client and client.id
+		agreement['clientID'] = client and client['id']
+		logging.warn(agreement)
 		agreement.save()
-		agreement.refresh()
 
 		if action == "send":
-			if not agreement.clientID:
+			if not agreement['clientID']:
 				# @todo: Check this. I'm pretty sure it makes sense, but uh...
 				error = {
 					"domain": "application.conflict",
@@ -531,44 +528,52 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 
 			clientState = UserState.currentState(client)
-
+			logging.info(clientState)
 			if isinstance(clientState, InvitedUserState):
+				# @todo: Whoa! What's going on here?
 				data = {"confirmationHash": "foo"}
-				clientState.doTransition("send_verification", data)
-
-				with Beanstalk() as bconn:
-					msg = json.dumps(dict(
-						userID=client.id,
-						agreementID=agreement.id,
-						action='agreementInvite'
-					))
-
-					tube = self.application.configuration['notifications']['beanstalk_tube']
-					bconn.use(tube)
-					r = bconn.put(msg)
-					logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
-
-			agreement.dateSent = datetime.now()
+				clientState.performTransition("send_verification", data)
+				
+				msg = json.dumps(dict(
+					userID=client['id'],
+					agreementID=agreement['id'],
+					action='agreementInvite'
+				))
+			elif isinstance(clientState, ActiveUserState):
+				msg = json.dumps(dict(
+					userID=client['id'],
+					agreementID=agreement['id'],
+					action='agreementSent'
+				))
+			else:
+				msg = json.dumps(dict())
+			
+			with Beanstalk() as bconn:
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(msg)
+				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
+			
+			agreement['dateSent'] = datetime.now()
 			agreement.save()
-			agreement.refresh()
 
-		summary = AgreementSummary.initWithDict(dict(agreementID=agreement.id))
-		summary.summary = args['summary']
+		summary = AgreementSummary()
+		summary['agreementID'] = agreement['id']
+		summary['summary'] = args['summary']
 
 		summary.save()
-		summary.refresh()
 
 		for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
 			phase = AgreementPhase()
-			phase.agreementID = agreement.id
-			phase.phaseNumber = num
-			phase.amount = cost
-			phase.description = descr
-			phase.estDateCompleted = date
+			phase['agreementID'] = agreement['id']
+			phase['phaseNumber'] = num
+			phase['amount'] = cost
+			phase['description'] = descr
+			phase['estDateCompleted'] = date
 			phase.save()
-
+		logging.warn(agreement)
 		self.set_status(201)
-		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement.id) + '.json')
+		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement['id']) + '.json')
 		self.renderJSON(self.assembleDictionary(agreement))
 
 
@@ -586,7 +591,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write('{"success": false}')
 			return
 
-		if agreement.vendorID != user.id and agreement.clientID != user.id:
+		if agreement['vendorID'] != user['id'] and agreement['clientID'] != user['id']:
 			self.set_status(403)
 			self.write('{"success": false}')
 			return
@@ -608,14 +613,14 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write('{"success": false}')
 			return
 
-		if agreement.vendorID != user.id and agreement.clientID != user.id:
+		if agreement['vendorID'] != user['id'] and agreement['clientID'] != user['id']:
 			self.set_status(403)
 			self.write('{"success": false}')
 			return
 
 		stateDict = {
 			"agreement": {
-				"id": agreement.id
+				"id": agreement['id']
 			},
 			"state": agreement.getCurrentState()
 		}
@@ -628,6 +633,8 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 	@web.authenticated
 	def post(self, agreementID, action):
+		'''POST handler for /agreement/([0-9]+)/(save|send|accept|decline|mark_complete|verify|dispute)\.json'''
+		
 		user = self.current_user
 
 		agreement = Agreement.retrieveByID(agreementID)
@@ -637,19 +644,20 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write('{"success": false}')
 			return
 
-		if agreement.vendorID != user.id and agreement.clientID != user.id:
+		if agreement['vendorID'] != user['id'] and agreement['clientID'] != user['id']:
 			self.set_status(403)
 			self.write('{"success": false}')
 			return
 
 		agreementText = None
 
-		role = "vendor" if agreement.vendorID == user.id else "client"
+		role = "vendor" if agreement['vendorID'] == user['id'] else "client"
 
 		logging.info(role)
 		logging.info(action)
 
 		currentState = agreement.getCurrentState()
+		phase = agreement.getCurrentPhase()
 		logging.info(currentState.__class__.__name__)
 
 		# In order to make sure records are not put in inconsistent states, a
@@ -708,11 +716,11 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						self.renderJSON(error)
 						return
 
-					agreement.clientID = client.id
+					agreement['clientID'] = client['id']
 				elif args['email']:
 					client = User.retrieveByEmail(args['email'])
 
-					if client and client.id == user.id:
+					if client and client['id'] == user['id']:
 						error = {
 							"domain": "application.conflict",
 							"display": "You can't send estimates to yourself. Please choose a different client.",
@@ -724,17 +732,12 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 					if not client:
 						profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
-						client = User.initWithDict(
-							dict(
-								email=args['email'],
-								invitedBy=user.id,
-								profileSmallURL=profileURL
-							)
-						)
-
+						client = User()
+						client['email'] = args['email']
+						client['invitedBy'] = user['id']
+						client['profileSmallURL'] = profileURL
 						client.save()
-						client.refresh()
-					agreement.clientID = client.id
+					agreement['clientID'] = client['id']
 
 				if action == "send":
 					if client is None:
@@ -750,63 +753,42 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						self.set_status(400)
 						self.renderJSON(error)
 						return
-					else:
-						clientState = UserState.currentState(client)
-
-						if isinstance(clientState, InvitedUserState):
-							data = {"confirmationHash": "foo"}
-							clientState.doTransition("send_verification", data)
-
-							# @todo: also defer this to after the transition is successful?
-							with Beanstalk() as bconn:
-								msg = json.dumps(dict(
-									userID=client.id,
-									agreementID=agreement.id,
-									action='agreementInvite'
-								))
-
-								tube = self.application.configuration['notifications']['beanstalk_tube']
-								bconn.use(tube)
-								r = bconn.put(msg)
-								logging.warn('Beanstalk: tube#%d %s' % (r, msg))
 
 			if (isinstance(currentState, DraftState) or
 					isinstance(currentState, EstimateState) or
 					isinstance(currentState, DeclinedState)):
 
-				agreement.name = args['title'] or agreement.name
+				agreement['name'] = args['title'] or agreement['name']
 
-				summary = AgreementSummary.retrieveByAgreementID(agreement.id)
+				summary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 				if not summary:
-					summary = AgreementSummary.initWithDict(
-						dict(agreementID=agreement.id)
-					)
-
-				summary.summary = args['summary'] or summary.summary
+					summary = AgreementSummary()
+					summary['agreementID'] = agreement['id']
+				
+				summary['summary'] = args['summary'] or summary['summary']
 
 				# @todo: Defer phase saves until state transition is complete
 				for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
-					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement.id, num)
+					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement['id'], num)
 
 					if not phase:
-						phase = AgreementPhase.initWithDict(
-							dict(agreementID=agreement.id, phaseNumber=num)
-						)
-
+						phase = AgreementPhase()
+						phase['agreementID'] = agreement['id']
+						phase['phaseNumber'] = num
+					
 					if cost:
-						phase.amount = cost
-
+						phase['amount'] = cost
+					
 					if descr:
-						phase.description = descr
-
+						phase['description'] = descr
+					
 					if date:
-						phase.estDateCompleted = date
+						phase['estDateCompleted'] = date
 					phase.save()
-
+				
 				summary.save()
-				agreement.save()
-
+		
 		# Clients can accept or decline an estimate, in which case the comment
 		# fields in the agreement summary and agreement phase records get
 		# updated; or they can dispute or verify a completed agreement, in
@@ -828,26 +810,71 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 
 			if isinstance(currentState, EstimateState) and action == 'decline':
-				agreementSummary = AgreementSummary.retrieveByAgreementID(agreement.id)
+				agreementSummary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 				if not agreementSummary:
-					agreementSummary = AgreementSummary.initWithDict(
-						dict(agreementID=agreement.id)
-					)
-
-				agreementSummary.comments = args['summaryComments']
+					agreementSummary = AgreementSummary()
+					agreementSummary['agreementID'] = agreement['id']
+				
+				agreementSummary['comments'] = args['summaryComments']
 				agreementSummary.save()
 				
-				for phase in AgreementPhase.iteratorWithAgreementID(agreement.id):
-					if phase.phaseNumber < len(args['phaseComments']):
-						phase.comments = args['phaseComments'][phase.phaseNumber]
+				for phase in AgreementPhase.iteratorWithAgreementID(agreement['id']):
+					if phase['phaseNumber'] < len(args['phaseComments']):
+						phase['comments'] = args['phaseComments'][phase['phaseNumber']]
 						phase.save()
 			elif isinstance(currentState, CompletedState) and action == 'dispute':
-				phase = agreement.getCurrentPhase()
-				phase.comments = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
+				# phase = agreement.getCurrentPhase()
+				phase['comments'] = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
 				phase.save()
+		
 		try:
 			currentState.performTransition(role, action, unsavedRecords)
+			
+			actionMap = {
+				'send': 'agreementSent',
+				'accept': 'agreementAccepted',
+				'decline': 'agreementDeclined',
+				'mark_complete': 'agreementWorkCompleted',
+				'dispute': 'agreementDisputed'
+			}
+			
+			if action in actionMap:
+				recipient = User.retrieveByID(
+					agreement['vendorID'] if role == 'client' else agreement['clientID']
+				)
+				
+				msg = dict(agreementID=agreement['id'], action=actionMap[action])
+				
+				if role == 'vendor':
+					recipient = User.retrieveByID(agreement['clientID'])
+					clientState = UserState.currentState(recipient)
+					
+					# For users that have not yet signed up on the platform,
+					# create the necessary confirmation codes and perform a
+					# user state transition. Override the 'agreementSent'
+					# action to say 'agreementInvite'.
+					if isinstance(clientState, InvitedUserState):
+						# @todo: use a real value here
+						data = {"confirmationHash": "foo"}
+						clientState.performTransition("send_verification", data)
+						msg['action'] = 'agreementInvite'
+				else:
+					recipient = User.retrieveByID(agreement['vendorID'])
+				
+				if action in ['mark_complete', 'dispute']:
+					msg['agreementPhaseID'] = phase['id']
+				
+				# The message's 'userID' field should really be called 'recipientID'
+				msg['userID'] = recipient['id']
+				
+				with Beanstalk() as bconn:
+					tube = self.application.configuration['notifications']['beanstalk_tube']
+					bconn.use(tube)
+					msgJSON = json.dumps(msg)
+					r = bconn.put(msgJSON)
+					logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		
 		except StateTransitionError as e:
 			# @todo: This is where we would describe each of the possible errors
 			error = {
@@ -863,7 +890,6 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			self.renderJSON(error)
 
 		for record in unsavedRecords:
-			logging.warn(record)
 			record.save()
 
 		self.renderJSON(self.assembleDictionary(agreement))

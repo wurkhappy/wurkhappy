@@ -6,6 +6,8 @@ class BeanstalkConnectionError(Exception):
 	pass
 
 
+class AsyncBeanstalk(object):
+	pass
 
 class Beanstalk(object):
 	settings = {}

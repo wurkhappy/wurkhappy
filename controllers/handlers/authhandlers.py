@@ -64,23 +64,22 @@ class SignupHandler(BaseHandler):
 		# User wasn't found, so begin sign up process
 		if not user:
 			user = User()
-			user.email = args['email']
-			user.confirmed = 0
-			user.dateCreated = datetime.now()
+			user['email'] = args['email']
+			# user['confirmed'] = 0
+			user['dateCreated'] = datetime.now()
 			verifier = Verification()
-			user.confirmationCode = verifier.code
-			user.confirmationHash = verifier.hashDigest
+			user['confirmationCode'] = verifier.code
+			user['confirmationHash'] = verifier.hashDigest
 			user.setPasswordHash(args['password'])
 			user.save()
-			user.refresh()
 			
 			# @todo: This should be better. Static value in config file...
 			# user.profileSmallURL = self.application.config['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
 			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
-			user.profileSmallURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user.id % 5)
+			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
 			user.save()
 			
-			self.set_secure_cookie("user_id", str(user.id), httponly=True)
+			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
 			self.redirect('/user/me/account')
 		else:
 			# User exists, render with error
@@ -93,7 +92,7 @@ class SignupHandler(BaseHandler):
 				"debug": "specified email address is already registered"
 			}
 			
-			self.set_status(e.status_code)
+			self.set_status(400)
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
 			# self.redirect("/signup?err=email_exists")
 
@@ -152,7 +151,7 @@ class LoginHandler(BaseHandler):
 			self.set_status(401)
 			self.render("user/login.html", title="Sign In to Wurk Happy", error=error)
 		else:
-			self.set_secure_cookie("user_id", str(user.id), httponly=True)
+			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
 			self.redirect('/user/me/account') #TODO: Should go to dashboard...
 
 
@@ -199,17 +198,17 @@ class ForgotPasswordHandler(BaseHandler):
 			code = verifier.hashDigest
 			# build rest of forgot password model
 			forgotPassword = ForgotPassword()
-			forgotPassword.userID = user.id
-			forgotPassword.code = code
-			forgotPassword.validUntil = datetime.now() + timedelta(hours=24)
-			forgotPassword.active = 1
+			forgotPassword['userID'] = user['id']
+			forgotPassword['code'] = code
+			forgotPassword['validUntil'] = datetime.now() + timedelta(hours=24)
+			forgotPassword['active'] = 1
 			forgotPassword.save()
 			# send an email to the user containing a link to reset password with the code
 			link = "http://"+self.request.host+"/reset_password?code="+code
 			msg = """\
 			To reset your password, click on this link and enter a new password. (The link is only valid for the next 24 hours.)
 			"""+link
-			Email.sendFromApp(user.email, 'Reset Password', msg)
+			Email.sendFromApp(user['email'], 'Reset Password', msg)
 			# render template to confirm
 			self.render("user/forgot_password_confirm.html", title="Forgot Password", logged_in_user=self.current_user)
 
@@ -232,7 +231,7 @@ class ResetPasswordHandler(Authenticated, BaseHandler):
 			self.set_status(403)
 			self.write("Forbidden")
 			return
-		elif not self.current_user and (forgotPassword.validUntil < datetime.now() or forgotPassword.active == False):
+		elif not self.current_user and (forgotPassword['validUntil'] < datetime.now() or forgotPassword['active'] == False):
 			self.set_status(403)
 			self.write("Forbidden")
 			return
@@ -256,12 +255,12 @@ class ResetPasswordHandler(Authenticated, BaseHandler):
 			if not forgotPassword:
 				user = self.current_user
 			else:
-				user = User.retrieveByUserID(forgotPassword.userID)
-			user.password = Verification.hash_password(str(password))
+				user = User.retrieveByUserID(forgotPassword['userID'])
+			user['password'] = Verification.hash_password(str(password))
 			user.save()
 			flash = {"error": "Your password was reset successfully."}
 			if forgotPassword:
-				forgotPassword.active = 0
+				forgotPassword['active'] = 0
 				forgotPassword.save()
 			if self.current_user:
 				# if user is already logged in, redirect to edit profile page

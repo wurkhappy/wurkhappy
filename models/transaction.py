@@ -13,27 +13,24 @@ import logging
 # -------------------------------------------------------------------
 
 class Transaction(MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.agreementPhaseID = None
-		self.senderID = None # fromClientID
-		self.recipientID = None # toVendorID
-		self.paymentMethodID = None
-		self.amount = None
-		self.dateInitiated = None
-		self.dateApproved = None
-		self.dateDeclined = None
-	
-	@classmethod
-	def tableName(clz):
-		return "transaction"
+	tableName = 'transaction'
+	columns = {
+		'id': None,
+		'agreementPhaseID': None,
+		'senderID': None, # fromClientID
+		'recipientID': None, # toVendorID
+		'paymentMethodID': None,
+		'amount': None,
+		'dateInitiated': None,
+		'dateApproved': None,
+		'dateDeclined': None
+	}
 	
 	@classmethod
 	def iteratorWithSenderID(clz, senderID):
 		with Database() as (conn, cursor):
 			query = "SELECT * FROM %s WHERE senderID = %%s"
-			cursor.execute(query % clz.tableName(), senderID)
+			cursor.execute(query % clz.tableName, senderID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -43,7 +40,7 @@ class Transaction(MappedObj):
 	def iteratorWithRecipientID(clz, recipientID):
 		with Database() as (conn, cursor):
 			query = "SELECT * FROM %s WHERE recipientID = %%s"
-			cursor.execute(query % clz.tableName(), recipientID)
+			cursor.execute(query % clz.tableName, recipientID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -54,7 +51,7 @@ class Transaction(MappedObj):
 		with Database() as (conn, cursor):
 			query = """SELECT * FROM %s WHERE senderID = %%s 
 				AND recipientID = %%s"""
-			cursor.execute(query % clz.tableName(), (senderID, recipientID))
+			cursor.execute(query % clz.tableName, (senderID, recipientID))
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -67,7 +64,7 @@ class Transaction(MappedObj):
 				LEFT JOIN agreementPhase AS p ON t.agreementPhaseID = p.id
 				LEFT JOIN agreement AS a ON p.agreementID = a.id
 				WHERE p.agreementID = %%s ORDER BY p.phaseNumber"""
-			cursor.execute(query % clz.tableName(), agreementID)
+			cursor.execute(query % clz.tableName, agreementID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -77,15 +74,15 @@ class Transaction(MappedObj):
 	def retrieveByAgreementPhaseID(clz, phaseID):
 		with Database() as (conn, cursor):
 			query = "SELECT * FROM %s WHERE agreementPhaseID = %%s"
-			cursor.execute(query % clz.tableName(), phaseID)
+			cursor.execute(query % clz.tableName, phaseID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
 	def publicDict(self):
 		return OrderedDict([
-			('id', self.id),
-			('senderID', self.senderID),
-			('recipientID', self.recipientID),
-			('paymentMethodID', self.paymentMethodID),
-			('amount', self.amount)
+			('id', self['id']),
+			('senderID', self['senderID']),
+			('recipientID', self['recipientID']),
+			('paymentMethodID', self['paymentMethodID']),
+			('amount', self['amount'])
 		])

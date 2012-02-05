@@ -10,20 +10,16 @@ from collections import OrderedDict
 # want to have much more granular contol over what's going on here.
 
 class PaymentMethod(MappedObj):
-	_tableName = 'paymentMethod'
-	
-	def __init__(self):
-		self.id = None
-		self.userID = None
-		self.display = None
-		self.cardExpires = None
-		self.abaDisplay = None
-		self.gatewayToken = None
-		self.dateDeleted = None
-	
-	@classmethod
-	def tableName(clz):
-		return 'paymentMethod'
+	tableName = 'paymentMethod'
+	columns = {
+		'id': None,
+		'userID': None,
+		'display': None,
+		'cardExpires': None,
+		'abaDisplay': None,
+		'gatewayToken': None,
+		'dateDeleted': None
+	}
 	
 	@classmethod
 	def retrieveCCMethodWithUserID(clz, userID):
@@ -34,7 +30,7 @@ class PaymentMethod(MappedObj):
 		with Database() as (conn, cursor):
 			query = """SELECT * FROM %s WHERE userID = %%s
 				AND abaDisplay is NULL AND dateDeleted is NULL LIMIT 1"""
-			cursor.execute(query % clz._tableName, userID)
+			cursor.execute(query % clz.tableName, userID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
@@ -46,22 +42,22 @@ class PaymentMethod(MappedObj):
 		with Database() as (conn, cursor):
 			query = """SELECT * FROM %s WHERE userID = %%s
 				AND cardExpires is NULL AND dateDeleted is NULL LIMIT 1"""
-			cursor.execute(query % clz._tableName, userID)
+			cursor.execute(query % clz.tableName, userID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
 	def publicDict(self):
 		d = OrderedDict([
-			('id', self.id),
-			('userID', self.userID),
-			('display', self.display)
+			('id', self['id']),
+			('userID', self['userID']),
+			('display', self['display'])
 		])
 		
-		if self.abaDisplay is None:
-			d['cardExpires'] = self.cardExpires
+		if self['abaDisplay'] is None:
+			d['cardExpires'] = self['cardExpires']
 			d['type'] = 'CC'
-		elif self.cardExpires is None:
-			d['abaDisplay'] = self.abaDisplay
+		elif self['cardExpires'] is None:
+			d['abaDisplay'] = self['abaDisplay']
 			d['type'] = 'ACH'
 		
 		return d

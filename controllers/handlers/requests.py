@@ -13,10 +13,10 @@ class RequestBase(BaseHandler):
 	def assembleDictionary(self, request):
 		requestDict = request.publicDict()
 
-		client = User.retrieveByID(request.clientID)
+		client = User.retrieveByID(request['clientID'])
 		requestDict["client"] = client.publicDict()
 
-		vendor = User.retrieveByID(request.vendorID)
+		vendor = User.retrieveByID(request['vendorID'])
 		requestDict['vendor'] = vendor.publicDict()
 
 		del(requestDict['clientID'])
@@ -70,7 +70,7 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 		if args['vendorID']:
 			vendor = User.retrieveByID(args['vendorID'])
 
-			if vendor and vendor.id == user.id:
+			if vendor and vendor['id'] == user['id']:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't request estimates from yourself. Please choose a different vendor.",
@@ -92,7 +92,7 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 		elif args['email']:
 			vendor = User.retrieveByEmail(args['email'])
 
-			if vendor and vendor.id == user.id:
+			if vendor and vendor['id'] == user['id']:
 				error = {
 					"domain": "application.conflict",
 					"display": "You can't request estimates from yourself. Please choose a different vendor.",
@@ -104,16 +104,12 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 
 			if not vendor:
 				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
-				vendor = User.initWithDict(
-					dict(
-						email=args['email'],
-						invitedBy=user.id,
-						profileSmallURL=profileURL
-					)
-				)
-
+				vendor = User()
+				vendor['email'] = args['email']
+				vendor['invitedBy'] = user['id']
+				vendor['profileSmallURL'] = profileURL
+				
 				vendor.save()
-				vendor.refresh()
 		else:
 			error = {
 				"domain": "web.request",
@@ -129,15 +125,13 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 			self.renderJSON(error)
 			return
 
-		request = Request.initWithDict(dict(
-			clientID=user.id,
-			vendorID=vendor.id,
-			message=args['message']
-		))
-
+		request = Request()
+		request['clientID'] = user['id']
+		request['vendorID'] = vendor['id']
+		request['message'] = args['message']
+		
 		request.save()
-		request.refresh()
-
+		
 		self.set_status(201)
 		self.renderJSON(self.assembleDictionary(request))
 		return

@@ -2,9 +2,10 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
-from models.agreement import *
+from models.agreement import Agreement, CompletedState
 from models.paymentmethod import PaymentMethod
 from models.transaction import Transaction
+from controllers.beanstalk import Beanstalk
 from controllers import fmt
 
 import json
@@ -70,7 +71,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		# agreement = Agreement.retrieveByID(phase.agreementID)
 		
-		if not (agreement and agreement.clientID == user.id):
+		if not (agreement and agreement['clientID'] == user['id']):
 			# The logged-in user is not authorized to make a payment
 			# on this agreement. I don't know how it's even possible
 			# to get to this point.
@@ -95,15 +96,15 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 		
 		# Look up the user's preferred payment method
-		paymentPref = UserPrefs.retrieveByUserIDAndName(user.id, 'preferredPaymentID')
+		paymentPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'preferredPaymentID')
 		
 		if paymentPref:
-			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
+			paymentMethod = PaymentMethod.retrieveByID(paymentPref['value'])
 		else:
-			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user.id)
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
 			
 			if not paymentMethod:
-				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user.id)
+				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
 		
 		if not paymentMethod:
 			error = {
@@ -118,16 +119,14 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 			return
 		
-		transaction = Transaction.initWithDict(dict(
-			agreementPhaseID=phase.id,
-			senderID=user.id,
-			recipientID=agreement.vendorID,
-			paymentMethodID=paymentMethod.id,
-			amount=phase.amount
-		))
+		transaction = Transaction()
+		transaction['agreementPhaseID'] = phase['id']
+		transaction['senderID'] = user['id']
+		transaction['recipientID'] = agreement['vendorID']
+		transaction['paymentMethodID'] = paymentMethod['id']
+		transaction['amount'] = phase['amount']
 		
 		transaction.save()
-		transaction.refresh()
 		
 		# @todo: Put the transaction info on the processing queue.
 		
@@ -135,6 +134,22 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		try:
 			agreementState.performTransition('client', 'verify', unsavedRecords)
+			
+			# The message's 'userID' field should really be called 'recipientID'
+			msg = dict(
+				agreementID=agreement['id'],
+				transactionID=transaction['id'],
+				userID=agreement['vendorID'],
+				action='agreementPaid'
+			)
+			
+			with Beanstalk() as bconn:
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				msgJSON = json.dumps(msg)
+				r = bconn.put(msgJSON)
+				logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		
 		except StateTransitionError as e:
 			error = {
 				"domain": "application.consistency",
@@ -149,7 +164,6 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 		
 		for record in unsavedRecords:
-			logging.warn(record)
 			record.save()
 		
 		transactionJSON = transaction.publicDict()

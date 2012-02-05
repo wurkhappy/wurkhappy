@@ -72,8 +72,8 @@
 			
 			{% if data['self'] == 'client' and data['state'] == 'EstimateState' %}
 				<div class="add notes toggle">
-					<p>Add comments and feedback on the agreement here.</p>
-					<textarea name="summaryComments" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
+					<p class="no-select">Add comments and feedback on the agreement here.</p>
+					<textarea name="summaryComments" class="hidden" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
 				</div>
 			{% elif data['state'] == 'DeclinedState' and data['summaryComments'] %}
 				<div class="notes">
@@ -101,8 +101,8 @@
 
 				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or (data['state'] == 'CompletedState' and 'isCurrent' in phase)) %}
 					<div class="add notes toggle">
-						<p>Add comments and feedback on the agreement here.</p>
-						<textarea name="phaseComments" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
+						<p class="no-select">Add comments and feedback on the agreement here.</p>
+						<textarea name="phaseComments" class="hidden" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
 					</div>
 				{% elif 'comments' in phase and data['state'] in ['DeclinedState', 'ContestedState'] %}
 					<div class="notes">

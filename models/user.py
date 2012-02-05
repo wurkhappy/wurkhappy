@@ -20,36 +20,33 @@ import logging
 # -------------------------------------------------------------------
 
 class User(MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.email = None
-		self.confirmationCode = None
-		self.confirmationHash = None
-		self.invitedBy = None
-		# self.confirmed = None # @todo: Delete field from schema
-		# self.subscriberStatus = 0 # @todo: Delete field from schema
-		self.firstName = None
-		self.lastName = None
-		self.telephone = None
-		self.password = None
-		self.accessToken = None
-		self.accessTokenSecret = None
-		self.accessTokenExpiration = None
-		self.profileOrigURL = None
-		self.profileSmallURL = None
-		self.profileLargeURL = None
-		self.dateCreated = None
-		self.dateVerified = None
-	
-	@classmethod
-	def tableName(clz):
-		return "user"
+	tableName = 'user'
+	columns = {
+		'id': None,
+		'email': None,
+		'confirmationCode': None,
+		'confirmationHash': None,
+		'invitedBy': None,
+		# 'confirmed': None, # @todo: Delete field from schema
+		# 'subscriberStatus': 0, # @todo: Delete field from schema
+		'firstName': None,
+		'lastName': None,
+		'telephone': None,
+		'password': None,
+		'accessToken': None,
+		'accessTokenSecret': None,
+		'accessTokenExpiration': None,
+		'profileOrigURL': None,
+		'profileSmallURL': None,
+		'profileLargeURL': None,
+		'dateCreated': None,
+		'dateVerified': None,
+	}
 	
 	@classmethod
 	def retrieveByEmail(clz, email):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE email = %%s LIMIT 1" % clz.tableName(), email)
+			cursor.execute("SELECT * FROM %s WHERE email = %%s LIMIT 1" % clz.tableName, email)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -57,7 +54,7 @@ class User(MappedObj):
 	@classmethod
 	def retrieveByAccessToken(clz, token):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE accessToken = %%s LIMIT 1" % clz.tableName(), token)
+			cursor.execute("SELECT * FROM %s WHERE accessToken = %%s LIMIT 1" % clz.tableName, token)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -65,7 +62,7 @@ class User(MappedObj):
 	@classmethod
 	def retrieveByUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName(), userID)
+			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName, userID)
 			result = cursor.fetchone()
 
 		return clz.initWithDict(result)
@@ -73,11 +70,11 @@ class User(MappedObj):
 	@classmethod
 	def iteratorWithContactsForID(clz, userID):
 		with Database() as (conn, cursor):
-			query = """SELECT %s.* FROM %s 
+			query = """SELECT {0}.* FROM {0}
 				LEFT JOIN agreement AS a ON user.id = a.clientID
 				LEFT JOIN agreement AS b ON user.id = b.vendorID
-				WHERE b.clientID = %%s OR a.vendorID = %%s
-				GROUP BY user.id""" % (clz.tableName(), clz.tableName())
+				WHERE b.clientID = %s OR a.vendorID = %s
+				GROUP BY user.id""".format(clz.tableName)
 			
 			cursor.execute(query, (userID, userID))
 			result = cursor.fetchone()
@@ -96,59 +93,83 @@ class User(MappedObj):
 			k.key = name
 			k.set_contents_from_string(data, headers)
 			k.make_public()
-		self.profileOrigURL = 'http://media.wurkhappy.com/%s' % name
+		self['profileOrigURL'] = 'http://media.wurkhappy.com/%s' % name
 		self.save()
 	
 	
 	def getProfile(self):
-		return Profile.retrieveByUserID(self.id)
+		return Profile.retrieveByUserID(self['id'])
 	
 	def getFullName(self):
-		return " ".join([str(self.firstName or ""), str(self.lastName or "")]).strip() or self.email
+		return " ".join([str(self['firstName'] or ""), str(self['lastName'] or "")]).strip() or self['email']
 	
 	def setPasswordHash(self, password):
-		self.password = bcrypt.hashpw(str(password), bcrypt.gensalt())
+		self['password'] = bcrypt.hashpw(str(password), bcrypt.gensalt())
 	
 	def passwordIsValid(self, password):
-		if self.password is None:
+		if self['password'] is None:
 			logging.warn(json.dumps({
 				"domain": "model.consistency",
 				"message": "This user is missing a valid 'password' record.",
-				"userID": self.id
+				"userID": self['id']
 			}))
 			return False
-		return self.password == bcrypt.hashpw(str(password), self.password)
+		return self['password'] == bcrypt.hashpw(str(password), self['password'])
 	
 	def setConfirmationHash(self, confirmation):
-		self.confirmationHash = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
+		self['confirmationHash'] = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
 	
 	def confirmationIsValid(self, confirmation):
-		return self.confirmationHash == bcrypt.hashpw(str(confirmation), self.confirmationHash)
+		return self['confirmationHash'] == bcrypt.hashpw(str(confirmation), self['confirmationHash'])
 	
 	def getDefaultPaymentMethod(self):
-		paymentPref = UserPrefs.retrieveByUserIDAndName(self.id, 'preferredPaymentID')
+		paymentPref = UserPrefs.retrieveByUserIDAndName(self['id'], 'preferredPaymentID')
 		
 		if paymentPref:
 			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
 		else:
-			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self.id)
+			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self['id'])
 			
 			if not paymentMethod:
-				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self.id)
+				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self['id'])
 		
 		return paymentMethod
 	
+	def getCurrentState(self):
+		""" getCurrentState : () -> UserState """
+		
+		dateCreated = self['dateCreated']
+		email = self['email']
+		invitedBy = self['invitedBy']
+		confirmationCode = self['confirmationCode']
+		confirmationHash = self['confirmationHash']
+		password = self['password']
+		dateVerified = self['dateVerified']
+		
+		states = [
+			(ActiveUserState, password and dateVerified and email),
+			(PendingUserState, confirmationCode and confirmationHash and email and dateCreated),
+			(NewUserState, dateCreated and email and password),
+			(InvitedUserState, dateCreated and email and invitedBy),
+			(BetaUserState, dateCreated and email),
+			(InvalidUserState, True)
+		]
+		
+		# logging.info([s[0] for s in states if s[1]])
+		state = [s[0] for s in states if s[1]][0]
+		return state(self)
+		
 	def publicDict(self):
 		return {
-			'id': self.id,
+			'id': self['id'],
 			'fullName': self.getFullName(),
-			'email': self.email,
-			'telephone': self.telephone,
+			'email': self['email'],
+			'telephone': self['telephone'],
 			'profileURL': [
-				self.profileSmallURL or '#',
-				self.profileLargeURL or '#'
+				self['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
+				self['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
 			],
-			'dateCreated': self.dateCreated
+			'dateCreated': self['dateCreated']
 		}
 
 
@@ -158,21 +179,18 @@ class User(MappedObj):
 # -------------------------------------------------------------------
 
 class UserPrefs(MappedObj):
-
-	def __init__(self):
-		self.id = None
-		self.userID = None
-		self.name = None
-		self.value = None
-	
-	@classmethod
-	def tableName(clz):
-		return "userPrefs"
+	tableName = 'userPrefs'
+	columns = {
+		'id': None,
+		'userID': None,
+		'name': None,
+		'value': None
+	}
 	
 	@classmethod
 	def iteratorWithUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName(), userID)
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName, userID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -181,14 +199,14 @@ class UserPrefs(MappedObj):
 	@classmethod
 	def retrieveByUserIDAndName(clz, userID, name):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s AND name = %%s" % clz.tableName(), (userID, name))
+			cursor.execute("SELECT * FROM %s WHERE userID = %%s AND name = %%s" % clz.tableName, (userID, name))
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
 	def publicDict(self):
 		return {
-			"name": self.name,
-			"value": self.value
+			"name": self['name'],
+			"value": self['value']
 		}
 
 
@@ -207,7 +225,7 @@ class UserState(object):
 		assert type(user) == User
 		self.user = user
 	
-	def doTransition(self, action, data):
+	def performTransition(self, action, data):
 		""" currentState : string, dict -> UserState """
 		
 		try:
@@ -230,13 +248,13 @@ class UserState(object):
 	def currentState(clz, user):
 		""" currentState : User -> UserState """
 		
-		dateCreated = user.dateCreated
-		email = user.email
-		invitedBy = user.invitedBy
-		confirmationCode = user.confirmationCode
-		confirmationHash = user.confirmationHash
-		password = user.password
-		dateVerified = user.dateVerified
+		dateCreated = user['dateCreated']
+		email = user['email']
+		invitedBy = user['invitedBy']
+		confirmationCode = user['confirmationCode']
+		confirmationHash = user['confirmationHash']
+		password = user['password']
+		dateVerified = user['dateVerified']
 		
 		states = [
 			(ActiveUserState, password and dateVerified and email),
@@ -298,12 +316,12 @@ class PendingUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "confirm":
-			if not self.user.password and 'password' not in data:
+			if not self.user['password'] and 'password' not in data:
 				raise StateTransitionError("missing required password field")
 			else:
 				self.user.setPasswordHash(data['password'])
 			
-			self.user.dateVerified = datetime.now()
+			self.user['dateVerified'] = datetime.now()
 		else:
 			raise StateTransitionError()
 

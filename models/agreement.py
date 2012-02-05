@@ -15,30 +15,26 @@ import logging
 # -------------------------------------------------------------------
 
 class Agreement(MappedObj):
-	
-	def __init__(self):
-		self.id = None
-		self.vendorID = None
-		self.clientID = None
-		self.name = None
-		self.tokenFingerprint = None
-		self.tokenHash = None
-		self.dateCreated = None
-		self.dateSent = None
-		self.dateAccepted = None
-		self.dateModified = None
-		self.dateDeclined = None
-		# self.dateCompleted = None
-	
-	@classmethod
-	def tableName(clz):
-		return "agreement"
+	tableName = 'agreement'
+	columns = {
+		'id': None,
+		'vendorID': None,
+		'clientID': None,
+		'name': None,
+		'tokenFingerprint': None,
+		'tokenHash': None,
+		'dateCreated': None,
+		'dateSent': None,
+		'dateAccepted': None,
+		'dateModified': None,
+		'dateDeclined': None
+	}
 	
 	@classmethod
 	def countWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
 			query = "SELECT COUNT(*) FROM %s WHERE vendorID = %%s"
-			cursor.execute(query % clz.tableName(), vendorID)
+			cursor.execute(query % clz.tableName, vendorID)
 			result = cursor.fetchone()
 			return result['COUNT(*)']
 	
@@ -46,7 +42,7 @@ class Agreement(MappedObj):
 	def countWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
 			query = "SELECT COUNT(*) FROM %s WHERE clientID = %%s"
-			cursor.execute(query % clz.tableName(), clientID)
+			cursor.execute(query % clz.tableName, clientID)
 			result = cursor.fetchone()
 			return result['COUNT(*)']
 	
@@ -63,7 +59,7 @@ class Agreement(MappedObj):
 				WHERE a.vendorID = %%s AND a.dateAccepted IS NOT NULL
 				AND b.dateVerified IS NULL
 			"""
-			cursor.execute(query % clz.tableName(), vendorID)
+			cursor.execute(query % clz.tableName, vendorID)
 			result = cursor.fetchone()
 			return result['SUM(b.amount)']
 	
@@ -81,7 +77,7 @@ class Agreement(MappedObj):
 				WHERE a.clientID = %%s AND a.dateAccepted IS NOT NULL
 				AND b.dateVerified IS NULL
 			"""
-			cursor.execute(query % clz.tableName(), clientID)
+			cursor.execute(query % clz.tableName, clientID)
 			result = cursor.fetchone()
 			return result['SUM(b.amount)']
 	
@@ -89,14 +85,14 @@ class Agreement(MappedObj):
 	def retrieveByFingerprint(clz, fingerprint):
 		with Database() as (conn, cursor):
 			query = "SELECT * FROM %s WHERE tokenFingerprint = %%s"
-			cursor.execute(query % clz.tableName(), fingerprint)
+			cursor.execute(query % clz.tableName, fingerprint)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
 	@classmethod
 	def iteratorWithVendorID(clz, vendorID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE vendorID = %%s ORDER BY dateCreated DESC" % clz.tableName(), vendorID)
+			cursor.execute("SELECT * FROM %s WHERE vendorID = %%s ORDER BY dateCreated DESC" % clz.tableName, vendorID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -105,7 +101,7 @@ class Agreement(MappedObj):
 	@classmethod
 	def iteratorWithClientID(clz, clientID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE clientID = %%s ORDER BY dateCreated DESC" % clz.tableName(), clientID)
+			cursor.execute("SELECT * FROM %s WHERE clientID = %%s ORDER BY dateCreated DESC" % clz.tableName, clientID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -113,7 +109,7 @@ class Agreement(MappedObj):
 	
 	def getCostString(self):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self.id)
+			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self['id'])
 			amount = cursor.fetchone()['SUM(amount)']
 			return "${:,.2f}".format(amount / 100) if amount else ""
 	
@@ -121,7 +117,7 @@ class Agreement(MappedObj):
 		with Database() as (conn, cursor):
 			query = """SELECT * FROM agreementPhase WHERE agreementID = %s AND
 				dateVerified IS NULL ORDER BY phaseNumber LIMIT 1"""
-			cursor.execute(query, self.id)
+			cursor.execute(query, self['id'])
 			result = cursor.fetchone()
 			phase = AgreementPhase.initWithDict(result)
 			return phase
@@ -163,18 +159,18 @@ class Agreement(MappedObj):
 		#     |     |     |   \--> 2 ==> 2 ========> 2 --> o  |
 		#     |     |     |     |     |     |     |     |     |
 		
-		dateSent =  self.dateSent
-		dateAccepted = self.dateAccepted
-		dateDeclined = self.dateDeclined
+		dateSent =  self['dateSent']
+		dateAccepted = self['dateAccepted']
+		dateDeclined = self['dateDeclined']
 		
 		# Get the first agreement phase that has not been marked complete.
 		phase = self.getCurrentPhase()
 		
-		dateCompleted = phase and phase.dateCompleted
-		dateVerified = phase and phase.dateVerified
-		dateContested = phase and phase.dateContested
+		dateCompleted = phase and phase['dateCompleted']
+		dateVerified = phase and phase['dateVerified']
+		dateContested = phase and phase['dateContested']
 		
-		# @todo: Unit test these against some example cases. Also make this look more like the diagram above.
+		# @todo: Unit test these against some example cases. Also make this fit the diagram above more closely.
 		states = [
 			# (FinalState, not phase),
 			(PaidState, dateVerified or not phase),
@@ -183,8 +179,9 @@ class Agreement(MappedObj):
 			(ContestedState, dateAccepted and dateCompleted and dateContested and dateContested > dateCompleted),
 			(CompletedState, dateAccepted and dateCompleted and (not dateContested or dateContested < dateCompleted)),
 			(InProgressState, dateSent and dateAccepted),
-			(EstimateState, dateSent and not dateContested and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
-			#                        ^-------------------^ Do we need this?
+			(EstimateState, dateSent                       and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
+			#                        and not dateContested
+			#                       |---------------------|  Do we need this?
 			
 			(DeclinedState, dateSent and dateDeclined and not dateAccepted),
 			(DraftState, not dateSent), # The following will break shit, but we need to figure out how to do it: or (dateDeclined and dateDeclined > dateSent)),
@@ -192,29 +189,30 @@ class Agreement(MappedObj):
 		]
 		
 		# like find-first
-		# logging.info("(%d) %s: %s" % (self.id, self.name, [s[0] for s in states if s[1]]))
+		# logging.info("(%d) %s: %s" % (self['id'], self['name'], [s[0] for s in states if s[1]]))
 		subStateName = [s[0] for s in states if s[1]][0]
 		return subStateName(self)
 		
 		
 	
 	def setTokenHash(self, token):
-		self.tokenHash = bcrypt.hashpw(str(token), bcrypt.gensalt())
+		self['tokenHash'] = bcrypt.hashpw(str(token), bcrypt.gensalt())
 	
 	def tokenIsValid(self, token):
-		return self.tokenHash and self.tokenHash == bcrypt.hashpw(str(token), self.tokenHash)
+		return self['tokenHash'] and self['tokenHash'] == bcrypt.hashpw(str(token), self['tokenHash'])
 	
 	def publicDict(self):
 		return OrderedDict([
-			('id', self.id),
-			('vendorID', self.vendorID),
-			('clientID', self.clientID),
-			('name', self.name),
-			('dateCreated', self.dateCreated),
-			('dateSent', self.dateSent),
-			('dateAccepted', self.dateAccepted),
-			('dateModified', self.dateModified),
-			('dateDeclined', self.dateDeclined),
+			('id', self['id']),
+			('vendorID', self['vendorID']),
+			('clientID', self['clientID']),
+			('name', self['name']),
+			('costString', self.getCostString()),
+			('dateCreated', self['dateCreated']),
+			('dateSent', self['dateSent']),
+			('dateAccepted', self['dateAccepted']),
+			('dateModified', self['dateModified']),
+			('dateDeclined', self['dateDeclined']),
 			# ('dateVerified', self.dateVerified),
 			# ('dateContested', self.dateContested)
 		])
@@ -226,21 +224,22 @@ class Agreement(MappedObj):
 # -------------------------------------------------------------------
 
 class AgreementSummary(MappedObj):
+	tableName = 'agreementSummary'
+	columns = {
+		'id': None,
+		'agreementID': None,
+		'summary': None,
+		'comments': None
+	}
 
-	def __init__(self):
-		self.id = None
-		self.agreementID = None
-		self.summary = None
-		self.comments = None
-
-	@classmethod
-	def tableName(clz):
-		return "agreementSummary"
+	# @classmethod
+	# def tableName(clz):
+	# 	return "agreementSummary"
 	
 	@classmethod
 	def retrieveByAgreementID(clz, agreementID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName(), agreementID)
+			cursor.execute("SELECT * FROM %s WHERE agreementID = %%s" % clz.tableName, agreementID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 
@@ -251,29 +250,30 @@ class AgreementSummary(MappedObj):
 # -----------------------------------------------------------------------------
 
 class AgreementPhase (MappedObj):
+	tableName = 'agreementPhase'
+	columns = {
+		'id': None,
+		'agreementID': None,
+		'phaseNumber': None,
+		'amount': None,
+		'estDateCompleted': None,
+		'dateCompleted': None,
+		'dateVerified': None,
+		'dateContested': None,
+		'description': None,
+		'comments': None
+	}
 	
-	def __init__(self):
-		self.id = None
-		self.agreementID = None
-		self.phaseNumber = None
-		self.amount = None
-		self.estDateCompleted = None
-		self.dateCompleted = None
-		self.dateVerified = None
-		self.dateContested = None
-		self.description = None
-		self.comments = None
-	
-	@classmethod
-	def tableName(clz):
-		return "agreementPhase"
+	# @classmethod
+	# def tableName(clz):
+	# 	return "agreementPhase"
 	
 	@classmethod
 	def iteratorWithAgreementID(clz, agreementID):
 		with Database() as (conn, cursor):
 			query = """SELECT * FROM %s WHERE agreementID = %%s
 				ORDER BY phaseNumber"""
-			cursor.execute(query % clz.tableName(), agreementID)
+			cursor.execute(query % clz.tableName, agreementID)
 			result = cursor.fetchone()
 			
 			while result:
@@ -285,22 +285,23 @@ class AgreementPhase (MappedObj):
 		with Database() as (conn, cursor):
 			query = """SELECT * FROM %s WHERE agreementID = %%s
 				AND phaseNumber = %%s LIMIT 1"""
-			cursor.execute(query % clz.tableName(), (agreementID, phaseNumber))
+			cursor.execute(query % clz.tableName, (agreementID, phaseNumber))
 			return clz.initWithDict(cursor.fetchone())
 	
 	def getCostString(self):
-		return "${:,.2f}".format(self.amount / 100) if self.amount else ""
+		return "${:,.2f}".format(self['amount'] / 100) if self['amount'] else ""
 	
 	def publicDict(self):
 		return OrderedDict([
-			('phaseNumber', self.phaseNumber),
-			('amount', self.amount),
-			('estimatedCompletion', self.estDateCompleted),
-			('dateCompleted', self.dateCompleted),
-			('dateVerified', self.dateVerified),
-			('dateContested', self.dateContested),
-			('description', self.description),
-			('comments', self.comments)
+			('phaseNumber', self['phaseNumber']),
+			('amount', self['amount']),
+			('costString', self.getCostString()),
+			('estimatedCompletion', self['estDateCompleted']),
+			('dateCompleted', self['dateCompleted']),
+			('dateVerified', self['dateVerified']),
+			('dateContested', self['dateContested']),
+			('description', self['description']),
+			('comments', self['comments'])
 		])
 
 
@@ -339,23 +340,13 @@ class AgreementState(object):
 	
 	inProgressPhaseNumber = None
 	
-	def __init__(self, agreementInstance):#, phaseList):
+	def __init__(self, agreementInstance):
 		assert isinstance(agreementInstance, Agreement)
 		self.agreement = agreementInstance
 		self.actions = {"vendor": {}, "client" : {}}
 	
 	def addAction(self, role, actionName):
 		self.actions[role][actionName] = self.actionMap[actionName]
-	
-	def doTransition(self, role, action):
-		if role in self.actions and action in self.actions[role]:
-			self.agreement.__dict__[self.actions[role][action]] = datetime.now()
-			self.agreement.save()
-		else:
-			fmat = 'Invalid transition for agreement %d (role: %s, action: %s)'
-			logging.error(fmat % (self.agreementInstance.id, role, action))
-		
-		return self.agreement.getCurrentState()
 	
 	def performTransition(self, role, action, unsavedRecords):
 		""" currentState : string, dict -> AgreementState """
@@ -414,10 +405,10 @@ class DraftState(AgreementState):
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'save':
-				self.agreement.dateModified = datetime.now()
+				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
-				self.agreement.dateSent = datetime.now()
+				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
@@ -433,17 +424,18 @@ class EstimateState(AgreementState):
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
+			raise StateTransitionError()
 			if action == 'save':
-				self.agreement.dateModified = datetime.now()
+				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
 		elif role == 'client':
 			if action == 'accept':
-				self.agreement.dateAccepted = datetime.now()
+				self.agreement['dateAccepted'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'decline':
-				self.agreement.dateDeclined = datetime.now()
+				self.agreement['dateDeclined'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
@@ -459,25 +451,25 @@ class DeclinedState(AgreementState):
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'save':
-				self.agreement.dateModified = datetime.now()
+				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
 				# If the agreement has been declined, reset previous comments
 				# before re-sending the updated agreement. This also applies
 				# to all of the agreement's phases.
 				
-				if self.agreement.dateDeclined:
-					summary = AgreementSummary.retrieveByAgreementID(self.agreement.id)
-					summary.comments = None
+				if self.agreement['dateDeclined']:
+					summary = AgreementSummary.retrieveByAgreementID(self.agreement['id'])
+					summary['comments'] = None
 					unsavedRecords.append(summary)
-					#self.agreement.comments = None
 				
-				for phase in AgreementPhase.iteratorWithAgreementID(self.agreement.id):
-					if phase.comments:
-						phase.comments = None
+				for phase in AgreementPhase.iteratorWithAgreementID(self.agreement['id']):
+					if phase['comments']:
+						phase['comments'] = None
 						unsavedRecords.append(phase)
 				
-				self.agreement.dateSent = datetime.now()
+				self.agreement['dateModified'] = datetime.now()
+				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
 				raise StateTransitionError()
@@ -497,7 +489,7 @@ class InProgressState(AgreementState):
 				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
 				phase = self.agreement.getCurrentPhase()
 				logging.warn(phase)
-				phase.dateCompleted = datetime.now()
+				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError()
@@ -513,14 +505,12 @@ class CompletedState(AgreementState):
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'client':
 			if action == 'verify':
-				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
 				phase = self.agreement.getCurrentPhase()
-				phase.dateVerified = datetime.now()
+				phase['dateVerified'] = datetime.now()
 				unsavedRecords.append(phase)
 			elif action == 'dispute':
-				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
 				phase = self.agreement.getCurrentPhase()
-				phase.dateContested = datetime.now()
+				phase['dateContested'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError()
@@ -536,16 +526,16 @@ class ContestedState(AgreementState):
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if action == 'save':
-				self.agreement.dateModified = datetime.now()
+				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'mark_complete':
 				phase = self.agreement.getCurrentPhase()
 				
 				# Remove previous comments when re-sending
-				phase.comments = None
+				phase['comments'] = None
 				
 				logging.warn(phase)
-				phase.dateCompleted = datetime.now()
+				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError()
@@ -556,18 +546,12 @@ class PaidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
-	def doTransition(self, r, a):
-		return self
-	
 	def _prepareFields(self, r, a, d):
 		pass
 	
 class InvalidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
-	
-	def doTransition(self, r, a):
-		return self
 	
 	def _prepareFields(self, r, a, d):
 		pass

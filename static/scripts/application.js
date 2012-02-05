@@ -80,10 +80,10 @@ $(document).ready(function() {
 	$(".js-replace-action").ajaxForm({
 		data: {'_xsrf': slug['_xsrf']},
 		beforeSubmit: function (arr, $form, options) {
-			// @todo: This should only append if it's not already there.
 			// We add the .json extension to the form action URL
 			// for AJAX requests.
-			options.url = $form.attr('action') + '.json';
+			var action = $form.attr('action');
+			options.url = action + (action.match(/\.json$/) ? '' : '.json');
 			options.dataType = "json";
 
 			if ($form.attr('id')) {
@@ -107,21 +107,6 @@ $(document).ready(function() {
 		var btn = new Button(elt);
 	});
 });
-
-
-// var SubmitButton = function(elt) {
-// 	var self = this;
-// 	
-// 	this.$elt = $(elt);
-// 	this.successAction = buttonActions[this.$elt.attr('id')];
-// 	
-// 	this.$elt.ajaxForm({
-// 		data: {'_xsrf': slug['_xsrf']},
-// 		beforeSubmit: function (arr, $form, options) {
-// 			return self.successAction(self, arr, $form, options);
-// 		}
-// 	});
-// };
 
 
 
@@ -168,6 +153,60 @@ Button.prototype.jsonHTTPRequest = function(url, method, data, success, error) {
 		success: success,
 		error: error
 	});
+};
+
+
+
+var Popup = function (parent) {
+	var self = this;
+	var $container = null;
+	
+	if (arguments[1]) {
+		$container = arguments[1];
+	} else {
+		$container = $(
+		'<div class="clear prompt-box" id="popup-div" style="display:none;">\
+			<div class="column-three-fourth">\
+				<h3><span style="font-size: 30px; margin-right: 10px;"><a href="#" class="js-close-btn" style="color:#EEE; text-shadow: 1px 1px #333">&#x2297;</a></span> <span id="popup-label"></span></h3>\
+			</div>\
+			<div class="column-one-fourth">\
+			</div>\
+		</div>');
+	}
+	
+	this.state = 'closed';
+	this.$elt = $container; 
+	$(parent).prepend(this.$elt);
+	
+	this.$elt.find('.js-close-btn').click(function(evt) {
+		self.$elt.slideUp(300);
+		return evt.preventDefault();
+	});
+};
+
+Popup.prototype.setLabel = function(label) {
+	this.$elt.find('#popup-label').html(label);
+	return this;
+};
+
+Popup.prototype.open = function() {
+	if (this.state == 'open') {
+		return this;
+	}
+	
+	this.$elt.slideDown(300);
+	this.state = 'closed';
+	return this;
+};
+
+Popup.prototype.close = function() {
+	if (this.state == 'closed') {
+		return this;
+	}
+	
+	this.$elt.slideUp(300);
+	this.state = 'open';
+	return this;
 };
 
 // var wh = { };
@@ -257,9 +296,10 @@ var formValidator = {
 };
 
 $('.notes.toggle').click(function(e) {
-	if (!$(e.target).is('textarea')) {
-		$(this).children().toggle();
-		$(this).removeClass('toggle').unbind();
+	var $textArea = $(this).children('textarea');
+	if (!$(e.target).is('textarea') && ($textArea.is(':hidden') || $textArea.val() === '')) {
+		$(this).children('textarea').toggle();
+		//$(this).removeClass('toggle').unbind();
 	};
 });
 

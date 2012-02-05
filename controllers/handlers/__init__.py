@@ -1,11 +1,11 @@
 __all__ = [
 	"base",
-	"root",
-	"authhandlers",
-	"agreements",
-	"profilehandlers",
-	"users",
 	"accounts",
+	"agreements",
+	"authhandlers",
+	"notifications",
 	"payments",
-	"requests"
+	"requests",
+	"root",
+	"users",
 ]

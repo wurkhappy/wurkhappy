@@ -1,0 +1,14 @@
+{% extends "email_base.html" %}
+
+{% block body %}
+
+	<h1 style="font-weight: bold; font-size: 24px; line-height: 32px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ data['vendor']['fullName'] }} has re-submitted a proposal with changes.</h1>
+	
+	<h2 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;"><a href="http://www.wurkhappy.com/agreement/{{ data['agreement']['id'] }} }}" style="text-decoration: none; color: #0099DD;">{{ data['agreement']['name'] }}</a></h2>
+	
+	<!--{% set num = len(data['agreement']['phases']) %}-->
+	<p style="font-size: 12px; font-style: italic; color: #999999; margin: 0; padding: 5px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ num }} phase{% if num != 1 %}s{% end %} totalling {{ data['agreement']['costString'] }}</p>
+	
+	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ data['vendor']['fullName'] }} has edited the proposal in response to your recommendations. Please take a minute to review the proposal and respond.</p>
+
+{% end %}
