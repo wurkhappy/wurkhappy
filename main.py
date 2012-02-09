@@ -1,8 +1,8 @@
 # WurkHappy Web Application Template
-# Version 0.1
+# Version 0.5
 #
 # Written by Brendan Berg
-# Copyright WurkHappy, 2011
+# Copyright WurkHappy, 2011 - 2012
 
 import yaml
 

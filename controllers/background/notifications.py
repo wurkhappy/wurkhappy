@@ -1,4 +1,4 @@
-from models.user import User
+from models.user import User, UserState, ActiveUserState
 from models.agreement import Agreement, AgreementPhase
 from models.transaction import Transaction
 from controllers.email import Email
@@ -17,7 +17,9 @@ from email.mime.text import MIMEText
 
 
 class QueueHandler(object):
-	def __init__(self):
+	def __init__(self, application):
+		self.application = application
+		
 		# @todo: This should be set in a config file.
 		self.loader = template.Loader('templates/notification')
 	
@@ -99,6 +101,7 @@ class AgreementInviteHandler(QueueHandler):
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -113,42 +116,38 @@ class AgreementInviteHandler(QueueHandler):
 		subject = "%s just sent you an estimate using Wurk Happy" % vendor.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		with Email() as (server):
-			senderName = "Wurk Happy Community"
-			# @todo: Replace this line with "recipientAddress = client['email']" for production deployment
-			recipientAddress = client['email'] if client['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		# @todo: This defeats the function of an invitation to prevent it from going out to
+		# non-registered users, but we're keeping things closed for now...
+		if client.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": client['id'],
+				"recipientEmail": client['email'],
+				"agreementID": agreement['id']
+			}))
 			
-			# Create message container - the correct MIME type is multipart/alternative.
-			msg = MIMEMultipart('alternative')
-			msg['Subject'] = subject
-			msg['From'] = senderName
-			msg['To'] = recipientAddress
-			
-			# @todo: Something sensible here, please...
-			# Create the body of the message (a plain-text and an HTML version).
-			text = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
-			html = htmlString
-
-			# Record the MIME types of both parts - text/plain and text/html.
-			part1 = MIMEText(text, 'plain')
-			part2 = MIMEText(html, 'html')
-
-			# Attach parts into message container.
-			# According to RFC 2046, the last part of a multipart message, in this case
-			# the HTML message, is best and preferred.
-			msg.attach(part1)
-			msg.attach(part2)
-			
-			server.sendmail("contact@wurkhappy.com", recipientAddress, msg.as_string())
+			return
+		
+		self.sendEmail({
+			'from': (vendor.getFullName(), "contact@wurkhappy.com"),
+			'to': (client.getFullName(), client['email']),
+			'subject': subject,
+			'multipart': [
+				(textString, 'text'),
+				(htmlString, 'html')
+			]
+		})
 		
 		agreement.save()
-		agreement.refresh()
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client['id'],
-			"clientEmail": client['email'],
+			"actionType": body['action'],
+			"recipientID": client['id'],
+			"recipientEmail": client['email'],
 			"agreementID": agreement['id']
 		}))
 
@@ -168,6 +167,7 @@ class AgreementSentHandler(QueueHandler):
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -177,18 +177,26 @@ class AgreementSentHandler(QueueHandler):
 		
 		t = self.loader.load('agreement_send.html')
 		htmlString = t.generate(data=data)
-
+		
 		subject = "%s just sent you an estimate using Wurk Happy" % vendor.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
-		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		recipientAddress = client['email'] if client['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		if client.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": client['id'],
+				"recipientEmail": client['email'],
+				"agreementID": agreement['id']
+			}))
+			
+			return
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(vendor.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client['email']),
-			'to': (client.getFullName(), recipientAddress),
+			'from': (vendor.getFullName(), "contact@wurkhappy.com"),
+			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -196,13 +204,11 @@ class AgreementSentHandler(QueueHandler):
 			]
 		})
 		
-		agreement.save()
-		#agreement.refresh()
-		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client['id'],
-			"clientEmail": client['email'],
+			"actionType": body['action'],
+			"recipientID": client['id'],
+			"recipientEmail": client['email'],
 			"agreementID": agreement['id']
 		}))
 
@@ -222,6 +228,7 @@ class AgreementAcceptedHandler(QueueHandler):
 		client = User.retrieveByID(agreement['clientID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -233,14 +240,22 @@ class AgreementAcceptedHandler(QueueHandler):
 		subject = "%s just accepted your proposed agreement on Wurk Happy" % client.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
-		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		if vendor.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": vendor['id'],
+				"recipientEmail": vendor['email'],
+				"agreementID": agreement['id']
+			}))
+			
+			return
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client['email']),
-			'to': (vendor.getFullName(), recipientAddress),
+			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -250,6 +265,7 @@ class AgreementAcceptedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
+			"actionType": body['action'],
 			"vendorID": vendor['id'],
 			"vendorEmail": vendor['email'],
 			"agreementID": agreement['id']
@@ -271,6 +287,7 @@ class AgreementDeclinedHandler(QueueHandler):
 		client = User.retrieveByID(agreement['clientID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -282,14 +299,22 @@ class AgreementDeclinedHandler(QueueHandler):
 		subject = "%s requested changes to your proposed agreement on Wurk Happy" % client.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
-		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		if vendor.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": vendor['id'],
+				"recipientEmail": vendor['email'],
+				"agreementID": agreement['id']
+			}))
+			
+			return
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (vendor.getFullName(), vendor['email']),
-			'to': (vendor.getFullName(), recipientAddress),
+			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -299,8 +324,9 @@ class AgreementDeclinedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"vendorID": vendor['id'],
-			"vendorEmail": vendor['email'],
+			"actionType": body['action'],
+			"recipientID": vendor['id'],
+			"recipientEmail": vendor['email'],
 			"agreementID": agreement['id']
 		}))
 
@@ -322,6 +348,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
@@ -334,14 +361,22 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		subject = "%s just completed a phase of work on your agreement on Wurk Happy" % vendor.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
-		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		recipientAddress = client['email'] if client['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		if client.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": client['id'],
+				"recipientEmail": client['email'],
+				"agreementID": agreement['id']
+			}))
+			
+			return
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(vendor.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (client.getFullName(), client['email']),
-			'to': (client.getFullName(), recipientAddress),
+			'from': (vendor.getFullName(), "contact@wurkhappy.com"),
+			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -351,8 +386,9 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
-			"clientID": client['id'],
-			"clientEmail": client['email'],
+			"actionType": body['action'],
+			"recipientID": client['id'],
+			"recipientEmail": client['email'],
 			"agreementID": agreement['id']
 		}))
 
@@ -376,6 +412,7 @@ class AgreementPaidHandler(QueueHandler):
 		paymentMethod = PaymentMethod.retrieveByID(transaction['paymentMethodID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
@@ -389,14 +426,22 @@ class AgreementPaidHandler(QueueHandler):
 		subject = "%s just submitted payment via Wurk Happy" % client.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
-		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		if vendor.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": vendor['id'],
+				"recipientEmail": vendor['email'],
+				"agreementID": agreement['id']
+			}))
+			
+			return
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (vendor.getFullName(), vendor['email']),
-			'to': (vendor.getFullName(), recipientAddress),
+			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -406,6 +451,7 @@ class AgreementPaidHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
+			"actionType": body['action'],
 			"vendorID": vendor['id'],
 			"vendorEmail": vendor['email'],
 			"agreementID": agreement['id']
@@ -428,6 +474,7 @@ class AgreementDisputedHandler(QueueHandler):
 		phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
 		
 		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
@@ -440,14 +487,22 @@ class AgreementDisputedHandler(QueueHandler):
 		subject = "%s needs more information about the work you completed" % client.getFullName()
 		# @todo: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
-		textString = "If you cannot view the message, go to http://www.wurkhappy.com/ and type 'foo'."
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		recipientAddress = vendor['email'] if vendor['email'].endswith("wurkhappy.com") else "brendan+test@wurkhappy.com"
+		if vendor.getUserState() is not ActiveUserState:
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": vendor['id'],
+				"recipientEmail": vendor['email'],
+				"agreementID": agreement['id']
+			}))
+			
+			return
 		
 		self.sendEmail({
-			'from': ("{0} (via Wurk Happy)".format(client.getFullName()), "contact@wurkhappy.com"),
-			# 'to': (vendor.getFullName(), vendor['email']),
-			'to': (vendor.getFullName(), recipientAddress),
+			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
 				(textString, 'text'),
@@ -457,6 +512,7 @@ class AgreementDisputedHandler(QueueHandler):
 		
 		logging.info(json.dumps({
 			"message": "Successfully sent email",
+			"actionType": body['action'],
 			"vendorID": vendor['id'],
 			"vendorEmail": vendor['email'],
 			"agreementID": agreement['id']

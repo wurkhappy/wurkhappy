@@ -72,7 +72,7 @@ class MailController (object):
 						continue
 					
 					if body:
-						handler = self.handlers[body['action']]()
+						handler = self.handlers[body['action']](self)
 						try:
 							handler.receive(body)
 							msg.delete()
