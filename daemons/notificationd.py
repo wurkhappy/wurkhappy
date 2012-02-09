@@ -35,7 +35,7 @@ class MailController (object):
 		Email.configure(config['smtp'])
 		
 		self.handlers = {
-			'invite': notifications.InviteHandler,
+			'beanstalkTest': notifications.TestHandler,
 			'agreementInvite': notifications.AgreementInviteHandler,
 			'agreementSent': notifications.AgreementSentHandler,
 			'agreementAccepted': notifications.AgreementAcceptedHandler,

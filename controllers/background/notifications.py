@@ -54,8 +54,8 @@ class QueueHandler(object):
 			# Record the MIME types of each part - (usually text/plain and text/html)
 			for (content, mimeType) in message['multipart']:
 				# Attach parts into message container.
-				# According to RFC 2046, the last part of a multipart message, in this case
-				# the HTML message, is best and preferred.
+				# According to RFC 2046, the last part of a multipart message,
+				# in this case the HTML message, is best and preferred.
 				msg.attach(MIMEText(content, mimeType))
 			
 			server.sendmail(message['from'][1], message['to'][1], msg.as_string())
@@ -63,13 +63,14 @@ class QueueHandler(object):
 
 
 
-class InviteHandler(QueueHandler):
+class TestHandler(QueueHandler):
 	def receive(self, body):
 		user = User.retrieveByID(body['userID'])
 		
 		if user:
 			logging.info(json.dumps({
 				"message": "Test hook recieved user",
+				"actionType": body['action'],
 				"userID": user['id'],
 				"userName": user.getFullName(),
 				"userEmail": user['email']
