@@ -505,6 +505,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				client = User()
 				client['email'] = args['email']
 				client['invitedBy'] = user['id']
+				client['dateCreated'] = datetime.now()
 				client['profileSmallURL'] = profileURL
 				
 				client.save()
@@ -531,7 +532,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			logging.info(clientState)
 			if isinstance(clientState, InvitedUserState):
 				# @todo: Whoa! What's going on here?
-				data = {"confirmationHash": "foo"}
+				data = {"confirmation": "foo"}
 				clientState.performTransition("send_verification", data)
 				
 				msg = json.dumps(dict(
@@ -735,8 +736,11 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						client = User()
 						client['email'] = args['email']
 						client['invitedBy'] = user['id']
+						client['dateCreated'] = datetime.now()
 						client['profileSmallURL'] = profileURL
+						
 						client.save()
+					
 					agreement['clientID'] = client['id']
 
 				if action == "send":
@@ -854,9 +858,10 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					# create the necessary confirmation codes and perform a
 					# user state transition. Override the 'agreementSent'
 					# action to say 'agreementInvite'.
+					
 					if isinstance(clientState, InvitedUserState):
 						# @todo: use a real value here
-						data = {"confirmationHash": "foo"}
+						data = {"confirmation": "foo"}
 						clientState.performTransition("send_verification", data)
 						msg['action'] = 'agreementInvite'
 				else:

@@ -165,6 +165,13 @@ class Email(Enforce):
 	def test(self, value):
 		if not re.match(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$', value):
 			raise Exception("value must be well-formed")
+	
+	def __lshift__(self, value):
+		if value is None:
+			return self.default
+		
+		self.test(val)
+		return val.lower()
 
 
 

@@ -54,8 +54,6 @@ class SignupHandler(BaseHandler):
 			
 			self.set_status(e.status_code)
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
-			
-			# self.redirect("/signup?err=email_invalid")
 			return
 		
 		# Check whether user exists already
@@ -65,11 +63,9 @@ class SignupHandler(BaseHandler):
 		if not user:
 			user = User()
 			user['email'] = args['email']
-			# user['confirmed'] = 0
 			user['dateCreated'] = datetime.now()
-			verifier = Verification()
-			user['confirmationCode'] = verifier.code
-			user['confirmationHash'] = verifier.hashDigest
+			# verifier = Verification()
+			# user.setConfirmationHash(verifier.code)
 			user.setPasswordHash(args['password'])
 			user.save()
 			
@@ -94,7 +90,6 @@ class SignupHandler(BaseHandler):
 			
 			self.set_status(400)
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
-			# self.redirect("/signup?err=email_exists")
 
 
 
@@ -176,10 +171,6 @@ class LogoutHandler(Authenticated, BaseHandler):
 # -------------------------------------------------------------------
 		
 class ForgotPasswordHandler(BaseHandler):
-	ERR = 	{	
-			"email_does_not_exist":"That email does not exist in our system. Please use a different email."
-			}
-
 	def get(self):
 		flash = {"error": self.parseErrors()}
 		self.render("user/forgot_password.html", title="Forgot Password", flash=flash, logged_in_user=self.current_user)
@@ -190,7 +181,7 @@ class ForgotPasswordHandler(BaseHandler):
 
 		# User wasn't found, so redirect with error
 		if not user:
-			flash = {"error": [self.ERR["email_does_not_exist"]]}
+			flash = {"error": "That email does not exist in our system. Please use a different email."}
 			self.render("user/forgot_password.html", title="Forgot Password", flash=flash, logged_in_user=self.current_user)
 		else: # user exists
 			# generate a code
@@ -218,10 +209,6 @@ class ForgotPasswordHandler(BaseHandler):
 
 
 class ResetPasswordHandler(Authenticated, BaseHandler):
-	ERR = 	{	
-			"passwords_do_not_match":"The passwords you entered do not match, please try again."
-			}
-
 	def get(self):
 		flash = {"error": self.parseErrors()}
 		code = self.get_argument("code", '')
@@ -248,7 +235,7 @@ class ResetPasswordHandler(Authenticated, BaseHandler):
 			self.write("Forbidden")
 			return
 		elif password != cpassword:
-			flash = {"error":[self.ERR["passwords_do_not_match"]], "code":code}
+			flash = {"error":"The passwords you entered do not match, please try again.", "code":code}
 			self.render("user/reset_password.html", title="Reset Password", flash=flash, logged_in_user=self.current_user)
 		else:
 			user = None
@@ -274,7 +261,6 @@ class ResetPasswordHandler(Authenticated, BaseHandler):
 # -------------------------------------------------------------------
 
 class PasswordJSONHandler(Authenticated, BaseHandler):
-		
 	@web.authenticated
 	def post(self):
 		user = self.current_user

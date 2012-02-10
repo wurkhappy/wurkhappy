@@ -24,8 +24,8 @@ class User(MappedObj):
 	columns = {
 		'id': None,
 		'email': None,
-		'confirmationCode': None,
-		'confirmationHash': None,
+		'confirmation': None,
+		'fingerprint': None,
 		'invitedBy': None,
 		# 'confirmed': None, # @todo: Delete field from schema
 		# 'subscriberStatus': 0, # @todo: Delete field from schema
@@ -46,15 +46,23 @@ class User(MappedObj):
 	@classmethod
 	def retrieveByEmail(clz, email):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE email = %%s LIMIT 1" % clz.tableName, email)
+			cursor.execute("SELECT * FROM %s WHERE email = %%s LIMIT 1" % clz.tableName, email.lower())
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
 	
 	@classmethod
+	def retrieveByFingerprint(clz, fingerprint):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} WHERE fingerprint = %s"
+			cursor.execute(query.format(clz.tableName), fingerprint)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+	
+	@classmethod
 	def retrieveByAccessToken(clz, token):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE accessToken = %%s LIMIT 1" % clz.tableName, token)
+			cursor.execute("SELECT * FROM {0} WHERE accessToken = %s LIMIT 1".format(clz.tableName), token)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -62,7 +70,7 @@ class User(MappedObj):
 	@classmethod
 	def retrieveByUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName, userID)
+			cursor.execute("SELECT * FROM {0} WHERE id = %s LIMIT 1".format(clz.tableName), userID)
 			result = cursor.fetchone()
 
 		return clz.initWithDict(result)
@@ -84,7 +92,7 @@ class User(MappedObj):
 				result = cursor.fetchone()
 	
 	def setProfileImage(self, data, ext, headers=None):
-		# @todo: Move this method to a more appropriate class.
+		# @todo: Move this method to a more appropriate class. (Some sort of aux class or something?)
 		hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
 		# hashString = Data(uuid.uuid4().bytes).stringWithEncoding(Base58)
 		name = '%s%s' % (hashString, ext)
@@ -101,9 +109,15 @@ class User(MappedObj):
 		return Profile.retrieveByUserID(self['id'])
 	
 	def getFullName(self):
+		"""
+		Return the first and last name of the user, or if no values are set,
+		the user's email address.
+		"""
 		return " ".join([str(self['firstName'] or ""), str(self['lastName'] or "")]).strip() or self['email']
 	
 	def setPasswordHash(self, password):
+		"Store the user's encrypted password"
+		
 		self['password'] = bcrypt.hashpw(str(password), bcrypt.gensalt())
 	
 	def passwordIsValid(self, password):
@@ -117,10 +131,27 @@ class User(MappedObj):
 		return self['password'] == bcrypt.hashpw(str(password), self['password'])
 	
 	def setConfirmationHash(self, confirmation):
-		self['confirmationHash'] = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
+		"Store the confirmation code's fingerprint and encrypted value"
+		
+		# The confirmation code is a password equivalent, so we must take care
+		# to protect the plaintext from appearing in the database. However,
+		# confirmation codes also must be indexed and searchable, so we need
+		# to store a unique fingerprint.
+		# 
+		# We do this by storing an SHA-1 digest of the confirmation code that is
+		# indexed, and a bcrypt encrypted ciphertext of the code for verification.
+		
+		self['fingerprint'] = hashlib.sha1(confirmation).hexdigest()
+		self['confirmation'] = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
 	
 	def confirmationIsValid(self, confirmation):
-		return self['confirmationHash'] == bcrypt.hashpw(str(confirmation), self['confirmationHash'])
+		"""
+		Validate the user based on the supplied confirmation code. Similar to
+		the User.passwordIsValid(password) method. A confirmation code is only
+		valid if there is no password set for the user.
+		"""
+		cipherText = bcrypt.hashpw(str(confirmation), self['confirmation'])
+		return self['password'] is None and self['confirmation'] == cipherText
 	
 	def getDefaultPaymentMethod(self):
 		paymentPref = UserPrefs.retrieveByUserIDAndName(self['id'], 'preferredPaymentID')
@@ -136,13 +167,16 @@ class User(MappedObj):
 		return paymentMethod
 	
 	def getCurrentState(self):
-		""" getCurrentState : () -> UserState """
+		"""
+		Return the UserState subclass that represents the user's current state
+		in the invitation and sign-up process.
+		"""
 		
 		dateCreated = self['dateCreated']
 		email = self['email']
 		invitedBy = self['invitedBy']
-		confirmationCode = self['confirmationCode']
-		confirmationHash = self['confirmationHash']
+		confirmationCode = self['confirmation']
+		confirmationHash = self['fingerprint']
 		password = self['password']
 		dateVerified = self['dateVerified']
 		
@@ -242,32 +276,9 @@ class UserState(object):
 			
 			raise HTTPErrorBetter(409, 'state transition error', json.dumps(error))
 		
-		return UserState.currentState(self.user)
-	
-	@classmethod
-	def currentState(clz, user):
-		""" currentState : User -> UserState """
-		
-		dateCreated = user['dateCreated']
-		email = user['email']
-		invitedBy = user['invitedBy']
-		confirmationCode = user['confirmationCode']
-		confirmationHash = user['confirmationHash']
-		password = user['password']
-		dateVerified = user['dateVerified']
-		
-		states = [
-			(ActiveUserState, password and dateVerified and email),
-			(PendingUserState, confirmationCode and confirmationHash and email and dateCreated),
-			(NewUserState, dateCreated and email and password),
-			(InvitedUserState, dateCreated and email and invitedBy),
-			(BetaUserState, dateCreated and email),
-			(InvalidUserState, True)
-		]
-		
-		logging.info([s[0] for s in states if s[1]])
-		state = [s[0] for s in states if s[1]][0]
-		return state(user)
+		return self.user.getCurrentState()
+
+
 
 class BetaUserState(UserState):
 	def __init__(self, agreementInstance):
@@ -275,14 +286,14 @@ class BetaUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmationHash' not in data:
+			if 'confirmation' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.setConfirmationHash(data['confirmationHash'])
-			# self.user.confirmationCode = data['confirmationCode']
-			# self.user.confirmationHash = data['confirmationHash']
+			self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
+
+
 
 class InvitedUserState(UserState):
 	def __init__(self, agreementInstance):
@@ -290,12 +301,14 @@ class InvitedUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmationHash' not in data:
+			if 'confirmation' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.setConfirmationHash(data['confirmationHash'])
+			self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
+
+
 
 class NewUserState(UserState):
 	def __init__(self, agreementInstance):
@@ -303,12 +316,14 @@ class NewUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmationHash' not in data:
+			if 'confirmation' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.setConfirmationHash(data['confirmationHash'])
+			self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
+
+
 
 class PendingUserState(UserState):
 	def __init__(self, agreementInstance):
@@ -325,12 +340,16 @@ class PendingUserState(UserState):
 		else:
 			raise StateTransitionError()
 
+
+
 class ActiveUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(ActiveUserState, self).__init__(agreementInstance)
 	
 	def _prepareFields(self, action, data):
 		raise StateTransitionError()
+
+
 
 class InvalidUserState(UserState):
 	def __init__(self, agreementInstance):
