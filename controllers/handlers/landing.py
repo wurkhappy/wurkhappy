@@ -148,4 +148,12 @@ class JobsHandler(BaseHandler):
 		self.render('landing/jobs.html',
 			title="Wurk Happy is hiring.")
 	
+class AboutPersonHandler(BaseHandler):
+	def get(self, person):
+		self.render('landing/about/%s.html' % person, title='Wurk Happy')
+
+
+class TechstarsHandler(BaseHandler):
+	def get(self):
+		self.render('landing/techstars.html', title="About Our Team")
 
