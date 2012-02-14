@@ -528,7 +528,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				self.renderJSON(error)
 				return
 
-			clientState = UserState.currentState(client)
+			clientState = client.getCurrentState()
 			logging.info(clientState)
 			if isinstance(clientState, InvitedUserState):
 				# @todo: Whoa! What's going on here?
@@ -852,7 +852,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				
 				if role == 'vendor':
 					recipient = User.retrieveByID(agreement['clientID'])
-					clientState = UserState.currentState(recipient)
+					clientState = recipient.getCurrentState()
 					
 					# For users that have not yet signed up on the platform,
 					# create the necessary confirmation codes and perform a
