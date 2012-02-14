@@ -56,8 +56,6 @@ class SignupHandler(BaseHandler):
 			user = User()
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
-			# verifier = Verification()
-			# user.setConfirmationHash(verifier.code)
 			user.save()
 		
 		self.render('landing/thankyou.html',
@@ -133,8 +131,6 @@ class SignupJSONHandler(BaseHandler):
 			user = User()
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
-			# verifier = Verification()
-			# user.setConfirmationHash(verifier.code)
 			user.save()
 		
 		self.renderJSON({"success": True})

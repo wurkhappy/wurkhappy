@@ -21,8 +21,8 @@ if __name__ == "__main__":
 	newUsers = []
 	
 	with Database() as (conn, cursor):
-		query = """SELECT u.* FROM {0} AS u WHERE id NOT IN (
-			SELECT p.id FROM {1} AS p WHERE name = 'userSignupAcknowledged'
+		query = """SELECT u.* FROM {0} AS u WHERE u.id NOT IN (
+			SELECT p.userID FROM {1} AS p WHERE name = 'userSignupAcknowledged'
 		)""".format(User.tableName, UserPrefs.tableName)
 		
 		cursor.execute(query)
