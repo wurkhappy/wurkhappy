@@ -134,13 +134,13 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		# }
 		
 		if args['email']:
-			user.email = args['email']
+			user['email'] = args['email']
 		if args['firstName']:
-			user.firstName = args['firstName']
+			user['firstName'] = args['firstName']
 		if args['lastName']:
-			user.lastName = args['lastName']
+			user['lastName'] = args['lastName']
 		if args['telephone']:
-			user.telephone = args['telephone']
+			user['telephone'] = args['telephone']
 		
 		# @todo: This needs refactoring
 		if 'profilePhoto' in self.request.files:

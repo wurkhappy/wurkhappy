@@ -9,8 +9,6 @@
 import MySQLdb
 import json
 
-
-
 # -------------------------------------------------------------------
 # Custom JSON encoder to add support for datetime objects
 # -------------------------------------------------------------------
@@ -115,7 +113,7 @@ class MappedObj(object):
 				keys.append(k)
 				values.append(self[k])
 			
-			if self['id']:
+			if self['id'] and len(keys) > 0:
 				values += [self['id']]
 				
 				atom = "%s = %%s"
@@ -126,7 +124,7 @@ class MappedObj(object):
 				
 				cursor.execute(updateStatement, tuple(values))
 				conn.commit()
-			else:
+			elif self['id'] is None:
 				atom = "%s"
 				
 				keyClause = ", ".join(keys)
