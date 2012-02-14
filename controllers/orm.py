@@ -144,7 +144,7 @@ class MappedObj(object):
 			result = cursor.fetchone()
 			
 			for key, value in result.iteritems():
-				self[key] = value
+				self.fields[key] = value
 	
 	def getPublicDictionary(self):
 		return {}
