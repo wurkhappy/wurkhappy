@@ -170,8 +170,8 @@ class Email(Enforce):
 		if value is None:
 			return self.default
 		
-		self.test(val)
-		return val.lower()
+		self.test(value[0])
+		return value[0].lower()
 
 
 
