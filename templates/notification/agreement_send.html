@@ -6,7 +6,6 @@
 	
 	<h2 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;"><a href="http://{{ data['hostname'] }}/agreement/{{ data['agreement']['id'] }} }}" style="text-decoration: none; color: #0099DD;">{{ data['agreement']['name'] }}</a></h2>
 	
-	<!--{% set num = len(data['agreement']['phases']) %}-->
 	<p style="font-size: 12px; font-style: italic; color: #999999; margin: 0; padding: 5px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ num }} phase{% if num != 1 %}s{% end %} totalling {{ data['agreement']['costString'] }}</p>
 	
 	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Click on the above link to view the details of {{ data['vendor']['fullName'] }}&rsquo;s work proposal. Upon acceptance of the agreement you will be asked to make a deposit.</p>
