@@ -105,7 +105,8 @@ class AgreementInviteHandler(QueueHandler):
 			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phases': list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -171,7 +172,8 @@ class AgreementSentHandler(QueueHandler):
 			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phases': list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -232,7 +234,8 @@ class AgreementAcceptedHandler(QueueHandler):
 			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phases': list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		}
 		
 		t = self.loader.load('agreement_accept.html')
@@ -291,7 +294,8 @@ class AgreementDeclinedHandler(QueueHandler):
 			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'agreement': agreement.publicDict(),
+			'phases': list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		}
 		
 		t = self.loader.load('agreement_change.html')
@@ -353,7 +357,8 @@ class AgreementWorkCompletedHandler(QueueHandler):
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
-			'phase': phase.publicDict()
+			'phase': phase.publicDict(),
+			'phases': list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
 		}
 		
 		t = self.loader.load('agreement_work_complete.html')
@@ -418,6 +423,7 @@ class AgreementPaidHandler(QueueHandler):
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
 			'phase': phase.publicDict(),
+			'phases': list(AgreementPhase.iteratorWithAgreementID(agreement['id'])),
 			'paymentMethod': paymentMethod.publicDict()
 		}
 		
