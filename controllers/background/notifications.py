@@ -121,7 +121,7 @@ class AgreementInviteHandler(QueueHandler):
 		
 		# @todo: This defeats the function of an invitation to prevent it from going out to
 		# non-registered users, but we're keeping things closed for now...
-		if client.getUserState() is not ActiveUserState:
+		if client.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
@@ -184,7 +184,7 @@ class AgreementSentHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		if client.getUserState() is not ActiveUserState:
+		if client.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
@@ -245,7 +245,7 @@ class AgreementAcceptedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		if vendor.getUserState() is not ActiveUserState:
+		if vendor.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
@@ -306,7 +306,7 @@ class AgreementDeclinedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		if vendor.getUserState() is not ActiveUserState:
+		if vendor.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
@@ -370,7 +370,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		if client.getUserState() is not ActiveUserState:
+		if client.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
@@ -437,7 +437,7 @@ class AgreementPaidHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		if vendor.getUserState() is not ActiveUserState:
+		if vendor.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
@@ -498,7 +498,7 @@ class AgreementDisputedHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		if vendor.getUserState() is not ActiveUserState:
+		if vendor.getCurrentState() is not ActiveUserState:
 			logging.warn(json.dumps({
 				"message": "Attempted to send message to invalid user",
 				"actionType": body['action'],
