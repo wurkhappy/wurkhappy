@@ -490,6 +490,8 @@ class AgreementDisputedHandler(QueueHandler):
 			'phase': phase.publicDict()
 		}
 		
+		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
+		
 		t = self.loader.load('agreement_dispute.html')
 		htmlString = t.generate(data=data)
 		
