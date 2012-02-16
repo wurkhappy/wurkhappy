@@ -175,14 +175,14 @@ class User(MappedObj):
 		dateCreated = self['dateCreated']
 		email = self['email']
 		invitedBy = self['invitedBy']
-		confirmationCode = self['confirmation']
-		confirmationHash = self['fingerprint']
+		confirmation = self['confirmation']
+		fingerprint = self['fingerprint']
 		password = self['password']
 		dateVerified = self['dateVerified']
 		
 		states = [
 			(ActiveUserState, password and dateVerified and email),
-			(PendingUserState, confirmationCode and confirmationHash and email and dateCreated),
+			(PendingUserState, confirmation and fingerprint and email and dateCreated),
 			(NewUserState, dateCreated and email and password),
 			(InvitedUserState, dateCreated and email and invitedBy),
 			(BetaUserState, dateCreated and email),
