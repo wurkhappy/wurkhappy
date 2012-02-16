@@ -1,6 +1,7 @@
 from models.user import User, UserState, ActiveUserState
 from models.agreement import Agreement, AgreementPhase
 from models.transaction import Transaction
+from models.paymentmethod import PaymentMethod
 from controllers.email import Email
 from controllers.orm import ORMJSONEncoder
 from controllers.verification import Verification
