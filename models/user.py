@@ -1,6 +1,7 @@
 from controllers.orm import *
 from controllers.amazonaws import *
-from controllers.base import Base16, Base58
+# from controllers.base import Base16, Base58
+from controllers.data import Data, Base58
 from profile import Profile
 
 from models.paymentmethod import PaymentMethod
@@ -93,14 +94,19 @@ class User(MappedObj):
 	
 	def setProfileImage(self, data, ext, headers=None):
 		# @todo: Move this method to a more appropriate class. (Some sort of aux class or something?)
-		hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
-		# hashString = Data(uuid.uuid4().bytes).stringWithEncoding(Base58)
+		# hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
+		
+		digest = sha1(uuid.uuid4().bytes).digest()
+		hashString = Data(digest).stringWithEncoding(Base58)
+		
 		name = '%s%s' % (hashString, ext)
 		with AmazonS3() as (conn, bucket):
 			k = Key(bucket)
 			k.key = name
 			k.set_contents_from_string(data, headers)
 			k.make_public()
+		
+		# self['profileOrigURL'] = 'https://media.wurkhappy.com.s3.amazonaws.com/{0}'.format(name)
 		self['profileOrigURL'] = 'http://media.wurkhappy.com/%s' % name
 		self.save()
 	
@@ -113,7 +119,7 @@ class User(MappedObj):
 		Return the first and last name of the user, or if no values are set,
 		the user's email address.
 		"""
-		return " ".join([str(self['firstName'] or ""), str(self['lastName'] or "")]).strip() or self['email']
+		return ' '.join([str(self['firstName'] or ''), str(self['lastName'] or '')]).strip() or self['email']
 	
 	def setPasswordHash(self, password):
 		"Store the user's encrypted password"

@@ -1,7 +1,7 @@
 var Accordion = {
 	init: function() {
 		$('#phases').accordion({
-			header: 'h2'
+			header: 'h3'
 		});
 
 		$('#add-phase-btn').click(function(e) {
@@ -18,7 +18,7 @@ var Accordion = {
 	},
 	addPane: function(nextPhase) {
 		nextPhase.show();
-		nextPhase.find('h2').click();
+		nextPhase.find('h3').click();
 	}
 };
 

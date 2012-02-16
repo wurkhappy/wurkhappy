@@ -8,7 +8,8 @@ import os
 import smtplib
 import bcrypt
 
-from base import Base16, Base58
+#from base import Base16, Base58
+from data import Data, Base58
 
 # -------------------------------------------------------------------
 # Verification
@@ -33,8 +34,10 @@ class Verification (object):
 	
 	@staticmethod
 	def _generateHashDigest():
-		hexDigest = hashlib.sha1(uuid.uuid4().get_bytes()).hexdigest()
-		return Base58(Base16(hexDigest)).string
+		# hexDigest = hashlib.sha1(uuid.uuid4().get_bytes()).hexdigest()
+		# return Base58(Base16(hexDigest)).string
+		digest = hashlib.sha1(uuid.uuid4().bytes).digest()
+		return Data(digest).stringWithEncoding(Base58)
 	
 	@staticmethod
 	def checkCode(code):

@@ -18,7 +18,8 @@ from StringIO import StringIO
 # Required for generating remote resource ID strings (S3 keys)
 import uuid
 from hashlib import sha1
-from controllers.base import Base16, Base58
+# from controllers.base import Base16, Base58
+from controllers.data import Data, Base58
 
 # Required for uploading images to S3
 from controllers.amazonaws import AmazonS3
@@ -180,7 +181,8 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 			imgs['s'] = ImageOps.fit(imgs['o'], (50, 50), Image.ANTIALIAS)
 			imgs['l'] = ImageOps.fit(imgs['o'], (150, 150), Image.ANTIALIAS)
 			
-			hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
+			# hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
+			hashString = Data(sha1(uuid.uuid4().bytes).digest()).stringWithEncoding(Base58)
 			nameFormat = '%s_%%s.jpg' % hashString
 			
 			with AmazonS3() as (conn, bucket):

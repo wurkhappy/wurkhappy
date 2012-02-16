@@ -531,7 +531,8 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			clientState = client.getCurrentState()
 			logging.info(clientState)
 			if isinstance(clientState, InvitedUserState):
-				# @todo: Whoa! What's going on here?
+				# @todo: Generate confirmation code to be sent in email
+				# data = {'confirmation': client.generateCode()} # or something...
 				data = {"confirmation": "foo"}
 				clientState.performTransition("send_verification", data)
 				

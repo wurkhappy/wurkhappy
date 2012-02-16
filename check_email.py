@@ -7,7 +7,7 @@ import json
 import yaml
 
 if __name__ == "__main__":
-	conf = yaml.load(open('_b.yaml', 'r'))
+	conf = yaml.load(open('/var/www/config/beta.yaml', 'r'))
 	
 	Database.configure({
 		"host": conf['database']['host'],
