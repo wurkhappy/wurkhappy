@@ -1,0 +1,89 @@
+{% extends "../base.html" %}
+
+{% block main %}
+<div class="container">
+	{% block navigation %}
+	{% end %}
+
+	{% block header %}
+	{% end %}
+
+	<div id="content" class="clear">
+		<div class="clear">
+			{% block list-group %}
+			{% end %}
+		</div>
+	</div>
+	
+	<div id="footer" class="clear">
+		{% if data['prev'] %}<h3 style="float:left"><a href="{{ data['prev'] }}">&larr;Previous</a></h3>{% end %}
+		{% if data['next'] %}<h3 style="float:right"><a href="{{ data['next'] }}">Next&rarr;</a></h3>{% end %}
+	</div>
+
+	<div id="copyright" class="clear">
+		<p>Copyright &#169; Wurk Happy &mdash; All Rights Reserved</p>
+	</div>
+</div>
+{% end %}
+
+
+
+{% block header %}
+	<div id="intro" class="clear">
+		<div class="column-three-fourth">
+			<h1>Users</h1>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block navigation %}
+	<div id="navigation" class="clear">
+		<div class="column-three-fourth">
+			<ul class="clear">
+				<li class="current"><a href="/users"><strong>Users</strong></a></li>
+				<li ><a href="/agreements"><strong>Agreements</strong></a></li>
+			</ul>
+		</div>
+		<div class="column-one-fourth">
+			<ul id="admin" class="clear">
+				<li><a href="/logout">Log Out</a></li>
+			</ul>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block styles-custom %}
+	<link rel="stylesheet" type="text/css" href="{{ static_url("css/admin.css") }}" media="all" />
+{% end %}
+
+
+
+{% block list-group %}
+	<div class="data-table">
+		{% for user in data['users'] %}
+			{% block list-item %}
+			{% end %}
+		{% end %}
+	</div>
+{% end %}
+
+
+
+{% block list-item %}
+	<table border="0" cellspacing="0" cellpadding="0">
+		<tr>
+			<td class="meta">
+				<!-- TODO: move the style to CSS and use a background placeholder image -->
+				<span style="height: 50px; width: 50px;"><img src="{{ user['profileURL'][0] }}" width="50"></span>
+			</td>
+			<td>
+				<h3><a href="/user/{{ user['id'] }}">{{ user['fullName'] }}</a></h3>
+				<p>{{ user['state'] }}</p>
+			</td>
+		</tr>
+	</table>
+{% end %}

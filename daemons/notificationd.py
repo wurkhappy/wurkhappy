@@ -36,6 +36,7 @@ class MailController (object):
 		
 		self.handlers = {
 			'beanstalkTest': notifications.TestHandler,
+			
 			'agreementInvite': notifications.AgreementInviteHandler,
 			'agreementSent': notifications.AgreementSentHandler,
 			'agreementAccepted': notifications.AgreementAcceptedHandler,
@@ -43,7 +44,10 @@ class MailController (object):
 			# 'agreementUpdated': notifications.AgreementUpdatedHandler,
 			'agreementWorkCompleted': notifications.AgreementWorkCompletedHandler,
 			'agreementPaid': notifications.AgreementPaidHandler,
-			'agreementDisputed': notifications.AgreementDisputedHandler
+			'agreementDisputed': notifications.AgreementDisputedHandler,
+			
+			'userInvite': notifications.UserInviteHandler,
+			'userResetPassword': notifications.UserResetPasswordHandler
 		}
 	
 	def start(self):

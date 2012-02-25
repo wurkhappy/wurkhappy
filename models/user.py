@@ -42,7 +42,16 @@ class User(MappedObj):
 		'profileLargeURL': None,
 		'dateCreated': None,
 		'dateVerified': None,
+		'dateLocked': None,
 	}
+	
+	@classmethod
+	def count(clz):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT COUNT(*) FROM {0}".format(clz.tableName))
+			result = cursor.fetchone()
+		
+		return result['COUNT(*)']
 	
 	@classmethod
 	def retrieveByEmail(clz, email):
@@ -86,6 +95,17 @@ class User(MappedObj):
 				GROUP BY user.id""".format(clz.tableName)
 			
 			cursor.execute(query, (userID, userID))
+			result = cursor.fetchone()
+			
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+	
+	@classmethod
+	def iteratorWithPage(clz, page):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} ORDER BY id ASC LIMIT %s, %s".format(clz.tableName)
+			cursor.execute(query, (page[0], page[1]))
 			result = cursor.fetchone()
 			
 			while result:
@@ -147,7 +167,7 @@ class User(MappedObj):
 		# We do this by storing an SHA-1 digest of the confirmation code that is
 		# indexed, and a bcrypt encrypted ciphertext of the code for verification.
 		
-		self['fingerprint'] = hashlib.sha1(confirmation).hexdigest()
+		self['fingerprint'] = sha1(confirmation).hexdigest()
 		self['confirmation'] = bcrypt.hashpw(str(confirmation), bcrypt.gensalt())
 	
 	def confirmationIsValid(self, confirmation):
@@ -185,8 +205,10 @@ class User(MappedObj):
 		fingerprint = self['fingerprint']
 		password = self['password']
 		dateVerified = self['dateVerified']
+		dateLocked = self['dateLocked']
 		
 		states = [
+			(InvalidUserState, dateLocked),
 			(ActiveUserState, password and dateVerified and email),
 			(PendingUserState, confirmation and fingerprint and email and dateCreated),
 			(NewUserState, dateCreated and email and password),
@@ -230,7 +252,7 @@ class UserPrefs(MappedObj):
 	@classmethod
 	def iteratorWithUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s" % clz.tableName, userID)
+			cursor.execute("SELECT * FROM {0} WHERE userID = %s".format(clz.tableName), userID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -239,7 +261,7 @@ class UserPrefs(MappedObj):
 	@classmethod
 	def retrieveByUserIDAndName(clz, userID, name):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE userID = %%s AND name = %%s" % clz.tableName, (userID, name))
+			cursor.execute("SELECT * FROM {0} WHERE userID = %s AND name = %s".format(clz.tableName), (userID, name))
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
@@ -290,6 +312,9 @@ class BetaUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(BetaUserState, self).__init__(agreementInstance)
 	
+	def __str__(self):
+		return 'Requested beta access'
+	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
 			if 'confirmation' not in data:
@@ -304,6 +329,9 @@ class BetaUserState(UserState):
 class InvitedUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(InvitedUserState, self).__init__(agreementInstance)
+	
+	def __str__(self):
+		return 'Invited by existing user and awaiting verification'
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
@@ -320,6 +348,9 @@ class NewUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(NewUserState, self).__init__(agreementInstance)
 	
+	def __str__(self):
+		return 'Signed up on landing page and awaiting verification'
+	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
 			if 'confirmation' not in data:
@@ -334,6 +365,9 @@ class NewUserState(UserState):
 class PendingUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(PendingUserState, self).__init__(agreementInstance)
+	
+	def __str__(self):
+		return 'Waiting for user to verify email address'
 	
 	def _prepareFields(self, action, data):
 		if action is "confirm":
@@ -352,6 +386,9 @@ class ActiveUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(ActiveUserState, self).__init__(agreementInstance)
 	
+	def __str__(self):
+		return 'Active user'
+	
 	def _prepareFields(self, action, data):
 		raise StateTransitionError()
 
@@ -360,6 +397,9 @@ class ActiveUserState(UserState):
 class InvalidUserState(UserState):
 	def __init__(self, agreementInstance):
 		super(InvalidUserState, self).__init__(agreementInstance)
+	
+	def __str__(self):
+		return 'Locked account'
 	
 	def _prepareFields(self, action, data):
 		raise StateTransitionError()

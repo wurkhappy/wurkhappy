@@ -2,6 +2,7 @@ import tornado.web as web
 from models.user import User
 
 from controllers.orm import ORMJSONEncoder
+from hashlib import sha1
 import json
 
 
@@ -23,15 +24,6 @@ class BaseHandler(web.RequestHandler):
 	def superuser(self, method):
 		pass
 	
-	# What is this for? I think Jamie wrote it, but I don't think it's used anywhere...
-	def parseErrors(self):
-		err = self.get_argument("err", None)
-		if err:
-			err = err.split('-')
-			return [self.ERR.get(e) for e in err]
-		else:
-			return None
-	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
 		self.write(json.dumps(obj, cls=ORMJSONEncoder))
@@ -40,8 +32,25 @@ class BaseHandler(web.RequestHandler):
 
 class Authenticated(object):
 	def get_current_user(self):
+		self.token = self.get_argument("t", None)
 		userID = self.get_secure_cookie("user_id")
 		return userID and User.retrieveByID(userID)
+	
+	def superuser(self, method, *args, **kwargs):
+		def wrapped(method):
+			return method(*args, **kwargs)
+		return wrapped
 
-	def _is_superuser(self):
-		pass
+
+
+class TokenAuthenticated(object):
+	def get_current_user(self):
+		userID = self.get_secure_cookie("user_id")
+		user = userID and User.retrieveByID(userID)
+		self.token = None
+		
+		if not user:
+			self.token = self.get_argument("t", None)
+			user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
+		
+		return user

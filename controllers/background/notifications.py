@@ -1,4 +1,4 @@
-from models.user import User, UserState, ActiveUserState
+from models.user import User, UserState, ActiveUserState, NewUserState, InvitedUserState, BetaUserState
 from models.agreement import Agreement, AgreementPhase
 from models.transaction import Transaction
 from models.paymentmethod import PaymentMethod
@@ -528,4 +528,127 @@ class AgreementDisputedHandler(QueueHandler):
 			"vendorID": vendor['id'],
 			"vendorEmail": vendor['email'],
 			"agreementID": agreement['id']
+		}))
+
+
+
+class UserInviteHandler(QueueHandler):
+	def receive(self, body):
+		user = User.retrieveByID(body['userID'])
+		
+		if not user:
+			raise Exception("No such user")
+		
+		if user.getCurrentState().__class__ not in [NewUserState, InvitedUserState, BetaUserState]:
+			raise Exception("User may not be invited")
+		
+		digest = Verification.generateHashDigest()
+		host = self.application.config['wurkhappy']['hostname']
+		
+		user.setConfirmationHash(digest)
+		user.save()
+		
+		data = {
+			'hostname': host,
+			'user': user.publicDict(),
+			'url': 'http://{0}/user/me/account?t={1}'.format(host, digest)
+		}
+		
+		t = self.loader.load('user_invite.html')
+		htmlString = t.generate(data=data)
+		
+		subject = "Get started on Wurk Happy!"
+		textString = '''
+Welcome to Wurk Happy. To get started with your account, please verify your
+email address by following the link below.
+
+{0}
+
+If you have questions or comments, you can reach us at
+
+contact@wurkhappy.com
+
+Sincerely,
+The Wurk Happy Team
+'''.format(data['url'])
+		
+		self.sendEmail({
+			'from': ('Wurk Happy', 'contact@wurkhappy.com'),
+			'to': (user.getFullName(), user['email']),
+			'subject': subject,
+			'multipart': [
+				(textString, 'text'),
+				(htmlString, 'html')
+			]
+		})
+		
+		logging.info(json.dumps({
+			'message': 'Successfully sent email',
+			'actionType': body['action'],
+			'recipientID': user['id'],
+			'recipientEmail': user['email']
+		}))
+
+
+
+class UserResetPasswordHandler(QueueHandler):
+	def receive(self, body):
+		user = User.retrieveByID(body['userID'])
+		
+		if not user:
+			raise Exception("No such user")
+		
+		if not isinstance(user.getCurrentState(), ActiveUserState):
+			raise Exception("User may not reset password")
+		
+		digest = Verification.generateHashDigest()
+		host = self.application.config['wurkhappy']['hostname']
+		
+		user.setConfirmationHash(digest)
+		user['password'] = None
+		user.save()
+		
+		data = {
+			'hostname': host,
+			'user': user.publicDict(),
+			'url': 'http://{0}/user/me/password?t={1}'.format(host, digest)
+		}
+		
+		data['user']['firstName'] = user['firstName']
+		
+		t = self.loader.load('user_reset_password.html')
+		htmlString = t.generate(data=data)
+		
+		subject = "Reset your Wurk Happy password"
+		textString = '''
+Hello, {0}.
+
+To reset the password on your Wurk Happy account, please verify your
+email address by following the link below.
+
+{1}
+
+Please contact us if you need further assistance.
+
+contact@wurkhappy.com
+
+Thanks,
+The Wurk Happy Team
+'''.format(user['firstName'], data['url'])
+
+		self.sendEmail({
+			'from': ('Wurk Happy', 'contact@wurkhappy.com'),
+			'to': (user.getFullName(), user['email']),
+			'subject': subject,
+			'multipart': [
+				(textString, 'text'),
+				(htmlString, 'html')
+			]
+		})
+
+		logging.info(json.dumps({
+			'message': 'Successfully sent email',
+			'actionType': body['action'],
+			'recipientID': user['id'],
+			'recipientEmail': user['email']
 		}))

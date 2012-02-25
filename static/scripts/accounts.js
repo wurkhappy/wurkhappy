@@ -1,6 +1,14 @@
 
 var buttonActions = {
 	
+	profile_set: function (data, status, xhr) {
+		$('#profile-button').click();
+	},
+	
+	password_set: function (data, status, xhr) {
+		$('#details-button').click();
+	},
+	
 	profile_update: function (data, status, xhr) {
 		// @todo: Manually check the status code
 		data.telephone = data.telephone || '';

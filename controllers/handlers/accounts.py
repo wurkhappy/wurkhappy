@@ -10,6 +10,9 @@ import logging
 import os
 
 from datetime import datetime
+import urlparse
+import urllib
+import functools
 
 # Required for resizing profile image uploads
 import Image, ImageOps
@@ -18,25 +21,48 @@ from StringIO import StringIO
 # Required for generating remote resource ID strings (S3 keys)
 import uuid
 from hashlib import sha1
-# from controllers.base import Base16, Base58
 from controllers.data import Data, Base58
 
 # Required for uploading images to S3
 from controllers.amazonaws import AmazonS3
 from boto.s3.key import Key
 
+
+
 # -------------------------------------------------------------------
 # AccountHandler
 # -------------------------------------------------------------------
 
-class AccountHandler(Authenticated, BaseHandler):
+class AccountHandler(TokenAuthenticated, BaseHandler):
 
 	@web.authenticated
 	def get(self):
-		# inherited from web.RequestHandler:
 		user = self.current_user
+		token = self.token
 		
-		# userProfile = user.getProfile()
+		# If the user has provided a temporary token, display the
+		# the user onboarding interface
+		
+		if token:
+			userDict = {
+				'_xsrf': self.xsrf_token,
+				'token': token,
+				'id': user['id'],
+				'firstName': user['firstName'],
+				'lastName': user['lastName'],
+				'email': user['email'],
+				'telephone': user['telephone'] or '',
+				'profileURL': [
+					user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
+					user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+				]
+			}
+			
+			self.clear_cookie('user_id')
+			self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
+			return
+		
+		# Otherwise, render the accounts page
 		
 		userDict = {
 			'_xsrf': self.xsrf_token,
@@ -207,11 +233,31 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 # PasswordJSONHandler
 # -------------------------------------------------------------------
 
-class PasswordJSONHandler(Authenticated, BaseHandler):
+class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 
 	@web.authenticated
 	def post(self):
 		user = self.current_user
+		token = self.token
+		
+		if token:
+			try:
+				args = fmt.Parser(self.request.arguments,
+					required=[
+						('password', fmt.Enforce(str)),
+					]
+				)
+			except Exception as e:
+				self.set_status(401)
+				self.renderJSON(error)
+				return
+			
+			user.setPasswordHash(args['password'])
+			user.save()
+			
+			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
+			self.write(json.dumps({"success": True}))
+			return
 		
 		try:
 			args = fmt.Parser(self.request.arguments,
@@ -231,10 +277,7 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 			# User wasn't found, or password is wrong, display error
 			#TODO: Exponential back-off when user enters incorrect password.
 			#TODO: Flag accounds if passwords change too often.
-			error = {
-				"domain": "web.request",
-				"debug": "please validate authentication credentials"
-			}
+			
 			self.set_status(401)
 			self.renderJSON(error)
 		else:

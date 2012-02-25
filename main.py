@@ -33,46 +33,46 @@ class Application(web.Application):
 		handlers = [
 			# Redirect as appropriate based on user state
 			(r'/', root.RootHandler),
-
+			
 			(r'/signup', authhandlers.SignupHandler), # /account/create
 			(r'/login', authhandlers.LoginHandler),
 			(r'/logout', authhandlers.LogoutHandler),
 			(r'/forgot_password', authhandlers.ForgotPasswordHandler), # /account/forgetpassword
 			(r'/reset_password', authhandlers.ResetPasswordHandler), # /account/resetpassword
-
+			
 			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),
-
+			
 			# JSON handlers to update account information
 			(r'/user/me/account\.json', accounts.AccountJSONHandler),
 			(r'/user/me/password\.json', accounts.PasswordJSONHandler),
 			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),
 			(r'/user/me/paymentmethod/([0-9]+)\.json', accounts.PaymentMethodJSONHandler),
-
+			
 			# Wurk Happy contact directory for current user
 			(r'/user/me/contacts\.json', users.ContactsJSONHandler),
-
+			
 			# Comet handler for site notifications
 			(r'/user/me/notifications\.json', notifications.NotificationHandler),
 			
 			(r'/agreements/with/(clients|vendors)/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]*)/?', agreements.AgreementHandler),
 			(r'/agreement/new/?', agreements.AgreementHandler),
-
+			
 			# JSON handlers to create & update agreements and change their state
 			(r'/agreement/([0-9]+)\.json', agreements.AgreementJSONHandler),
 			(r'/agreement/([0-9]+)/status\.json', agreements.AgreementStatusJSONHandler),
 			(r'/agreement/([0-9]+)/(save|send|accept|decline|mark_complete|verify|dispute)\.json', agreements.AgreementActionJSONHandler),
 			(r'/agreement/(save|send)\.json', agreements.NewAgreementJSONHandler),
-
+			
 			# JSON handler to initiate a new payment
 			(r'/payment/new\.json', payments.PaymentHandler),
-
+			
 			(r'/agreement/request/?', requests.RequestAgreementHandler),
-			(r'/agreement/request.json', requests.RequestAgreementJSONHandler),
+			(r'/agreement/request\.json', requests.RequestAgreementJSONHandler),
 		]
-
+		
 		settings = {
 			"xsrf_cookies": True,
 			# Convert cookie_secret from unicode string to ascii string, so as not to break hashlib
@@ -84,17 +84,17 @@ class Application(web.Application):
 			"debug": config['tornado'].get('debug', False),
 			"xheaders": config['tornado'].get('xheaders', False)
 		}
-
+		
 		web.Application.__init__(self, handlers, **settings)
 		self.configuration = config
-
+		
 		Database.configure({
 			"host": config['database']['host'],
 			"user": config['database']['user'],
 			"passwd": config['database']['passwd'],
 			"db": config['database']['db']
 		}, None)
-
+		
 		Beanstalk.configure(config['beanstalk'])
 		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])

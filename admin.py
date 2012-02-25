@@ -12,7 +12,7 @@ import tornado.options as options
 import tornado.web as web
 
 from controllers.handlers.admin import *
-# from controllers.email import Email
+from controllers.email import Email
 from controllers.orm import Database
 from controllers.amazonaws import AmazonS3
 from controllers.beanstalk import Beanstalk
@@ -31,11 +31,16 @@ from controllers.modules import modules
 class Application(web.Application):
 	def __init__(self, config):
 		handlers = [
-			# Redirect as appropriate based on user state
 			(r'/', root.RootHandler),
+			(r'/login', auth.LoginHandler),
+			(r'/logout', auth.LogoutHandler),
 			
-			(r'/users', users.UserListHandler),
-			(r'/agreements', agreements.AgreementListHandler),
+			(r'/users/?', users.UserListHandler),
+			(r'/user/([0-9]+)/?', users.UserDetailHandler),
+			(r'/user/([0-9]+)\.json', users.UserActionJSONHandler),
+			
+			(r'/agreements/?', agreements.AgreementListHandler),
+			(r'/agreement/([0-9]+)/?', agreements.AgreementListHandler),
 			
 		]
 
@@ -44,7 +49,7 @@ class Application(web.Application):
 			# Convert cookie_secret from unicode string to ascii string, so as not to break hashlib
 			"cookie_secret": str(config['admin']['cookie_secret']),
 			"login_url": "/login",
-			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
+			"template_path": os.path.join(os.path.dirname(__file__), "templates/admin"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			"ui_modules": modules,
 			"debug": config['tornado'].get('debug', False),

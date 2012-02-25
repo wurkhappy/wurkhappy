@@ -17,11 +17,11 @@ from data import Data, Base58
 
 class Verification (object):
 	def __init__(self):
-		self.hashDigest = self._generateHashDigest()
-		self.code = self._generateCode()
+		self.hashDigest = self.generateHashDigest()
+		self.code = self.generateCode()
 	
 	@staticmethod
-	def _generateCode():
+	def generateCode():
 		alphabet = string.ascii_uppercase
 		code = ''
 		checksum = 0
@@ -33,9 +33,7 @@ class Verification (object):
 		return code
 	
 	@staticmethod
-	def _generateHashDigest():
-		# hexDigest = hashlib.sha1(uuid.uuid4().get_bytes()).hexdigest()
-		# return Base58(Base16(hexDigest)).string
+	def generateHashDigest():
 		digest = hashlib.sha1(uuid.uuid4().bytes).digest()
 		return Data(digest).stringWithEncoding(Base58)
 	

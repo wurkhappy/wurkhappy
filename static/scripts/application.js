@@ -82,6 +82,7 @@ $(document).ready(function() {
 		beforeSubmit: function (arr, $form, options) {
 			// We add the .json extension to the form action URL
 			// for AJAX requests.
+			
 			var action = $form.attr('action');
 			options.url = action + (action.match(/\.json$/) ? '' : '.json');
 			options.dataType = "json";
@@ -299,7 +300,6 @@ $('.notes.toggle').click(function(e) {
 	var $textArea = $(this).children('textarea');
 	if (!$(e.target).is('textarea') && ($textArea.is(':hidden') || $textArea.val() === '')) {
 		$(this).children('textarea').toggle();
-		//$(this).removeClass('toggle').unbind();
 	};
 });
 

@@ -1,0 +1,72 @@
+{% extends "../base.html" %}
+
+{% block main %}
+<div class="container">
+	{% block navigation %}
+	{% end %}
+
+	{% block header %}
+	{% end %}
+
+	<div id="content" class="clear">
+		{% if error and error.get("display") %}
+			<p class="error">
+				{{ error['display'] }}
+			</p>
+		{% end %}
+	</div>
+
+	<div id="content" class="clear">
+		<form action="/login" method="POST" accept-charset="utf-8">
+			{% raw xsrf_form_html() %}
+			<fieldset>
+				<label for="email">Email</label>
+				<input type="email" name="email" value="" size="60" />
+				<label for="email">Password</label>
+				<input type="password" name="password" value="" size="60" />
+				<p class="faux-label"><span><a href="/forgot_password">Forgot your password?</a></span></p>
+			</fieldset>
+			<fieldset class="submit-buttons">
+				<input type="submit" value="Sign In" /><!-- populate from agreement state info -->
+			</fieldset>
+		</form>
+	</div>
+
+</div>
+{% end %}
+
+
+
+### Custom scripts and styles
+
+{% block styles-custom %}
+	<link rel="stylesheet" type="text/css" href="{{ static_url("css/admin.css") }}" media="all" />
+{% end %}
+
+
+
+### Component blocks included from above
+
+{% block navigation %}
+	<div id="navigation" class="clear">
+		<div class="column-one-half">
+			<p class="logo"><a href="/">Mission Control</a></p>
+		</div>
+		<div class="column-one-half">
+			<ul id="admin" class="clear">
+				<li><a href="http://wurkhappy.com/"><strong>Wurk Happy</strong></a></li>
+			</ul>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block header %}
+	<div id="intro" class="clear">
+		<div class="column-three-fourth">
+			<h1>{{ title }}</h1>
+		</div>
+	</div>
+{% end %}
+

@@ -1,0 +1,8 @@
+#intro {
+	background: #000 url(/static/images/shade-admin.png) repeat-x top;
+	border-bottom: #DDD;
+}
+
+#footer {
+	background: #000 url(/static/images/shade-admin.png) repeat-x bottom;
+}
