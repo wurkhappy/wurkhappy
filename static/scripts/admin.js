@@ -2,7 +2,7 @@ var buttonActions = {
 	
 	'action-send-invitation': {
 		default: function (self, evt) {
-			// var popup = new Popup('#content');
+			var popup = new Popup('#content');
 			
 			$.ajax({
 				url: '/user/' + slug['userID'] + '.json',
@@ -11,7 +11,8 @@ var buttonActions = {
 				type: 'POST',
 				success: function (data, status, xhr) {
 					popup.setLabel('Sent invitation').open();
-					$('#action-save').slideUp(300);
+					self.$elt.attr('id', 'action-send-password-reset').html('Send Password Reset');
+					self.actions = buttonActions[self.$elt.attr('id')];
 				},
 				error: self.errorHandler
 			});
@@ -22,7 +23,7 @@ var buttonActions = {
 	
 	'action-send-password-reset': {
 		default: function (self, evt) {
-			// var popup = new Popup('#content');
+			var popup = new Popup('#content');
 			
 			$.ajax({
 				url: '/user/' + slug['userID'] + '.json',
@@ -31,7 +32,6 @@ var buttonActions = {
 				type: 'POST',
 				success: function (data, status, xhr) {
 					popup.setLabel('Sent password reset instructions').open();
-					$('#action-save').slideUp(300);
 				},
 				error: self.errorHandler
 			});
@@ -50,9 +50,8 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					//$();
-					popup.setLabel('Account locked').open();
-					$('#action-save').slideUp(300);
+					self.$elt.attr('id', 'action-unlock-account').html('Unlock Account');
+					self.actions = buttonActions[self.$elt.attr('id')];
 				},
 				error: self.errorHandler
 			});
@@ -71,8 +70,9 @@ var buttonActions = {
 				dataType: 'json',
 				type: 'POST',
 				success: function (data, status, xhr) {
-					popup.setLabel('Account unlocked').open();
-					$('#action-save').slideUp(300);
+				//	popup.setLabel('Account unlocked').open();
+					self.$elt.attr('id', 'action-lock-account').html('Lock Account');
+					self.actions = buttonActions[self.$elt.attr('id')];
 				},
 				error: self.errorHandler
 			});
