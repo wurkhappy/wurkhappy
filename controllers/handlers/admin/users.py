@@ -37,8 +37,14 @@ class UserListHandler(Authenticated, BaseHandler):
 			u['state'] = user.getCurrentState()
 			data['users'].append(u)
 		
-		data['next'] = 'http://{0}/users?offset={1}&limit={2}'.format(self.request.host, offset+limit, limit) if offset + (limit) < User.count() else None
-		data['prev'] = 'http://{0}/users?offset={1}&limit={2}'.format(self.request.host, offset-limit, limit) if offset else None
+		data['next'] = '{0}://{1}/users?offset={2}&limit={3}'.format(
+			self.request.protocol, self.request.host, offset+limit, limit
+		) if offset + (limit) < User.count() else None
+		
+		data['prev'] = '{0}://{1}/users?offset={2}&limit={3}'.format(
+			self.request.protocol, self.request.host, offset-limit, limit
+		) if offset else None
+		
 		self.render('user/list.html', data=data, title='Admin &ndash; Users')
 
 
