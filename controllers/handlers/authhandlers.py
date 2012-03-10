@@ -70,7 +70,7 @@ class SignupHandler(BaseHandler):
 			user.save()
 			
 			# @todo: This should be better. Static value in config file...
-			# user.profileSmallURL = self.application.config['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
+			# user.profileSmallURL = self.application.configuration['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
 			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
 			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
 			user.save()

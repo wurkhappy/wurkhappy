@@ -37,7 +37,7 @@ class UserListHandler(Authenticated, BaseHandler):
 			u['state'] = user.getCurrentState()
 			data['users'].append(u)
 		
-		hostname = self.application.config['admin']['hostname']
+		hostname = self.application.configuration['admin']['hostname']
 		
 		data['next'] = '{0}://{1}/users?offset={2}&limit={3}'.format(
 			self.request.protocol, hostname, offset+limit, limit
