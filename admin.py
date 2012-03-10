@@ -52,8 +52,8 @@ class Application(web.Application):
 			"template_path": os.path.join(os.path.dirname(__file__), "templates/admin"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			"ui_modules": modules,
-			"debug": config['tornado'].get('debug', False),
-			"xheaders": config['tornado'].get('xheaders', False)
+			"debug": config['admin'].get('debug', False),
+			"xheaders": config['admin'].get('xheaders', False)
 		}
 
 		web.Application.__init__(self, handlers, **settings)
