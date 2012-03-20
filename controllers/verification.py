@@ -8,7 +8,6 @@ import os
 import smtplib
 import bcrypt
 
-#from base import Base16, Base58
 from data import Data, Base58
 
 # -------------------------------------------------------------------

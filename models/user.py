@@ -273,8 +273,44 @@ class UserPrefs(MappedObj):
 
 
 
-class StateTransitionError(Exception):
+# -------------------------------------------------------------------
+# Dwolla Account Information
+# -------------------------------------------------------------------
+
+class UserDwolla(MappedObj):
+	tableName = 'userDwolla'
+	columns = {
+		'id': None,
+		'userID': None, # Unique key
+		'dwollaID': None,
+		'oauthToken': None
+	}
+	
+	@classmethod
+	def retrieveByUserID(clz, userID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM {0} WHERE userID = %s".format(clz.tableName), userID)
+			return clz.initWithDict(cursor.fetchone())
+	
+	@classmethod
+	def retrieveByDwollaID(clz, dwollaID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM {0} WHERE dwollaID = %s".format(clz.tableName), dwollaID)
+			return clz.initWithDict(cursor.fetchone())
+	
+	def publicDict(self):
+		return { }
+
+
+
+# -------------------------------------------------------------------
+# State Transition Error
+# -------------------------------------------------------------------
+
+class StateTransitionError(AssertionError):
 	pass
+
+
 
 # -------------------------------------------------------------------
 # User State

@@ -23,7 +23,8 @@ class Transaction(MappedObj):
 		'amount': None,
 		'dateInitiated': None,
 		'dateApproved': None,
-		'dateDeclined': None
+		'dateDeclined': None,
+		'dwollaTransactionID': None # Temporary until we use paymentMethods for this
 	}
 	
 	@classmethod
