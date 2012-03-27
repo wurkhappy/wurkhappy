@@ -103,7 +103,7 @@ class AgreementInviteHandler(QueueHandler):
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -169,7 +169,7 @@ class AgreementSentHandler(QueueHandler):
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -230,7 +230,7 @@ class AgreementAcceptedHandler(QueueHandler):
 		client = User.retrieveByID(agreement['clientID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -291,7 +291,7 @@ class AgreementDeclinedHandler(QueueHandler):
 		client = User.retrieveByID(agreement['clientID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict()
@@ -354,7 +354,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
@@ -420,7 +420,7 @@ class AgreementPaidHandler(QueueHandler):
 		paymentMethod = PaymentMethod.retrieveByID(transaction['paymentMethodID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
@@ -484,7 +484,7 @@ class AgreementDisputedHandler(QueueHandler):
 		phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
 		
 		data = {
-			'hostname': self.application.configuration['wurkhappy']['hostname'],
+			'hostname': self.application.config['wurkhappy']['hostname'],
 			'client': client.publicDict(),
 			'vendor': vendor.publicDict(),
 			'agreement': agreement.publicDict(),
@@ -543,7 +543,7 @@ class UserInviteHandler(QueueHandler):
 			raise Exception("User may not be invited")
 		
 		digest = Verification.generateHashDigest()
-		host = self.application.configuration['wurkhappy']['hostname']
+		host = self.application.config['wurkhappy']['hostname']
 		
 		user.setConfirmationHash(digest)
 		user.save()
@@ -602,7 +602,7 @@ class UserResetPasswordHandler(QueueHandler):
 			raise Exception("User may not reset password")
 		
 		digest = Verification.generateHashDigest()
-		host = self.application.configuration['wurkhappy']['hostname']
+		host = self.application.config['wurkhappy']['hostname']
 		
 		user.setConfirmationHash(digest)
 		user['password'] = None
