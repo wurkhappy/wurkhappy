@@ -1,9 +1,11 @@
 from __future__ import division
 
 from base import *
-from models.user import User, UserPrefs
+from models.user import User, UserPrefs, UserDwolla
 from models.paymentmethod import PaymentMethod
 from controllers import fmt
+
+from tornado.httpclient import HTTPClient, HTTPError
 
 import json
 import logging
@@ -64,6 +66,78 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 		
 		# Otherwise, render the accounts page
 		
+		# Look for a code query argument. If it's there, this is a Dwolla callback.
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[
+					('code', fmt.Enforce(str))
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		if args['code']:
+			# Do an HTTP request to get the token
+			# It's synchronous for now, but we'll do async later.
+			
+			baseURL = 'https://www.dwolla.com/oauth/v2/token'
+			queryArgs = {
+			 	'client_id': self.application.configuration['dwolla']['key'],
+				'client_secret': self.application.configuration['dwolla']['secret'],
+				'grant_type': 'authorization_code',
+				'redirect_uri': 'https://{0}/user/me/account'.format(
+					self.application.configuration['wurkhappy']['hostname']
+				),
+				'code': args['code']
+			}
+			queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
+			logging.warn(queryString)
+			
+			httpClient = HTTPClient()
+			
+			# @TODO: UGLY HACK EW EW EW EW
+			
+			try:
+				exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
+			except HTTPError as e:
+				loggin.error('Dwolla token exchange returned an error: %s', e)
+			else:
+				if exchangeResponse.code == 200:
+					# Parse the response body and store the access token
+					responseDict = json.loads(exchangeResponse.body)
+					oauthToken = responseDict['access_token']
+					logging.info(oauthToken)
+					accountURL = 'https://www.dwolla.com/oauth/rest/users/'
+					queryString = 'oauth_token={0}'.format(oauthToken)
+					
+					try:
+						accountResponse = httpClient.fetch(accountURL + '?' + queryString)
+					except HTTPError as e:
+						logging.error('Dwolla account lookup returned an error: %s', e)
+					else:
+						if accountResponse.code == 200:
+							# Parse the second response body and update the DB
+							accountDict = json.loads(accountResponse.body)
+							
+							if accountDict['Success'] != True:
+								logging.error('Dwolla request failed. %s', accountDict)
+							
+							dwolla = UserDwolla()
+							dwolla['userID'] = user['id']
+							dwolla['userName'] = accountDict['Response']['Name']
+							dwolla['dwollaID'] = accountDict['Response']['Id']
+							dwolla['oauthToken'] = oauthToken
+							dwolla.save()
+							
+							logging.info(dwolla)
+						else:
+							logging.error('Dwolla account lookup returned an unexpected response. %s', accountResponse)
+			
+			# @TODO: If there was an error and you know it, clap your hands!
 		userDict = {
 			'_xsrf': self.xsrf_token,
 			'id': user['id'],
@@ -79,43 +153,31 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 			'self': 'account'
 		}
 		
-		paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
+		dwolla = UserDwolla.retrieveByUserID(user['id'])
 		
-		if paymentMethod:
-			userDict['storedBank'] = paymentMethod.publicDict()
-		
-		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
-		
-		if paymentMethod:
-			userDict['storedCard'] = paymentMethod.publicDict()
+		if dwolla:
+			userDict['dwolla'] = dwolla.fields
+		else:
+			redirectURL = 'https://{0}/user/me/account'.format(
+				self.application.configuration['wurkhappy']['hostname']
+			)
+			
+			url = (
+				'https://www.dwolla.com/oauth/v2/authenticate?'
+				'client_id={0}&response_type=code&redirect_uri={1}&scope={2}'
+			).format(
+				self.application.configuration['dwolla']['key'],
+				urllib.quote(redirectURL, '/'),
+				'transactions|balance|send|accountinfofull'
+			)
+			
+			userDict['dwolla'] = {
+				'authorizeURL': url
+			}
 		
 		self.render('user/account.html', 
 			title="Wurk Happy &ndash; My Account", data=userDict
 		)
-	
-	@web.authenticated
-	def post(self):
-		user = self.current_user
-		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				#TODO: Enforce email and telephone formats
-				optional=[
-					('firstName', fmt.Enforce(str)),
-					('lastName', fmt.Enforce(str)),
-					('email', fmt.Email()),
-					('telephone', fmt.PhoneNumber())
-				],
-				required=[]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
-		#TODO: this should probably be handled in a better way. We'll
-		# worry about that when we do cleanup and robustification.
 
 
 
@@ -124,7 +186,7 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 # -------------------------------------------------------------------
 
 class AccountJSONHandler(Authenticated, BaseHandler):
-
+	
 	@web.authenticated
 	def post(self):
 		user = self.current_user

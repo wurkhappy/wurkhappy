@@ -96,28 +96,33 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.renderJSON(error)
 		
 		# Look up the user's preferred payment method
-		paymentPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'preferredPaymentID')
 		
-		if paymentPref:
-			paymentMethod = PaymentMethod.retrieveByID(paymentPref['value'])
-		else:
-			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
-			
-			if not paymentMethod:
-				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
+		# paymentPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'preferredPaymentID')
+		# 
+		# if paymentPref:
+		# 	paymentMethod = PaymentMethod.retrieveByID(paymentPref['value'])
+		# else:
+		# 	paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
+		# 	
+		# 	if not paymentMethod:
+		# 		paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(user['id'])
+		# 
+		# if not paymentMethod:
+		# 	error = {
+		# 		'domain': 'application.not_found',
+		# 		'display': (
+		# 			"There's no payment method on file. Please add bank "
+		# 			"account or credit card information to continue."
+		# 		),
+		# 		'debug': 'no payment method on file'
+		# 	}
+		# 	self.set_status(400)
+		# 	self.renderJSON(error)
+		# 	return
 		
-		if not paymentMethod:
-			error = {
-				'domain': 'application.not_found',
-				'display': (
-					"There's no payment method on file. Please add bank "
-					"account or credit card information to continue."
-				),
-				'debug': 'no payment method on file'
-			}
-			self.set_status(400)
-			self.renderJSON(error)
-			return
+		# For now, we look for a Dwolla account for the user.
+		
+		# @TODO: LOOK FOR DWOLLA ACCOUNT
 		
 		transaction = Transaction()
 		transaction['agreementPhaseID'] = phase['id']
@@ -128,7 +133,19 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		transaction.save()
 		
-		# @todo: Put the transaction info on the processing queue.
+		transactionMsg = dict(
+			action='transactionSubmitPayment',
+			senderID=transaction['senderID'],
+			recipientID=transaction['recipientID'],
+			amount=transaction['amount']
+		)
+		
+		with Beanstalk() as bconn:
+			tube = self.application.configuration['transactions']['beanstalk_tube']
+			bconn.use(tube)
+			msgJSON = json.dumps(transactionMsg)
+			r = bconn.put(msgJSON)
+			logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
 		
 		unsavedRecords = []
 		
@@ -171,4 +188,4 @@ class PaymentHandler(Authenticated, BaseHandler):
 		del(transactionJSON['paymentMethodID'])
 		
 		self.renderJSON(transactionJSON)
-		
+

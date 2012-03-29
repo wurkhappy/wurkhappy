@@ -306,29 +306,17 @@ class AgreementPhase (MappedObj):
 
 
 
-class StateTransitionError(Exception):
+# -------------------------------------------------------------------
+# State Transition Error (move to models.errors?)
+# -------------------------------------------------------------------
+
+class StateTransitionError(AssertionError):
 	pass
 
+
+
 # -------------------------------------------------------------------
-# Add agreement state -> button stuff
-# DraftState -> agreement.dateSent null
-#  vendor sees draft, edit (?) and send buttons; send updates dateSent
-#  client sees nothing
-# EstimateState -> dateSent not null and dateAccepted null and (dateDeclined null or (dateDeclined < dateSent))
-#  vendor sees estimate, edit buttons
-#  client sees estimate, accept and decline buttons; accept updates dateAccepted; decline updates dateDeclined
-# DeclinedState -> dateAccepted null and dateDecline > dateSent
-#  vendor sees estimate, edit and re-send buttons; re-sent updates dateSent
-#  client sees nothing ?
-# InProgressState -> (dateAccepted > dateSent and dateContested null) or (dateContested > dateSent > dateAccepted)
-#  vendor sees agreement, mark-completed buttons; mark-completed updates dateSent
-#  client sees agreement
-# CompletedState -> (dateSent > dateAccepted and dateContested null) or (dateSent > dateContested > dateAccepted)
-#  vendor sees agreement
-#  client sees agreement, dispute and verify buttons; dispute updates dateContested; verify updates dateVerified
-# PaidState -> dateVerified is not null 
-#  what to show?
-# Do we store elsewhere a history of edits?
+# Agreement State
 # -------------------------------------------------------------------
 
 class AgreementState(object):

@@ -283,6 +283,7 @@ class UserDwolla(MappedObj):
 		'id': None,
 		'userID': None, # Unique key
 		'dwollaID': None,
+		'userName': None,
 		'oauthToken': None
 	}
 	
@@ -304,7 +305,7 @@ class UserDwolla(MappedObj):
 
 
 # -------------------------------------------------------------------
-# State Transition Error
+# State Transition Error (move to models.errors?)
 # -------------------------------------------------------------------
 
 class StateTransitionError(AssertionError):

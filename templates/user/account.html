@@ -23,8 +23,9 @@
 		<ul>
 			<li class="tab current" id="details-button"><a href="#" class="top">Personal Details</a></li>
 			<li class="tab" id="password-button"><a href="#" class="">Change Your Password</a></li>
-			<li class="tab" id="bank-button"><a href="#" class="">Bank Account Details</a></li>
-			<li class="tab" id="card-button"><a href="#" class="">Credit Card Details</a></li>
+			<li class="tab" id="dwolla-button"><a href="#" class="">Payment Information</a></li>
+			<!-- <li class="tab" id="bank-button"><a href="#" class="">Bank Account Details</a></li> -->
+			<!-- <li class="tab" id="card-button"><a href="#" class="">Credit Card Details</a></li> -->
 		</ul>
 	</div>
 	<div id="content" class="clear">
@@ -85,94 +86,35 @@
 				</fieldset>
 			</form>
 		</div>
-
-		<div id="bank-container" class="tab-content" style="display: none;">
-			{% if data.get('storedBank') %}
-				<div id="stored-bank">
-					{% set bank = data['storedBank'] %}
-					<h2>Stored Bank Account</h2>
-					<p>Routing Number</p>
-					<h3>&bull;&bull;&bull;&bull;&bull;&bull;{{ bank['abaDisplay'] }}</h3>
-					<p>Account Number</p>
-					<h3>&bull;&bull;&bull;&bull; &bull;&bull;{{ bank['display'] }}</h3>
-					<form action="/user/me/paymentmethod/{{ bank['id'] }}" method="DELETE" class="js-replace-action clear" id="bank_delete">
-						<fieldset class="submit-buttons">
-							<input type="submit" value="Delete This Card" />
-						</fieldsest>
-					</form>
+		
+		<div id="dwolla-container" class="tab-content" style="display: none;">
+			{% if 'id' in data['dwolla'] %}
+				<h2>Your Dwolla Account</h2>
+				<div class="data-table">
+					<table border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<!-- <td class="meta">
+								<span><img src="" alt="Verified" width="50" height="50" /></span>
+							</td> -->
+							<td>
+								<h3>{{ data['dwolla']['userName'] }}</h3>
+								<p><strong>Dwolla ID:</strong> {{ data['dwolla']['dwollaID'] }}</p>
+							</td>
+						</tr>
+					</table>
 				</div>
+			{% else %}
+				<h2>Link Your Dwolla Account</h2>
+				
+				<p>Wurk Happy uses Dwolla to process transactions. In order to pay vendors or receive payments from clients,
+					we require each user to have a Dwolla account. If you have an account set up already, you can click the link
+					below to link it with your Wurk Happy account.</p>
+				
+				<p>Click the link below to be redirected to Dwolla. You will be prompted to link your account with Wurk Happy.</p>
+				
+				<!-- Add signup form in case the user doesn't have a Dwolla account -->
+				<p><a href="{{ data['dwolla']['authorizeURL'] }}" rel="nofollow">Click here to link your Dwolla account to Wurk Happy.</a></p>
 			{% end %}
-			<div id="bank-form">
-				<h2 class="clear">Bank Account Details</h2>
-				<form action="/user/me/paymentmethod/new" method="POST" class="js-replace-action clear" id="bank_update">
-					<fieldset>
-						<label for="routingNumber">Routing Number</label>
-						<input type="text" name="routingNumber" size="100" />
-						<label for="accountNumber">Account Number</label>
-						<input type="text" name="accountNumber" size="100" />
-					</fieldset>
-					<fieldset class="submit-buttons">
-						<input type="submit" value="Update Bank Account Details" />
-					</fieldset>
-				</form>
-			</div>
-		</div>
-		<div id="card-container" class="tab-content" style="display: none;">
-			{% if data.get('storedCard') %}
-				<div id="stored-card">
-					{% set card = data['storedCard'] %}
-					<h2>Stored Credit Card</h2>
-					<h3>&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ card['display'] }}</h3>
-					<p>Expires {{ card['cardExpires'] }}</p>
-					<!--<p>Billing ZIP: {% comment card['billingZIP'] %}</p>-->
-					<form action="/user/me/paymentmethod/{{ card['id'] }}" method="DELETE" class="js-replace-action clear" id="card_delete">
-						<fieldset class="submit-buttons">
-							<input type="submit" value="Delete This Card" />
-						</fieldsest>
-					</form>
-				</div>
-			{% end %}
-			<div id="card-form">
-				<h2 class="clear">Credit Card Details</h2>
-				<form action="/user/me/paymentmethod/new" method="POST" class="js-replace-action clear" id="card_update">
-					<fieldset>
-						<label for="cardNumber">Credit Card Number</label>
-						<input type="text" name="cardNumber" size="100" />
-						<label for="">Expiration Date</label>
-						<select name="expirationMonth">
-							<option value="01">January</option>
-							<option value="02">February</option>
-							<option value="03">March</option>
-							<option value="04">April</option>
-							<option value="05">May</option>
-							<option value="06">June</option>
-							<option value="07">July</option>
-							<option value="08">August</option>
-							<option value="09">September</option>
-							<option value="10">October</option>
-							<option value="11">November</option>
-							<option value="12">December</option>
-						</select>
-						<select name="expirationYear">
-							<option value="2011">2011</option>
-							<option value="2012">2012</option>
-							<option value="2013">2013</option>
-							<option value="2014">2014</option>
-							<option value="2015">2015</option>
-							<option value="2016">2016</option>
-							<option value="2017">2017</option>
-							<option value="2018">2018</option>
-							<option value="2019">2019</option>
-							<option value="2020">2020</option>
-						</select>
-						<label for="verification">CVV</label><span>(What's that?)</span>
-						<input type="text" name="verification" size="20" />
-					</fieldset>
-					<fieldset class="submit-buttons">
-						<input type="submit" value="Update Credit Card Details" />
-					</fieldset>
-				</form>
-			</div>
 		</div>
 	</div>
 
