@@ -1,3 +1,4 @@
+from __future__ import division
 from controllers.orm import *
 from collections import OrderedDict
 from datetime import datetime

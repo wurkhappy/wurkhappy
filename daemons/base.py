@@ -1,3 +1,75 @@
+# WurkHappy Daemon Utilities
+# Version 0.2
+# 
+# Written by Brendan Berg
+# Copyright WurkHappy, 2011
+
+from controllers.beanstalk import Beanstalk
+
+import sys
+import json
+import logging
+import traceback
+
+
+# -------------------------------------------------------------------
+# Background process base class
+# -------------------------------------------------------------------
+
+class BackgroundController (object):
+	_continue = True
+	
+	def __init__(self, tubeName, handlers={}, config={}):
+		self.config = config
+		self.tubeName = tubeName
+		self.handlers = handlers
+	
+	def start(self):
+		logging.info('{"message": "Starting up..."}')
+		
+		with Beanstalk() as bconn:
+			bconn.watch(self.tubeName)
+			
+			while self._continue:
+				msg = bconn.reserve(timeout=15)
+				
+				if msg:
+					logDict = {
+						"jobID": msg.jid,
+						"body": msg.body
+					}
+					
+					body = None
+					
+					try:
+						body = json.loads(msg.body)
+					except ValueError as e:
+						logDict['error'] = "Message body was not well-formed JSON"
+						logging.error(json.dumps(logDict))
+						msg.delete()
+						continue
+					
+					if body:
+						handler = self.handlers[body['action']](self)
+						try:
+							handler.receive(body)
+							msg.delete()
+						except BaseException as e:
+							exc = traceback.format_exception(*sys.exc_info())
+							logDict['exception'] = exc
+							logging.error(json.dumps(logDict))
+							msg.bury()
+					else:
+						logDict['error'] = "Message did not contain a body"
+						logging.error(json.dumps(logDict))
+						msg.delete()
+		logging.info('{"message": "Successfully shut down."}')
+	
+	def stop(self, signum, frame):
+		logging.info('{"message": "Received stop signal. Shutting down."}')
+		self._continue = False
+
+
 
 # -------------------------------------------------------------------
 # PID file parser
@@ -30,12 +102,11 @@ class Parser (object):
 # Command line startup
 # -------------------------------------------------------------------
 
-def commandLineStartup(processClass):
+def commandLineStartup(processClass, name):
 	from optparse import OptionParser
 	import daemon
 	import os, os.path
 	import pwd
-	import sys
 	import yaml
 	import signal
 	import subprocess
@@ -52,7 +123,7 @@ def commandLineStartup(processClass):
 		metavar="USER", default=None)
 	parser.add_option("-p", "--pidfile", dest="pidfile",
 		help="specify a PID file when using the --daemon flag", metavar="FILE",
-		default="/var/spool/wh_notificationd.pid")
+		default="/var/spool/wh_{0}.pid")
 	parser.add_option("-f", "--logfile", dest="logfile",
 		help="redirect STDOUT and STDERR to the specified file",
 		metavar="FILE", default="/var/log/notification.log")
@@ -66,7 +137,7 @@ def commandLineStartup(processClass):
 		if args[-1] not in ['start', 'stop', 'refresh']:
 			parser.error('Final argument should be "start", "stop", or "refresh"')
 		
-		procParser = Parser(options.pidfile)
+		procParser = Parser(options.pidfile.format(name))
 		procID = procParser.read()
 		
 		if args[-1] in ['stop', 'refresh']:

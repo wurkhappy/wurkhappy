@@ -1,5 +1,5 @@
 # WurkHappy Administration Application
-# Version 0.1
+# Version 0.2
 #
 # Written by Brendan Berg
 # Copyright WurkHappy, 2012

@@ -2,7 +2,7 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs
-from models.agreement import Agreement, CompletedState
+from models.agreement import Agreement, CompletedState, StateTransitionError
 from models.paymentmethod import PaymentMethod
 from models.transaction import Transaction
 from controllers.beanstalk import Beanstalk
@@ -38,7 +38,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		if not (user and user.passwordIsValid(args['password'])):
+		if not user: # (user and user.passwordIsValid(args['password'])):
 			# User wasn't found, or password is wrong, display error
 			# @todo: Exponential back-off when user enters incorrect password.
 			# @todo: Flag accounds if incorrect password is presented too often.
@@ -128,7 +128,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 		transaction['agreementPhaseID'] = phase['id']
 		transaction['senderID'] = user['id']
 		transaction['recipientID'] = agreement['vendorID']
-		transaction['paymentMethodID'] = paymentMethod['id']
+		# transaction['paymentMethodID'] = paymentMethod['id']
 		transaction['amount'] = phase['amount']
 		
 		transaction.save()
@@ -137,7 +137,8 @@ class PaymentHandler(Authenticated, BaseHandler):
 			action='transactionSubmitPayment',
 			senderID=transaction['senderID'],
 			recipientID=transaction['recipientID'],
-			amount=transaction['amount']
+			agreementPhaseID=phase['id'],
+			pin=args['password']
 		)
 		
 		with Beanstalk() as bconn:
@@ -184,7 +185,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			record.save()
 		
 		transactionJSON = transaction.publicDict()
-		transactionJSON['paymentMethod'] = paymentMethod.publicDict()
+		# transactionJSON['paymentMethod'] = paymentMethod.publicDict()
 		del(transactionJSON['paymentMethodID'])
 		
 		self.renderJSON(transactionJSON)

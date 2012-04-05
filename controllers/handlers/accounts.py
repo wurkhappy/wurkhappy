@@ -89,13 +89,13 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 			 	'client_id': self.application.configuration['dwolla']['key'],
 				'client_secret': self.application.configuration['dwolla']['secret'],
 				'grant_type': 'authorization_code',
-				'redirect_uri': 'https://{0}/user/me/account'.format(
+				'redirect_uri': 'http://{0}/user/me/account'.format(
 					self.application.configuration['wurkhappy']['hostname']
 				),
 				'code': args['code']
 			}
 			queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
-			logging.warn(queryString)
+			logging.info('Dwolla key exchange URL: %s', baseURL + '?' + queryString)
 			
 			httpClient = HTTPClient()
 			
@@ -104,21 +104,31 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 			try:
 				exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
 			except HTTPError as e:
-				loggin.error('Dwolla token exchange returned an error: %s', e)
+				logging.error('Dwolla token exchange returned an error: %s', e)
 			else:
+				# We don't trust third parties, so, like, log the entire response
+				logging.info('Received %d from Dwolla', exchangeResponse.code)
+				logging.info(exchangeResponse.body)
+				
 				if exchangeResponse.code == 200:
 					# Parse the response body and store the access token
 					responseDict = json.loads(exchangeResponse.body)
 					oauthToken = responseDict['access_token']
 					logging.info(oauthToken)
 					accountURL = 'https://www.dwolla.com/oauth/rest/users/'
-					queryString = 'oauth_token={0}'.format(oauthToken)
+					queryString = 'oauth_token={0}'.format(urllib.quote(oauthToken, '/'))
+					
+					logging.info('Dwolla user info URL: %s', accountURL + '?' + queryString)
 					
 					try:
 						accountResponse = httpClient.fetch(accountURL + '?' + queryString)
 					except HTTPError as e:
 						logging.error('Dwolla account lookup returned an error: %s', e)
 					else:
+						# We don't trust third parties, so, like, log the entire response
+						logging.info('Received %d from Dwolla', accountResponse.code)
+						logging.info(accountResponse.body)
+						
 						if accountResponse.code == 200:
 							# Parse the second response body and update the DB
 							accountDict = json.loads(accountResponse.body)
@@ -158,7 +168,8 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 		if dwolla:
 			userDict['dwolla'] = dwolla.fields
 		else:
-			redirectURL = 'https://{0}/user/me/account'.format(
+			# Choose http or https here automatically as appropriate
+			redirectURL = 'http://{0}/user/me/account'.format(
 				self.application.configuration['wurkhappy']['hostname']
 			)
 			
