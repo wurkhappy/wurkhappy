@@ -126,7 +126,7 @@ def commandLineStartup(processClass, name):
 		default="/var/spool/wh_{0}.pid")
 	parser.add_option("-f", "--logfile", dest="logfile",
 		help="redirect STDOUT and STDERR to the specified file",
-		metavar="FILE", default="/var/log/notification.log")
+		metavar="FILE", default="/var/log/wh_{0}.log")
 	parser.add_option("-d", "--daemon", dest="daemonize",
 		help="detach from console and run as daemon",
 		action="store_true")
@@ -156,7 +156,7 @@ def commandLineStartup(processClass, name):
 		# if workingDir:
 		# 	os.chdir(workingDir)
 	
-	logfile = open(options.logfile, 'a+')
+	logfile = open(options.logfile.format(name), 'a+')
 	conf = yaml.load(open(options.config, 'r'))
 	
 	if options.daemonize:

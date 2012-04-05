@@ -35,7 +35,7 @@ class QueueHandler(object):
 		bodyArgs = {
 			'pin': pin,
 			'destinationId': recipient['dwollaID'],
-			'amount': phase['amount'],
+			'amount': "{:.2f}".format(phase['amount']),
 		}
 		
 		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
