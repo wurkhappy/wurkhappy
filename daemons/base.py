@@ -156,10 +156,10 @@ def commandLineStartup(processClass, name):
 		# if workingDir:
 		# 	os.chdir(workingDir)
 	
-	logfile = open(options.logfile.format(name), 'a+')
 	conf = yaml.load(open(options.config, 'r'))
 	
 	if options.daemonize:
+		logfile = open(options.logfile.format(name), 'a+')
 		ctx = daemon.DaemonContext(stdout=logfile, stderr=logfile, working_directory='.')
 		ctx.open()
 		
@@ -177,7 +177,7 @@ def commandLineStartup(processClass, name):
 	else:
 		logging.basicConfig(
 			format=logformat, level=logging.INFO,
-			filename=options.logfile, filemode='a+'
+			filename=options.logfile.format(name), filemode='a+'
 		)
 	
 	proc = processClass(conf)
