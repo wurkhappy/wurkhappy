@@ -8,6 +8,9 @@ from models.transaction import Transaction
 from controllers.beanstalk import Beanstalk
 from controllers import fmt
 
+from tornado.httpclient import HTTPClient, HTTPError
+from tornado.curl_httpclient import CurlAsyncHTTPClient
+
 import json
 import logging
 import os
@@ -21,6 +24,7 @@ import os
 class PaymentHandler(Authenticated, BaseHandler):
 	
 	@web.authenticated
+	@web.asynchronous
 	def post(self):
 		user = self.current_user
 		
@@ -133,60 +137,197 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		transaction.save()
 		
-		transactionMsg = dict(
-			action='transactionSubmitPayment',
-			senderID=transaction['senderID'],
-			recipientID=transaction['recipientID'],
-			agreementPhaseID=phase['id'],
-			pin=args['password']
+		# transactionMsg = dict(
+		# 	action='transactionSubmitPayment',
+		# 	senderID=transaction['senderID'],
+		# 	recipientID=transaction['recipientID'],
+		# 	agreementPhaseID=phase['id'],
+		# 	pin=args['password']
+		# )
+		# 
+		# with Beanstalk() as bconn:
+		# 	tube = self.application.configuration['transactions']['beanstalk_tube']
+		# 	bconn.use(tube)
+		# 	msgJSON = json.dumps(transactionMsg)
+		# 	r = bconn.put(msgJSON)
+		# 	logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		
+		self.agreement = agreement
+		self.transaction = transaction
+		self.agreementState = agreementState
+		
+		sender = UserDwolla.retrieveByUserID(user['id'])
+		recipient = UserDwolla.retrieveByUserID(agreement['vendorID'])
+		
+		baseURL = 'https://www.dwolla.com/oauth/rest/transactions/send'
+		queryArgs = {
+			'oauth_token': sender['oauthToken']
+		}
+		bodyArgs = {
+			'pin': args['password'],
+			'destinationId': recipient['dwollaID'],
+			'amount': "{:.2f}".format(phase['amount']),
+		}
+
+		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
+		logging.info('requestURL: ' + baseURL + '?' + queryString)
+		
+		c = CurlAsyncHTTPClient()
+		c.fetch(baseURL + '?' + queryString,
+			method="POST",
+			headers={'Content-Type': 'application/json'},
+			body=json.dumps(bodyArgs),
+			callback=self._dwollaResponseHandler
 		)
 		
-		with Beanstalk() as bconn:
-			tube = self.application.configuration['transactions']['beanstalk_tube']
-			bconn.use(tube)
-			msgJSON = json.dumps(transactionMsg)
-			r = bconn.put(msgJSON)
-			logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		# unsavedRecords = []
+		# 
+		# try:
+		# 	agreementState.performTransition('client', 'verify', unsavedRecords)
+		# 	
+		# 	# The message's 'userID' field should really be called 'recipientID'
+		# 	msg = dict(
+		# 		agreementID=agreement['id'],
+		# 		transactionID=transaction['id'],
+		# 		userID=agreement['vendorID'],
+		# 		action='agreementPaid'
+		# 	)
+		# 	
+		# 	with Beanstalk() as bconn:
+		# 		tube = self.application.configuration['notifications']['beanstalk_tube']
+		# 		bconn.use(tube)
+		# 		msgJSON = json.dumps(msg)
+		# 		r = bconn.put(msgJSON)
+		# 		logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+		# 
+		# except StateTransitionError as e:
+		# 	error = {
+		# 		"domain": "application.consistency",
+		# 		"display": (
+		# 			"We were unable to process your request at this time. "
+		# 			"Could you please try again in a moment? If the problem "
+		# 			"persists, you can get in touch with our support staff."
+		# 		),
+		# 		"debug": "error location (file marker / stacktrace ID)"
+		# 	}
+		# 	self.set_status(409)
+		# 	self.renderJSON(error)
+		# 
+		# for record in unsavedRecords:
+		# 	record.save()
+		# 
+		# transactionJSON = transaction.publicDict()
+		# # transactionJSON['paymentMethod'] = paymentMethod.publicDict()
+		# del(transactionJSON['paymentMethodID'])
+		# 
+		# self.renderJSON(transactionJSON)
+	
+	
+	# def submitPayment(self, sender, recipient, phase, pin):
+	# 	'''
+	# 	QueueHandler.submitPayment takes sender and recipient user objects and
+	# 	an agreement phase and submits an HTTP request to the Dwolla API.
+	# 	'''
+	# 
+	# 	c = self.application.connection
+	# 	response = None
+	# 	
+	# 	baseURL = 'https://www.dwolla.com/oauth/rest/transactions/send'
+	# 	queryArgs = {
+	# 		'oauth_token': sender['oauthToken']
+	# 	}
+	# 	bodyArgs = {
+	# 		'pin': pin,
+	# 		'destinationId': recipient['dwollaID'],
+	# 		'amount': "{:.2f}".format(phase['amount']),
+	# 	}
+	# 	
+	# 	queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
+	# 	logging.info('{"requestURL": "' + baseURL + '?' + queryString + '"}')
+	# 	
+	# 	try:
+	# 		
+	# 	except HTTPError as e:
+	# 		logging.error('{{"error": "Dwolla transaction error: {0}"}}'.format(e))
+	# 	else:
+	# 		# We don't trust third parties, so, like, log the entire response
+	# 		logging.info('{{"http_status": {0}}}'.format(response.code))
+	# 		# The body is already JSON, so we don't need to quote it.
+	# 		logging.info('{{"http_response": {0}}}'.format(response.body))
+	# 	
+	# 		responseDict = None
+	# 	
+	# 		if response.code == 200:
+	# 			# Parse the response body and store the access token
+	# 			responseDict = json.loads(response.body)
+	# 	
+	# 		return responseDict
+	
+	def _dwollaResponseHandler(self, response):
+		if isinstance(response, HTTPError):
+			logging.error('Dwolla transaction error: %s', response)
+			self.set_status(400)
+			self.renderJSON(error)
+			self.finish()
+			return
 		
+		body = json.loads(response.body)
+		
+		if body['Success'] == False:
+			display = "There was an error processing your transaction."
+			
+			if body['Message'] == 'Invalid account PIN':
+				display = (
+					"The PIN you entered did not match the one Dwolla has on "
+					"record for your account."
+				)
+			elif body['Message'] == 'Insufficient funds.':
+				display = (
+					"You do not have enough funds in your Dwolla account to "
+					"make this transaction. Please transfer funds into your "
+					"account and try again."
+				)
+			
+			error = {
+				"domain": 'external.dwolla',
+				"display": display,
+				"debug": 'Dwolla transaction error: {0}'.format(body['Message'])
+			}
+			
+			self.set_status(400)
+			self.renderJSON(error)
+			self.finish()
+			return
+		
+		logging.info(response)
 		unsavedRecords = []
 		
 		try:
-			agreementState.performTransition('client', 'verify', unsavedRecords)
-			
-			# The message's 'userID' field should really be called 'recipientID'
-			msg = dict(
-				agreementID=agreement['id'],
-				transactionID=transaction['id'],
-				userID=agreement['vendorID'],
-				action='agreementPaid'
-			)
-			
-			with Beanstalk() as bconn:
-				tube = self.application.configuration['notifications']['beanstalk_tube']
-				bconn.use(tube)
-				msgJSON = json.dumps(msg)
-				r = bconn.put(msgJSON)
-				logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
-		
+			self.agreementState.performTransition('client', 'verify', unsavedRecords)
 		except StateTransitionError as e:
 			error = {
 				"domain": "application.consistency",
 				"display": (
 					"We were unable to process your request at this time. "
 					"Could you please try again in a moment? If the problem "
-					"persists, you can get in touch with our support staff."
+					"persists, please contact our support team."
 				),
 				"debug": "error location (file marker / stacktrace ID)"
 			}
 			self.set_status(409)
 			self.renderJSON(error)
+			self.finish()
+			return
 		
 		for record in unsavedRecords:
 			record.save()
 		
-		transactionJSON = transaction.publicDict()
-		# transactionJSON['paymentMethod'] = paymentMethod.publicDict()
+		# transaction['dwollaTransactionID'] = body['Message']['']
+		# transaction.save()
+		
+		transactionJSON = self.transaction.publicDict()
 		del(transactionJSON['paymentMethodID'])
 		
 		self.renderJSON(transactionJSON)
+		self.finish()
 
