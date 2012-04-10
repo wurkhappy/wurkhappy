@@ -222,11 +222,11 @@ var buttonActions = {
 		<form id="password-form" class="invisible">\
 			<div class="column-three-fourth">\
 				<h3>Submitting payment of \
-					<span id="verify-amount">$0.00</span> from account ending in \
+					<span id="verify-amount">$0.00</span> from the Dwolla account ending in \
 					<span id="verify-account">----</span>\
 				</h3>\
 				<fieldset class="no-border">\
-					<label for="password">Enter your password to approve and send payment.</label><br />\
+					<label for="password">Enter your Dwolla pin approve and send payment.</label><br />\
 					<input type="password" name="password" />\
 				</fieldset>\
 			</div>\
@@ -241,6 +241,7 @@ var buttonActions = {
 				self.$popup.children('#password-form').submit(function(evt) {
 					var capture = self.serialize('password-form', {'agreementID': slug['agreementID']});
 					var popup = new Popup('#content');
+					var $actionButtons = $('.action-button li');
 					
 					//console.log(capture);
 					$.ajax({
@@ -248,12 +249,29 @@ var buttonActions = {
 						data: capture,
 						dataType: 'json',
 						type: 'POST',
-						success: function(data, status, xhr) {
-							$('.action-button li').slideUp(300);
+						beforeSend: function(jqXHR, settings) {
 							$('#password-div').slideUp(300);
+						},
+						success: function(data, status, xhr) {
+							$actionButtons.slideUp(300);
+							$('#password-div input:password').val('');
+							
+							// $('#password-div').slideUp(300);
 							setTimeout(function() { popup.setLabel('Successfully verified the work completed').open(); }, 300);
 						},
-						error: self.errorHandler
+						error: function(jqXHR, textStatus, errorThrown) {
+							var error = jQuery.parseJSON(jqXHR.responseText);
+							$('#password-div input:password').val('');
+							
+							if (error.hasOwnProperty('final') && error['final'] === true) {
+								$button.slideUp(300);
+							} else {
+								$button.removeClass('cancel');
+								$button.html('Verify and Pay');
+							}
+							
+							popup.setLabel(error ? error.display : 'There was a problem of some sort').open();
+						}
 					});
 					
 					return evt.preventDefault();

@@ -1,7 +1,7 @@
 from __future__ import division
 
 from base import *
-from models.user import User, UserPrefs
+from models.user import User, UserPrefs, UserDwolla
 from models.agreement import Agreement, CompletedState, StateTransitionError
 from models.paymentmethod import PaymentMethod
 from models.transaction import Transaction
@@ -11,6 +11,9 @@ from controllers import fmt
 from tornado.httpclient import HTTPClient, HTTPError
 from tornado.curl_httpclient import CurlAsyncHTTPClient
 
+from datetime import datetime
+
+import urllib
 import json
 import logging
 import os
@@ -40,6 +43,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			logging.warn(e.message)
 			self.set_status(e.status_code)
 			self.write(e.body_content)
+			self.finish()
 			return
 		
 		if not user: # (user and user.passwordIsValid(args['password'])):
@@ -59,6 +63,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			}
 			self.set_status(401)
 			self.renderJSON(error)
+			self.finish()
 			return
 		
 		agreement = Agreement.retrieveByID(args['agreementID'])
@@ -71,6 +76,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			}
 			self.set_status(404)
 			self.renderJSON(error)
+			self.finish()
 			return
 		
 		# agreement = Agreement.retrieveByID(phase.agreementID)
@@ -85,6 +91,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 			}
 			self.set_status(403)
 			self.renderJSON(error)
+			self.finish()
 			return
 		
 		agreementState = agreement.getCurrentState()
@@ -98,6 +105,8 @@ class PaymentHandler(Authenticated, BaseHandler):
 			
 			self.set_status(409)
 			self.renderJSON(error)
+			self.finish()
+			return
 		
 		# Look up the user's preferred payment method
 		
@@ -128,14 +137,16 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		# @TODO: LOOK FOR DWOLLA ACCOUNT
 		
-		transaction = Transaction()
-		transaction['agreementPhaseID'] = phase['id']
-		transaction['senderID'] = user['id']
-		transaction['recipientID'] = agreement['vendorID']
-		# transaction['paymentMethodID'] = paymentMethod['id']
-		transaction['amount'] = phase['amount']
+		transaction = Transaction.retrieveByAgreementPhaseID(phase['id'])
 		
-		transaction.save()
+		if not transaction:
+			transaction = Transaction()
+			transaction['agreementPhaseID'] = phase['id']
+			transaction['senderID'] = user['id']
+			transaction['recipientID'] = agreement['vendorID']
+			# transaction['paymentMethodID'] = paymentMethod['id']
+			transaction['amount'] = phase['amount']
+			transaction.save()
 		
 		# transactionMsg = dict(
 		# 	action='transactionSubmitPayment',
@@ -274,25 +285,34 @@ class PaymentHandler(Authenticated, BaseHandler):
 		body = json.loads(response.body)
 		
 		if body['Success'] == False:
-			display = "There was an error processing your transaction."
+			error = {
+				"domain": 'external.dwolla',
+				"display": "There was an error processing your transaction.",
+				"debug": 'Dwolla transaction error: {0}'.format(body['Message'])
+			}
 			
 			if body['Message'] == 'Invalid account PIN':
-				display = (
+				error['display'] = (
 					"The PIN you entered did not match the one Dwolla has on "
 					"record for your account."
 				)
 			elif body['Message'] == 'Insufficient funds.':
-				display = (
+				error['display'] = (
 					"You do not have enough funds in your Dwolla account to "
 					"make this transaction. Please transfer funds into your "
 					"account and try again."
 				)
+			elif body['Message'] == 'Account temporarily locked':
+				error['display'] = (
+					"Your Dwolla account has been temporarily locked. This is "
+					"probably due to too many incorrect PIN entries in a row. "
+					"Your account will automatically unlock after 30 minutes."
+				)
+				error['final'] = True
 			
-			error = {
-				"domain": 'external.dwolla',
-				"display": display,
-				"debug": 'Dwolla transaction error: {0}'.format(body['Message'])
-			}
+			
+			self.transaction['dateDeclined'] = datetime.now()
+			self.transaction.save()
 			
 			self.set_status(400)
 			self.renderJSON(error)
@@ -314,6 +334,10 @@ class PaymentHandler(Authenticated, BaseHandler):
 				),
 				"debug": "error location (file marker / stacktrace ID)"
 			}
+			
+			self.transaction['dateDeclined'] = datetime.now()
+			self.transaction.save()
+			
 			self.set_status(409)
 			self.renderJSON(error)
 			self.finish()
@@ -322,6 +346,8 @@ class PaymentHandler(Authenticated, BaseHandler):
 		for record in unsavedRecords:
 			record.save()
 		
+		self.transaction['dateAccepted'] = datetime.now()
+		self.transaction.save()
 		# transaction['dwollaTransactionID'] = body['Message']['']
 		# transaction.save()
 		

@@ -426,8 +426,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		else:
 			# Adding account info here because I'm a dumbass.
 			# @todo: figure out the right way to populate this info
-			paymentMethod = user.getDefaultPaymentMethod()
-			templateDict['account'] = paymentMethod and paymentMethod.publicDict()
+			# paymentMethod = user.getDefaultPaymentMethod()
+			userDwolla = UserDwolla.retrieveByUserID(user['id'])
+			templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.publicDict()
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 
 

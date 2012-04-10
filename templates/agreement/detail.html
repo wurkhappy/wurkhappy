@@ -13,7 +13,7 @@
 {% end %}
 
 {% if 'account' in data and data['account'] %}
-	{% set slug['account'] = data['account']['display'] %}
+	{% set slug['account'] = data['account'] %}
 {% end %}
 
 {% module Slug(slug) %}
