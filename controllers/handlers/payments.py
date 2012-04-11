@@ -177,11 +177,12 @@ class PaymentHandler(Authenticated, BaseHandler):
 		bodyArgs = {
 			'pin': args['password'],
 			'destinationId': recipient['dwollaID'],
-			'amount': "{:.2f}".format(phase['amount']),
+			'amount': "{:.2f}".format(phase['amount'] / 100),
 		}
 
 		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
 		logging.info('requestURL: ' + baseURL + '?' + queryString)
+		logging.info(bodyArgs)
 		
 		c = CurlAsyncHTTPClient()
 		c.fetch(baseURL + '?' + queryString,
@@ -346,7 +347,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 		for record in unsavedRecords:
 			record.save()
 		
-		self.transaction['dateAccepted'] = datetime.now()
+		self.transaction['dateApproved'] = datetime.now()
 		self.transaction.save()
 		# transaction['dwollaTransactionID'] = body['Message']['']
 		# transaction.save()
