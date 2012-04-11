@@ -226,7 +226,7 @@ var buttonActions = {
 					<span id="verify-account">----</span>\
 				</h3>\
 				<fieldset class="no-border">\
-					<label for="password">Enter your Dwolla pin approve and send payment.</label><br />\
+					<label for="password">Enter your Dwolla pin approve and send payment. We transmit this data securely and do not store your PIN.</label><br />\
 					<input type="password" name="password" />\
 				</fieldset>\
 			</div>\
