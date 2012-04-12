@@ -170,6 +170,22 @@ class PaymentHandler(Authenticated, BaseHandler):
 		sender = UserDwolla.retrieveByUserID(user['id'])
 		recipient = UserDwolla.retrieveByUserID(agreement['vendorID'])
 		
+		if not (sender and recipient):
+			error = {
+				"domain": "application.consistency",
+				"display": (
+					"One of the parties to the transaction does not have a "
+					"Dwolla account. This error should not be able to happen."
+				),
+				"debug": "one or more parties is missing a Dwolla account"
+			}
+			
+			self.set_status(400)
+			self.renderJSON(error)
+			self.finish()
+			return
+			
+		
 		baseURL = 'https://www.dwolla.com/oauth/rest/transactions/send'
 		queryArgs = {
 			'oauth_token': sender['oauthToken']
