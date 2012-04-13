@@ -423,18 +423,18 @@ div.prompt-box h3 {
 	color: rgb(255,255,255);
 }
 
-#intro ul.action-button {
+ul.action-button {
 	margin: 10px 20px 10px 20px;
 	padding: 0;
 }
 
-#intro ul.action-button li {
+ul.action-button li {
 	list-style: none;
 	padding: 10px 0 0 0;
 	margin: 0;
 }
 
-#intro ul.action-button li a {
+ul.action-button li a {
 	display: block;
 	font-weight: bold;
 	text-align: center;
@@ -454,23 +454,23 @@ div.prompt-box h3 {
 	border-radius: 5px;
 }
 
-#intro ul.action-button a:link,
-#intro ul.action-button a:visited {
+ul.action-button a:link,
+ul.action-button a:visited {
 	background-color: rgb(136,204,85);
 }
 
-#intro ul.action-button a:hover,
-#intro ul.action-button a:active {
+ul.action-button a:hover,
+ul.action-button a:active {
 	background-color: rgb(122,183,76);
 }
 
-#intro ul.action-button a.cancel:link,
-#intro ul.action-button a.cancel:visited {
+ul.action-button a.cancel:link,
+ul.action-button a.cancel:visited {
 	background-color: rgb(190,53,87);
 }
 
-#intro ul.action-button a.cancel:hover,
-#intro ul.action-button a.cancel:active {
+ul.action-button a.cancel:hover,
+ul.action-button a.cancel:active {
 	background-color: rgb(151,42,69);
 }
 

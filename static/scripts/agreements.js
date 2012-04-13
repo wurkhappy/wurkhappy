@@ -266,8 +266,9 @@ var buttonActions = {
 							if (error.hasOwnProperty('final') && error['final'] === true) {
 								$button.slideUp(300);
 							} else {
+								self.state = 'default';
 								$button.removeClass('cancel');
-								$button.html('Verify and Pay');
+								$button.html(self.name);
 							}
 							
 							popup.setLabel(error ? error.display : 'There was a problem of some sort').open();
@@ -297,6 +298,53 @@ var buttonActions = {
 			var $button = $(evt.target);
 			$button.removeClass('cancel');
 			$button.html(self.name);
+			
+			return evt.preventDefault();
+		}
+	},
+	
+	'action-connect': {
+		default: function (self, evt) {
+			self.state = 'cancel';
+			
+			if (!self.hasOwnProperty('$button')) {
+				self.$button = $(evt.target);
+				self.name = self.$button.html();
+			}
+			
+			if (!self.hasOwnProperty('$popup')) {
+				self.$popup = $('<div class="clear prompt-box" id="redirect-div" style="display:none;">\
+	<div class="column-three-fourth">\
+		<h3>Please Provide Some Account Information</h3>\
+		<p>In order to participate in an agreement, we require you to create a Dwolla account and link it to Wurk Happy.\
+			This allows us to provide prompt payments to the users of our system.\
+		</p>\
+	</div>\
+	<div class="column-one-fourth">\
+		<ul class="action-button">\
+			<li class="single"><a href="/user/me/account#dwolla" class="top js-button">Payment Info</a></li>\
+		</ul>\
+	</div></div>');
+			}
+			
+			var popup = new Popup('#content');
+			
+			self.$button.addClass('cancel');
+			self.$button.html('Cancel');
+			
+			$('#content').prepend(self.$popup);
+			self.$popup.slideDown(300);
+			
+			return evt.preventDefault();
+		},
+		
+		cancel: function (self, evt) {
+			self.state = 'default';
+			
+			self.$popup.slideUp(300);
+			
+			self.$button.removeClass('cancel');
+			self.$button.html(self.name);
 			
 			return evt.preventDefault();
 		}

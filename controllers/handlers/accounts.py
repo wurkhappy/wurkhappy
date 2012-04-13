@@ -16,6 +16,9 @@ import urlparse
 import urllib
 import functools
 
+# Required to handle a potential database integrity error
+from MySQLdb import IntegrityError
+
 # Required for resizing profile image uploads
 import Image, ImageOps
 from StringIO import StringIO
@@ -235,6 +238,25 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		
 		if args['email']:
 			user['email'] = args['email']
+			
+			try:
+				user.save()
+			except IntegrityError as e:
+				logging.warn(e.message)
+				
+				error = {
+					"domain": "application.consistency",
+					"display": (
+						"The email address you submitted is in use by another "
+						"member. Please provide a different email address."
+					),
+					"debug": "'email' parameter is already in use"
+				}
+				
+				self.set_status(409)
+				self.writeJSON(error)
+				return
+		
 		if args['firstName']:
 			user['firstName'] = args['firstName']
 		if args['lastName']:

@@ -245,6 +245,8 @@ class PaymentHandler(Authenticated, BaseHandler):
 				)
 				error['final'] = True
 			
+			# @TODO: Handle authorization errors (most likely because the user
+			# deauthorized the Wurk Happy app from within Dwolla.)
 			
 			self.transaction['dateDeclined'] = datetime.now()
 			self.transaction.save()

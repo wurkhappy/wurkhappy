@@ -72,3 +72,20 @@ var buttonActions = {
 		$('#stored-bank').remove();
 	}
 };
+
+var hashHandler = function() {
+	if (window.location.hash) {
+		var id = window.location.hash.match(/#(\w+)/);
+		var $button = $('#' + id[1] + '-button');
+		
+		if ($button.length) {
+			$('.tab.current').toggleClass('current');
+			$button.toggleClass('current');
+			$('#content .tab-content').hide();
+			$('#' + id[1] + '-container').show();
+		}
+	}
+};
+
+window.onhashchange = hashHandler;
+actions.push(hashHandler);

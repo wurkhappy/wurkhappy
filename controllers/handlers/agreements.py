@@ -51,10 +51,12 @@ class AgreementListHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self, withWhom):
 		user = self.current_user
-
+		userDwolla = UserDwolla.retrieveByUserID(user['id'])
+		
 		templateDict = {
 			"_xsrf": self.xsrf_token,
-			"userID": user['id']
+			"userID": user['id'],
+			"paymentEnabled": True if userDwolla else False
 		}
 
 		if withWhom.lower() == 'clients':
@@ -412,7 +414,18 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		templateDict['transactions'] = transactions
 
 		templateDict['state'] = currentState.__class__.__name__
-		templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
+		
+		# Look for the user's Dwolla account. If there is none, direct the
+		# user to the Payment Information tab. Otherwise, render the buttons.
+		
+		userDwolla = UserDwolla.retrieveByUserID(user['id'])
+		
+		if not userDwolla:
+			templateDict['actions'] = [
+				('action-connect', 'Connect an Account')
+			]
+		else:
+			templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
 
 		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
