@@ -221,7 +221,7 @@ class User(MappedObj):
 		state = [s[0] for s in states if s[1]][0]
 		return state(self)
 		
-	def publicDict(self):
+	def getPublicDict(self):
 		return {
 			'id': self['id'],
 			'fullName': self.getFullName(),
@@ -265,7 +265,7 @@ class UserPrefs(MappedObj):
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		return {
 			"name": self['name'],
 			"value": self['value']
@@ -299,7 +299,7 @@ class UserDwolla(MappedObj):
 			cursor.execute("SELECT * FROM {0} WHERE dwollaID = %s".format(clz.tableName), dwollaID)
 			return clz.initWithDict(cursor.fetchone())
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		return { }
 
 

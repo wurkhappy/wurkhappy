@@ -104,9 +104,9 @@ class AgreementInviteHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -170,9 +170,9 @@ class AgreementSentHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -231,9 +231,9 @@ class AgreementAcceptedHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -292,9 +292,9 @@ class AgreementDeclinedHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -355,10 +355,10 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict(),
-			'phase': phase.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict(),
+			'phase': phase.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -421,11 +421,11 @@ class AgreementPaidHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict(),
-			'phase': phase.publicDict(),
-			'paymentMethod': paymentMethod.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict(),
+			'phase': phase.getPublicDict(),
+			'paymentMethod': paymentMethod.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -485,10 +485,10 @@ class AgreementDisputedHandler(QueueHandler):
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
-			'client': client.publicDict(),
-			'vendor': vendor.publicDict(),
-			'agreement': agreement.publicDict(),
-			'phase': phase.publicDict()
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'agreement': agreement.getPublicDict(),
+			'phase': phase.getPublicDict()
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
@@ -550,7 +550,7 @@ class UserInviteHandler(QueueHandler):
 		
 		data = {
 			'hostname': host,
-			'user': user.publicDict(),
+			'user': user.getPublicDict(),
 			'url': 'http://{0}/user/me/account?t={1}'.format(host, digest)
 		}
 		
@@ -610,7 +610,7 @@ class UserResetPasswordHandler(QueueHandler):
 		
 		data = {
 			'hostname': host,
-			'user': user.publicDict(),
+			'user': user.getPublicDict(),
 			'url': 'http://{0}/user/me/password?t={1}'.format(host, digest)
 		}
 		

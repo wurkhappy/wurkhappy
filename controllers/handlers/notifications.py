@@ -66,8 +66,8 @@ class NotificationHandler(BaseHandler):
 					self.renderJSON(error)
 				else:
 					response = {
-						'to': user.publicDict(),
-						'from': fromUser.publicDict(),
+						'to': user.getPublicDict(),
+						'from': fromUser.getPublicDict(),
 						'text': body['text'],
 					}
 					

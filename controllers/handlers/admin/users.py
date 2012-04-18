@@ -33,7 +33,7 @@ class UserListHandler(Authenticated, BaseHandler):
 		data = { 'users': [] }
 		
 		for user in users:
-			u = user.publicDict()
+			u = user.getPublicDict()
 			u['state'] = user.getCurrentState()
 			data['users'].append(u)
 		
@@ -62,18 +62,18 @@ class UserDetailHandler(Authenticated, BaseHandler):
 			self.set_status(404)
 			return
 		
-		data = user.publicDict()
+		data = user.getPublicDict()
 		
 		if user['invitedBy']:
 			sender = User.retrieveByID(user['invitedBy'])
-			data['invitedBy'] = sender.publicDict()
+			data['invitedBy'] = sender.getPublicDict()
 			data['invitedBy']['url'] = 'http://{0}/user/{1}'.format(self.request.host, sender['id'])
 		else:
 			data['invitedBy'] = None
 		
 		data['_xsrf'] = self.xsrf_token
 		data['fields'] = user.fields
-		data['preferences'] = [p.publicDict() for p in UserPrefs.iteratorWithUserID(user['id'])]
+		data['preferences'] = [p.getPublicDict() for p in UserPrefs.iteratorWithUserID(user['id'])]
 		data['state'] = user.getCurrentState()
 		self.render('user/detail.html', data=data, title='Admin &ndash; User Detail')
 
@@ -131,4 +131,4 @@ class UserActionJSONHandler(Authenticated, BaseHandler):
 				r = bconn.put(json.dumps(msg))
 				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
-		self.renderJSON(user.publicDict())
+		self.renderJSON(user.getPublicDict())

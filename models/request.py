@@ -22,7 +22,7 @@ class Request(MappedObj):
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		return OrderedDict([
 			('id', self['id']),
 			('clientID', self['clientID']),

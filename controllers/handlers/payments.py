@@ -302,7 +302,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 		self.transaction['dwollaTransactionID'] = body['Response']
 		self.transaction.save()
 		
-		transactionJSON = self.transaction.publicDict()
+		transactionJSON = self.transaction.getPublicDict()
 		del(transactionJSON['paymentMethodID'])
 		
 		self.renderJSON(transactionJSON)

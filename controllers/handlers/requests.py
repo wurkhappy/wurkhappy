@@ -11,13 +11,13 @@ from random import randint
 
 class RequestBase(BaseHandler):
 	def assembleDictionary(self, request):
-		requestDict = request.publicDict()
+		requestDict = request.getPublicDict()
 
 		client = User.retrieveByID(request['clientID'])
-		requestDict["client"] = client.publicDict()
+		requestDict["client"] = client.getPublicDict()
 
 		vendor = User.retrieveByID(request['vendorID'])
-		requestDict['vendor'] = vendor.publicDict()
+		requestDict['vendor'] = vendor.getPublicDict()
 
 		del(requestDict['clientID'])
 		del(requestDict['vendorID'])

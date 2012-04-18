@@ -319,8 +319,8 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 					user[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
 		
 		user.save()
-		logging.warn(user.publicDict())
-		self.renderJSON(user.publicDict())
+		logging.warn(user.getPublicDict())
+		self.renderJSON(user.getPublicDict())
 
 
 
@@ -484,7 +484,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 		
 		paymentMethod.save()
 		
-		result = paymentMethod.publicDict()
+		result = paymentMethod.getPublicDict()
 		locationStr = 'http://%s/user/me/paymentmethod/%d.json' % (
 			self.request.host, paymentMethod['id']
 		)
@@ -517,7 +517,7 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 			self.set_status(404)
 			self.renderJSON(error)
 		
-		self.renderJSON(paymentMethod.publicDict())
+		self.renderJSON(paymentMethod.getPublicDict())
 	
 	@web.authenticated
 	def delete(self, paymentMethodID):

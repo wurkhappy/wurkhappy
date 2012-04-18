@@ -23,7 +23,7 @@ class AgreementListHandler(BaseHandler, Authenticated):
 			return
 		
 		agreements = list(Agreement.iteratorWithPage((offset, limit)))
-		data = [u.publicDict() for u in agreements]
+		data = [u.getPublicDict() for u in agreements]
 		self.render('agreement/list.html', data=data)
 
 
@@ -39,7 +39,7 @@ class AgreementDetailHandler(BaseHandler, Authenticated):
 			self.set_status(404)
 			return
 		
-		data = agreement.publicDict()
+		data = agreement.getPublicDict()
 		data['state'] = agreement.getCurrentState()
 		self.render('agreement/detail.html', data=data)
 

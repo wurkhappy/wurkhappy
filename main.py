@@ -42,6 +42,7 @@ class Application(web.Application):
 			
 			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
 			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
+			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),
 			
 			# JSON handlers to update account information

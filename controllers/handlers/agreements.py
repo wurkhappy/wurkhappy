@@ -22,13 +22,13 @@ class AgreementBase(object):
 		# This should probably go in the model class, but it
 		# could be considered controller, so it's here for now.
 
-		agreementDict = agreement.publicDict()
+		agreementDict = agreement.getPublicDict()
 
 		client = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
-		agreementDict['client'] = client and client.publicDict()
+		agreementDict['client'] = client and client.getPublicDict()
 
 		vendor = User.retrieveByID(agreement['vendorID'])
-		agreementDict['vendor'] = vendor.publicDict()
+		agreementDict['vendor'] = vendor.getPublicDict()
 
 		del(agreementDict['clientID'])
 		del(agreementDict['vendorID'])
@@ -36,7 +36,7 @@ class AgreementBase(object):
 		agreementDict['phases'] = []
 
 		for phase in AgreementPhase.iteratorWithAgreementID(agreement['id']):
-			agreementDict['phases'].append(phase.publicDict())
+			agreementDict['phases'].append(phase.getPublicDict())
 
 		return agreementDict
 
@@ -322,14 +322,14 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 		if agreementType == 'Client':
 			client = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
-			templateDict["client"] = client and client.publicDict()
-			templateDict["vendor"] = user.publicDict()
+			templateDict["client"] = client and client.getPublicDict()
+			templateDict["vendor"] = user.getPublicDict()
 			templateDict["self"] = "vendor"
 			templateDict["other"] = "client"
 		else:
 			vendor = User.retrieveByID(agreement['vendorID'])
-			templateDict["client"] = user.publicDict()
-			templateDict["vendor"] = vendor.publicDict()
+			templateDict["client"] = user.getPublicDict()
+			templateDict["vendor"] = vendor.getPublicDict()
 			templateDict["self"] = "client"
 			templateDict["other"] = "vendor"
 
@@ -441,7 +441,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			# @todo: figure out the right way to populate this info
 			# paymentMethod = user.getDefaultPaymentMethod()
 			userDwolla = UserDwolla.retrieveByUserID(user['id'])
-			templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.publicDict()
+			templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.getPublicDict()
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 
 

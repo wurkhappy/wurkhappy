@@ -79,7 +79,7 @@ class Transaction(MappedObj):
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		return OrderedDict([
 			('id', self['id']),
 			('senderID', self['senderID']),

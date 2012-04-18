@@ -146,7 +146,7 @@ class MappedObj(object):
 			for key, value in result.iteritems():
 				self.fields[key] = value
 	
-	def getPublicDictionary(self):
+	def getPublicDict(self):
 		return {}
 	
 	def __repr__(self):

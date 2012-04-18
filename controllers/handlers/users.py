@@ -42,9 +42,26 @@ class ContactsJSONHandler(Authenticated, BaseHandler):
 			iterator = User.iteratorWithContactsForID(user['id'])
 			condition = lambda x: x.getFullName().lower().find(query) > -1 or x['email'].lower().find(query) > -1
 			
-			contacts = [user.publicDict() for user in iterator if condition(user)]
+			contacts = [user.getPublicDict() for user in iterator if condition(user)]
 		
 		self.renderJSON({"contacts": contacts})
+
+
+
+# -------------------------------------------------------------------
+# Display Profile
+# -------------------------------------------------------------------
+
+class ProfileHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self, userID):
+		user = User.retrieveByID(userID)
+		
+		if user is None:
+			raise HTTPError(404, 'Visitor requested profile for nonexistent user')
+		
+		title = "%s Agreements &ndash; Wurk Happy" % agreementType
+		self.render("users/profile.html", title=title, data=user.getPublicDict())
 
 
 
@@ -75,7 +92,7 @@ class PreferencesJSONHandler(Authenticated, BaseHandler):
 	def get(self, userID):
 		user = self.current_user
 		
-		userDict = user.publicDict()
+		userDict = user.getPublicDict()
 		userDict['prefs'] = {}
 		
 		for pref in UserPrefs.iteratorWithUserID(user['id']):

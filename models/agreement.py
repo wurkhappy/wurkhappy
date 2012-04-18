@@ -202,7 +202,7 @@ class Agreement(MappedObj):
 	def tokenIsValid(self, token):
 		return self['tokenHash'] and self['tokenHash'] == bcrypt.hashpw(str(token), self['tokenHash'])
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		return OrderedDict([
 			('id', self['id']),
 			('vendorID', self['vendorID']),
@@ -292,7 +292,7 @@ class AgreementPhase (MappedObj):
 	def getCostString(self):
 		return "${:,.2f}".format(self['amount'] / 100) if self['amount'] else ""
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		return OrderedDict([
 			('phaseNumber', self['phaseNumber']),
 			('amount', self['amount']),

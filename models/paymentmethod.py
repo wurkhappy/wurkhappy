@@ -46,7 +46,7 @@ class PaymentMethod(MappedObj):
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
-	def publicDict(self):
+	def getPublicDict(self):
 		d = OrderedDict([
 			('id', self['id']),
 			('userID', self['userID']),
