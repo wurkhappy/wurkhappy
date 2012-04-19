@@ -177,5 +177,5 @@
 
 
 {% block transactionitem %}
-				<li>{{ transaction['type'] }} <a href="/people/{{ data[transaction['user']]['id'] }}">{{ data[transaction['user']]['fullName'] }}</a> on {{ transaction['date'] }}</li>
+				<li>{{ transaction['type'] }} <a href="/user/{{ data[transaction['user']]['id'] }}">{{ data[transaction['user']]['fullName'] }}</a> on {{ transaction['date'] }}</li>
 {% end %}

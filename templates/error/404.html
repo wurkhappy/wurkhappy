@@ -14,22 +14,10 @@
 
 	<div id="content" class="clear">
 		<div id="profile_preview">
-			<h2>Contact Information</h2>
-			<div class="data-table">
-				<table border="0" cellspacing="0" cellpadding="0">
-					<tr>
-						<td class="meta">
-							<span><img src="{{ data['profileURL'][0] }}" alt="Profile photo" width="50" height="50" /></span>
-						</td>
-						<td>
-							<p><a href="mailto:{{ data['email'] }}">{{ data['email'] }}</a></p>
-							<p>{{ data['telephone'] or 'No telephone number on file.' }}</p>
-						</td>
-					</tr>
-				</table>
-			</div>
+			<h2>The Page You Requested Is Not Available</h2>
+			<p>To continue to use Wurk Happy, you may return to the <a href="/">home page</a> or use the navigation links above.</p>
+			<p>If you believe you&rsquo;ve reached this page in error, please contact our <a href="mailto:contact@wurkhappy.com">support staff</a>.</p>
 		</div>
-		
 	</div>
 
 	{% module Footer() %}
@@ -49,7 +37,7 @@
 {% block header %}
 	<div id="intro" class="clear">
 		<div class="column-three-fourth">
-			<h1>{{ data['fullName'] }}</h1>
+			<h1>Uh-oh. Something&rsquo;s Wrong.</h1>
 		</div>
 	</div>
 {% end %}

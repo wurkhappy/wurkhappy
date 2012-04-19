@@ -63,6 +63,10 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 				]
 			}
 			
+			if user['dateVerified'] is None:
+				user['dateVerified'] = datetime.now()
+				user.save()
+			
 			self.clear_cookie('user_id')
 			self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
 			return

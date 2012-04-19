@@ -8,8 +8,11 @@ from models.agreement import *
 from models.profile import Profile
 import json
 
+from tornado.web import HTTPError
 from datetime import datetime
 import logging
+
+
 
 # -------------------------------------------------------------------
 # Contact listing
@@ -60,8 +63,8 @@ class ProfileHandler(Authenticated, BaseHandler):
 		if user is None:
 			raise HTTPError(404, 'Visitor requested profile for nonexistent user')
 		
-		title = "%s Agreements &ndash; Wurk Happy" % agreementType
-		self.render("users/profile.html", title=title, data=user.getPublicDict())
+		title = "{0}&rsquo;s Profile &ndash; Wurk Happy".format(user.getFullName())
+		self.render("user/profile.html", title=title, data=user.getPublicDict())
 
 
 

@@ -27,6 +27,9 @@ class BaseHandler(web.RequestHandler):
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
 		self.write(json.dumps(obj, cls=ORMJSONEncoder))
+	
+	def write_error(self, statusCode, **kwargs):
+		self.render('error/404.html', title="Uh-oh &ndash; Wurk Happy", data=dict())
 
 
 

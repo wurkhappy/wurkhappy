@@ -101,7 +101,7 @@
 									Unsent draft from {{ agreement['date'] }}</p>
 								{% else %}
 									{% if data['agreementType'] == 'Client' %}Sent to {% elif data['agreementType'] == 'Vendor' %}Received from {% end %}
-									<strong><a href="/people/{{ agreement['other_id'] }}">{{ agreement['other_name'] }}</a></strong>
+									<strong><a href="/user/{{ agreement['other_id'] }}">{{ agreement['other_name'] }}</a></strong>
 									on {{ agreement['date'] }}</p>
 								{% end %}
 						</td>
