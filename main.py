@@ -86,7 +86,6 @@ class Application(web.Application):
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
 			"ui_modules": modules,
 			"debug": config['tornado'].get('debug', False),
-			"xheaders": config['tornado'].get('xheaders', False)
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -124,8 +123,10 @@ if __name__ == "__main__":
 	# Override debug setting with command line flag, if set
 	if options.options.debug:
 		conf['tornado']['debug'] = options.options.debug
-
-	server = HTTPServer(Application(conf))
+	
+	xheaders = conf['tornado'].get('xheaders', False)
+	
+	server = HTTPServer(Application(conf), xheaders=xheaders)
 
 	port = options.options.port
 	address = options.options.address
