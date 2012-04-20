@@ -18,6 +18,8 @@ class HTTPServerTestHandler(Authenticated, JSONBaseHandler):
 			('user', self.current_user['id']),
 			('remote_ip', self.request.remote_ip),
 			('protocol', self.request.protocol),
+			('X-Real-IP', self.request.headers['X-Real-IP']),
+			('X-Scheme', self.request.headers['X-Scheme']),
 			('arguments', self.request.arguments)
 		])
 		
