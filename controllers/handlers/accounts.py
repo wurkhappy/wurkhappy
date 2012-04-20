@@ -87,6 +87,8 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
+		dwollaError = None
+		
 		if args['code']:
 			# Do an HTTP request to get the token
 			# It's synchronous for now, but we'll do async later.
@@ -140,23 +142,26 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 							# Parse the second response body and update the DB
 							accountDict = json.loads(accountResponse.body)
 							
-							if accountDict['Success'] != True:
+							if accountDict['Success'] == True:
+								dwolla = UserDwolla()
+								dwolla['userID'] = user['id']
+								dwolla['userName'] = accountDict['Response']['Name']
+								dwolla['dwollaID'] = accountDict['Response']['Id']
+								dwolla['oauthToken'] = oauthToken
+								dwolla.save()
+							
+								logging.info(dwolla)
+							else:
 								logging.error('Dwolla request failed. %s', accountDict)
+								dwollaError = 'Wurk Happy was unable to connect with your Dwolla account.'
 							
-							dwolla = UserDwolla()
-							dwolla['userID'] = user['id']
-							dwolla['userName'] = accountDict['Response']['Name']
-							dwolla['dwollaID'] = accountDict['Response']['Id']
-							dwolla['oauthToken'] = oauthToken
-							dwolla.save()
-							
-							logging.info(dwolla)
 						else:
 							logging.error('Dwolla account lookup returned an unexpected response. %s', accountResponse)
 			
 			# @TODO: If there was an error and you know it, clap your hands!
 		userDict = {
 			'_xsrf': self.xsrf_token,
+			'error': dwollaError,
 			'id': user['id'],
 			'firstName': user['firstName'],
 			'lastName': user['lastName'],
@@ -258,7 +263,7 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 				}
 				
 				self.set_status(409)
-				self.writeJSON(error)
+				self.renderJSON(error)
 				return
 		
 		if args['firstName']:

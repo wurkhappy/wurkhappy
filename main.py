@@ -72,6 +72,9 @@ class Application(web.Application):
 			
 			(r'/agreement/request/?', requests.RequestAgreementHandler),
 			(r'/agreement/request\.json', requests.RequestAgreementJSONHandler),
+			
+			# JSON handler to test server configuration
+			(r'/test/http_server\.json', tests.HTTPServerTestHandler)
 		]
 		
 		settings = {

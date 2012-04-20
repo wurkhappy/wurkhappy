@@ -33,9 +33,31 @@ class BaseHandler(web.RequestHandler):
 
 
 
+# -------------------------------------------------------------------
+# RequestHandler subclass that can serialize JSON objects
+# -------------------------------------------------------------------
+
+class JSONBaseHandler(web.RequestHandler):
+	
+	def renderJSON(self, obj):
+		self.set_header('Content-Type', 'application/json')
+		self.write(json.dumps(obj, cls=ORMJSONEncoder))
+
+
+
+# -------------------------------------------------------------------
+# Cookie authentication mix-in
+# -------------------------------------------------------------------
+
 class Authenticated(object):
+	'''Authentication mix-in for Wurk Happy. Identifies users by querying for
+	a secure cookie and looking up the resulting ID in the database.'''
+	
 	def get_current_user(self):
+		# TODO: I think this is handled by TokenAuthenticated.
+		# Make sure it's not used anywhere before deleting!
 		self.token = self.get_argument("t", None)
+		
 		userID = self.get_secure_cookie("user_id")
 		return userID and User.retrieveByID(userID)
 	
@@ -46,7 +68,15 @@ class Authenticated(object):
 
 
 
+# -------------------------------------------------------------------
+# Token (and cookie) authentication mix-in
+# -------------------------------------------------------------------
+
 class TokenAuthenticated(object):
+	'''Alternative authentication mix-in for classes that accept users
+	identified by log-in tokens. The token is usually specified as a query-
+	string argument called `t`.'''
+	
 	def get_current_user(self):
 		userID = self.get_secure_cookie("user_id")
 		user = userID and User.retrieveByID(userID)

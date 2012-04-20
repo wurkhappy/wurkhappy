@@ -8,4 +8,5 @@ __all__ = [
 	"requests",
 	"root",
 	"users",
+	"tests",
 ]
