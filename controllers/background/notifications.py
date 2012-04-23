@@ -557,10 +557,15 @@ class UserInviteHandler(QueueHandler):
 		t = self.loader.load('user_invite.html')
 		htmlString = t.generate(data=data)
 		
-		subject = "Get started on Wurk Happy!"
-		textString = '''
-Welcome to Wurk Happy. To get started with your account, please verify your
-email address by following the link below.
+		subject = "Get started with Wurk Happy!"
+		textString = '''Dear Wurk Happy Customer,
+
+Thank you for your interest in Wurk Happy! We enable freelancers and their
+clients to negotiate contracts, manage the working relationship and get paid,
+all in one easy place.
+
+To get started with your account, please verify your email address by
+either the link below or copying and pasting it in your browser.
 
 {0}
 
