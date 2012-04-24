@@ -96,15 +96,18 @@ class AgreementListHandler(Authenticated, BaseHandler):
 
 		for agreement in agreements:
 			stateClass = agreement.getCurrentState().__class__
-
-			if stateClass == 'InvalidState':
+			
+			logging.warn (agreement)
+			logging.warn (stateClass)
+			
+			if stateClass == InvalidState:
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement['id'], agreement['vendorID'], agreement['clientID']
 					)
 				)
 			if agreementType == 'Client':
 				other = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
-
+				
 				if stateClass in [DraftState, DeclinedState, ContestedState]:
 					appendAgreement(actionItems, agreement, other)
 				elif stateClass in [EstimateState, CompletedState]:

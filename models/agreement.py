@@ -166,6 +166,7 @@ class Agreement(MappedObj):
 		
 		# Get the first agreement phase that has not been marked complete.
 		phase = self.getCurrentPhase()
+		phaseCount = AgreementPhase.countWithAgreementID(self['id'])
 		
 		dateCompleted = phase and phase['dateCompleted']
 		dateVerified = phase and phase['dateVerified']
@@ -173,8 +174,10 @@ class Agreement(MappedObj):
 		
 		# @todo: Unit test these against some example cases. Also make this fit the diagram above more closely.
 		states = [
+			# TODO: Final state as distinct from paid state. IMPORTANT
+			# (Introduced phaseCount check to work around issue)
 			# (FinalState, not phase),
-			(PaidState, dateVerified or not phase),
+			(PaidState, (dateVerified or not phase) and phaseCount > 0),
 			# If phase is null, all phases are paid and
 			# the agreement is in the final state.
 			(ContestedState, dateAccepted and dateCompleted and dateContested and dateContested > dateCompleted),
@@ -280,6 +283,14 @@ class AgreementPhase (MappedObj):
 			while result:
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
+	
+	@classmethod
+	def countWithAgreementID(clz, agreementID):
+		with Database() as (conn, cursor):
+			query = "SELECT COUNT(*) FROM {0} WHERE agreementID = %s"
+			cursor.execute(query.format(clz.tableName), agreementID)
+			result = cursor.fetchone()
+			return result['COUNT(*)']
 	
 	@classmethod
 	def retrieveByAgreementIDAndPhaseNumber(clz, agreementID, phaseNumber):
