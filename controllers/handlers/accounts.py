@@ -352,6 +352,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 					]
 				)
 			except Exception as e:
+				# TODO: WHAT THE HELL WAS I THINKING HERE?!
 				self.set_status(401)
 				self.renderJSON(error)
 				return
@@ -382,7 +383,35 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 			#TODO: Exponential back-off when user enters incorrect password.
 			#TODO: Flag accounds if passwords change too often.
 			
+			error = {
+				"domain": "authentication",
+				"display": (
+					"The password you entered is incorrect. Please check "
+					"for typos and make sure caps lock is turned off when "
+					"entering your password."
+				),
+				"debug": "incorrect authentication credentials"
+			}
+			
 			self.set_status(401)
+			self.renderJSON(error)
+		elif user.passwordIsValid(args['newPassword']):
+			# New password is the same as old password, and that's bad.
+			
+			# TODO: This could expose a vector for a brute-force attack,
+			# so we need to make sure that this cannot be called more than
+			# say, five times per day...
+			
+			error = {
+				"domain": "authentication.password",
+				"display": (
+					"Your new password cannot be the same as your current "
+					"password. Please choose a different password."
+				),
+				"debug": "attempt to re-use password"
+			}
+			
+			self.set_status(400)
 			self.renderJSON(error)
 		else:
 			user.setPasswordHash(args['newPassword'])

@@ -97,9 +97,6 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		for agreement in agreements:
 			stateClass = agreement.getCurrentState().__class__
 			
-			logging.warn (agreement)
-			logging.warn (stateClass)
-			
 			if stateClass == InvalidState:
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement['id'], agreement['vendorID'], agreement['clientID']

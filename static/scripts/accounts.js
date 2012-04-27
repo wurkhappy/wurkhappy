@@ -9,6 +9,31 @@ var buttonActions = {
 		$('#details-button').click();
 	},
 	
+	'password-set': {
+		default: function (self, evt) {
+			var popup = new Popup('#internal');
+			var bodyString = self.serialize('password-form');
+			
+			$.ajax({
+				url: '/user/me/password.json',
+				data: bodyString,
+				dataType: 'json',
+				type: 'POST',
+				success: function (data, status, xhr) {
+					popup.setLabel('Your password has successfully been changed.').open();
+					$('#password-form input').val('');
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					var error = jQuery.parseJSON(jqXHR.responseText);
+					popup.setLabel(error ? error.display : 'There was a problem changing your password. It has not been changed.').open();
+					$('#password-form input').val('');
+				}
+			});
+			
+			return evt.preventDefault();
+		}
+	},
+	
 	profile_update: function (data, status, xhr) {
 		// @todo: Manually check the status code
 		data.telephone = data.telephone || '';
