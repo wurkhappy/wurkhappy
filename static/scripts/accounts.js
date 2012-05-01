@@ -9,7 +9,7 @@ var buttonActions = {
 		$('#details-button').click();
 	},
 	
-	'password-set': {
+	'password-change': {
 		default: function (self, evt) {
 			var popup = new Popup('#internal');
 			var bodyString = self.serialize('password-form');
@@ -30,6 +30,119 @@ var buttonActions = {
 				}
 			});
 			
+			return evt.preventDefault();
+		}
+	},
+	
+	'password-set': {
+		default: function (self, evt) {
+			var popup = new Popup('#internal');
+			var bodyString = self.serialize('password-form');
+			
+			$.ajax({
+				url: '/user/me/password.json',
+				data: bodyString,
+				dataType: 'json',
+				type: 'POST',
+				success: function (data, status, xhr) {
+					popup.setLabel('Your password has successfully been set.').open();
+					
+					self.state = 'disabled';
+					$(evt.target).addClass('disabled');
+					
+					$('#password-form input').val('');
+					$('#details-button').click();
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					var error = jQuery.parseJSON(jqXHR.responseText);
+					popup.setLabel(error ? error.display : 'There was a problem setting your password.').open();
+					$('#password-form input').val('');
+				}
+			});
+			
+			return evt.preventDefault();
+		},
+		
+		disabled: function (self, evt) {
+			return evt.preventDefault();
+		}
+	},
+	
+	'profile-submit': {
+		default: function (self, evt) {
+			// Do AJAX form.
+			$('form#profile-edit').submit();
+			
+			$('#dwolla-button').click();
+			return evt.preventDefault();
+		}
+	},
+	
+	'profile-edit': function (data, status, xhr) {
+		var popup = new Popup('#internal');
+		popup.setLabel('Your profile has been updated.').open();
+	},
+	
+	'dwolla_connect': {
+		default: function (self, evt) {
+			var width = window.outerWidth, height = window.outerHeight, x = 0, y = 0;
+			
+			var $dimmer = $('<div class="dimmer" style="display:none;"></div>');
+			$('body').prepend($dimmer);
+			$dimmer.fadeIn(300);
+			
+			var authWindow = window.open(slug['authorizeURL'], 'Permission Request', 'width=602,height=430,resizable=0,toolbar=0,location=0,menubar=0,directories=0');
+			
+			if (window.hasOwnProperty('screenX') && window.hasOwnProperty('screenY')) {
+				x = window.screenX;
+				y = window.screenY;
+			} else {
+				x = window.screenLeft;
+				y = window.screenTop;
+			}
+			
+			authWindow.moveTo(x + (width / 2) - 301, y + (height / 2) - 215);
+			
+			var windowPollTimer;
+			windowPollTimer = setInterval(function() {
+				if (authWindow && authWindow.closed) {
+					clearInterval(windowPollTimer);
+					$dimmer.fadeOut(300);
+				}
+			}, 100);
+			
+			var successPollTimer;
+			successPollTimer = setInterval(function() {
+				var token = getQueryArg('t');
+				if (token) {
+					$.ajax({
+						url: '/user/me/account.json',
+						data: {'t': token},
+						dataType: 'json',
+						type: 'GET',
+						success: function (data, status, xhr) {
+							if (data['dwolla'] === true) {
+								clearInterval(successPollTimer);
+								window.location = '/';
+							}
+						}
+					});
+				}
+			}, 800);
+			
+			return evt.preventDefault();
+		}
+	},
+	
+	'dwolla_create': {
+		default: function (self, evt) {
+			return evt.preventDefault();
+		}
+	},
+	
+	'dwolla_skip': {
+		default: function (self, evt) {
+			window.location = '/';
 			return evt.preventDefault();
 		}
 	},

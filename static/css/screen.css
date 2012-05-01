@@ -474,6 +474,13 @@ ul.action-button a.cancel:active {
 	background-color: rgb(151,42,69);
 }
 
+ul.action-button a.disabled:link,
+ul.action-button a.disabled:visited,
+ul.action-button a.disabled:hover,
+ul.action-button a.disabled:active {
+	color: rgb(151,151,151);
+	background-color: rgb(87,87,87);
+}
 
 /* INTERNAL
 ================================================================================ */
@@ -520,6 +527,21 @@ ul.action-button a.cancel:active {
 	     -o-user-select: none;
 	        user-select: none;
 }
+
+/* SCREEN DIMMER
+================================================================================ */
+
+
+div.dimmer {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: #111;
+	opacity: 0.9;
+	filter:alpha(opacity=90);
+	z-index: 1337;
+}
+
 
 /* CONTENT
 ================================================================================ */

@@ -34,12 +34,32 @@ from boto.s3.key import Key
 
 
 
+class DwollaRedirectMixin(object):
+	def buildRedirectURL(self, token=None):
+		return '{0}://{1}/user/me/connections{2}'.format(
+			self.request.protocol,
+			self.application.configuration['wurkhappy']['hostname'],
+			'?t={0}'.format(token) if token else ''
+		)
+
+	def buildAuthorizeURL(self, token=None):
+		return (
+			'https://www.dwolla.com/oauth/v2/authenticate?'
+			'client_id={0}&response_type=code&redirect_uri={1}&scope={2}'
+		).format(
+			self.application.configuration['dwolla']['key'],
+			urllib.quote(self.buildRedirectURL(token), '/'),
+			'transactions|balance|send|accountinfofull'
+		)
+
+
+
 # -------------------------------------------------------------------
 # AccountHandler
 # -------------------------------------------------------------------
 
-class AccountHandler(TokenAuthenticated, BaseHandler):
-
+class AccountHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
+	
 	@web.authenticated
 	def get(self):
 		user = self.current_user
@@ -49,6 +69,8 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 		# the user onboarding interface
 		
 		if token:
+			dwollaAcct = UserDwolla.retrieveByUserID(user['id'])
+			
 			userDict = {
 				'_xsrf': self.xsrf_token,
 				'token': token,
@@ -60,7 +82,12 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 				'profileURL': [
 					user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
 					user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
-				]
+				],
+				'password': True if user['password'] else False,
+				'dwolla': {
+					'dwollaID': dwollaAcct and dwollaAcct['dwollaID'],
+					'authorizeURL': self.buildAuthorizeURL(token)
+				}
 			}
 			
 			if user['dateVerified'] is None:
@@ -73,7 +100,46 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 		
 		# Otherwise, render the accounts page
 		
-		# Look for a code query argument. If it's there, this is a Dwolla callback.
+		userDict = {
+			'_xsrf': self.xsrf_token,
+			# 'error': dwollaError,
+			'id': user['id'],
+			'firstName': user['firstName'],
+			'lastName': user['lastName'],
+			'fullName': user.getFullName(),
+			'email': user['email'],
+			'telephone': user['telephone'] or '',
+			'profileURL': [
+				user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
+				user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+			],
+			'self': 'account'
+		}
+		
+		dwolla = UserDwolla.retrieveByUserID(user['id'])
+		
+		if dwolla:
+			userDict['dwolla'] = dwolla.fields
+		else:
+			userDict['dwolla'] = {'authorizeURL': self.buildAuthorizeURL() }
+		
+		self.render('user/account.html', 
+			title="Wurk Happy &ndash; My Account", data=userDict
+		)
+
+
+
+# -------------------------------------------------------------------
+# Account Connection Handler (Currently for Dwolla)
+# -------------------------------------------------------------------
+
+class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
+	@web.authenticated
+	def get(self):
+		"""This is a Dwolla callback handler. We are looking for the 'code'
+		query string parameter to begin the token exchange process."""
+		
+		user = self.current_user
 		
 		try:
 			args = fmt.Parser(self.request.arguments,
@@ -87,8 +153,6 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		dwollaError = None
-		
 		if args['code']:
 			# Do an HTTP request to get the token
 			# It's synchronous for now, but we'll do async later.
@@ -98,9 +162,7 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 			 	'client_id': self.application.configuration['dwolla']['key'],
 				'client_secret': self.application.configuration['dwolla']['secret'],
 				'grant_type': 'authorization_code',
-				'redirect_uri': 'http://{0}/user/me/account'.format(
-					self.application.configuration['wurkhappy']['hostname']
-				),
+				'redirect_uri': self.buildRedirectURL(self.token),
 				'code': args['code']
 			}
 			queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
@@ -159,59 +221,34 @@ class AccountHandler(TokenAuthenticated, BaseHandler):
 							logging.error('Dwolla account lookup returned an unexpected response. %s', accountResponse)
 			
 			# @TODO: If there was an error and you know it, clap your hands!
-		userDict = {
-			'_xsrf': self.xsrf_token,
-			'error': dwollaError,
-			'id': user['id'],
-			'firstName': user['firstName'],
-			'lastName': user['lastName'],
-			'fullName': user.getFullName(),
-			'email': user['email'],
-			'telephone': user['telephone'] or '',
-			'profileURL': [
-				user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
-				user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
-			],
-			'self': 'account'
-		}
-		
-		dwolla = UserDwolla.retrieveByUserID(user['id'])
-		
-		if dwolla:
-			userDict['dwolla'] = dwolla.fields
-		else:
-			# Choose http or https here automatically as appropriate
-			redirectURL = 'http://{0}/user/me/account'.format(
-				self.application.configuration['wurkhappy']['hostname']
-			)
 			
-			url = (
-				'https://www.dwolla.com/oauth/v2/authenticate?'
-				'client_id={0}&response_type=code&redirect_uri={1}&scope={2}'
-			).format(
-				self.application.configuration['dwolla']['key'],
-				urllib.quote(redirectURL, '/'),
-				'transactions|balance|send|accountinfofull'
-			)
-			
-			userDict['dwolla'] = {
-				'authorizeURL': url
-			}
-		
-		self.render('user/account.html', 
-			title="Wurk Happy &ndash; My Account", data=userDict
-		)
+		self.set_status(200)
+		self.set_secure_cookie("user_id", str(user['id']), httponly=True)
+		self.write("""<html><body onload="window.close()"></body></html>""")
+		return
 
 
 
 # -------------------------------------------------------------------
 # AccountJSONHandler
 # -------------------------------------------------------------------
-
-class AccountJSONHandler(Authenticated, BaseHandler):
+# TODO: FIGURE OUT TOKENS!
+class AccountJSONHandler(TokenAuthenticated, BaseHandler):
+	
+	@web.authenticated
+	def get(self):
+		# TODO: TOKENS OK HERE
+		user = self.current_user
+		dwolla = UserDwolla.retrieveByUserID(user['id'])
+		
+		accountDict = user.getPublicDict()
+		accountDict['dwolla'] = True if dwolla else False
+		
+		self.renderJSON(accountDict)
 	
 	@web.authenticated
 	def post(self):
+		# TODO: NO TOKENS HERE
 		user = self.current_user
 		
 		try:
@@ -330,6 +367,18 @@ class AccountJSONHandler(Authenticated, BaseHandler):
 		user.save()
 		logging.warn(user.getPublicDict())
 		self.renderJSON(user.getPublicDict())
+
+
+
+# -------------------------------------------------------------------
+# PasswordJSONHandler
+# -------------------------------------------------------------------
+
+class PasswordHandler(TokenAuthenticated, BaseHandler):
+	@web.authenticated
+	def get(self):
+		# TODO: WRITE ME!
+		pass
 
 
 

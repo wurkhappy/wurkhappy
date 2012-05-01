@@ -37,16 +37,20 @@ class Application(web.Application):
 			(r'/signup', authhandlers.SignupHandler), # /account/create
 			(r'/login', authhandlers.LoginHandler),
 			(r'/logout', authhandlers.LogoutHandler),
-			(r'/forgot_password', authhandlers.ForgotPasswordHandler), # /account/forgetpassword
-			(r'/reset_password', authhandlers.ResetPasswordHandler), # /account/resetpassword
 			
-			# (r'/user/([0-9]+)/preferences/?', users.PreferencesHandler),
-			# (r'/user/([0-9]+)/preferences\.json', users.PreferencesJSONHandler),
+			# (r'/forgot_password', authhandlers.ForgotPasswordHandler), # /account/forgetpassword
+			# (r'/reset_password', authhandlers.ResetPasswordHandler), # /account/resetpassword
+			
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),
 			
+			# Password handler with instructions to request a reset email
+			# and update the password with the token from the email.
+			(r'/user/me/password/?', accounts.PasswordHandler),
+			
 			# JSON handlers to update account information
 			(r'/user/me/account\.json', accounts.AccountJSONHandler),
+			(r'/user/me/connections/?', accounts.AccountConnectionHandler),
 			(r'/user/me/password\.json', accounts.PasswordJSONHandler),
 			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),
 			(r'/user/me/paymentmethod/([0-9]+)\.json', accounts.PaymentMethodJSONHandler),

@@ -6,7 +6,7 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": data['_xsrf'] } %}
+{% set slug = { "_xsrf": data['_xsrf'], "authorizeURL": data['dwolla']['authorizeURL'] } %}
 
 {% module Slug(slug) %}
 
@@ -34,38 +34,91 @@
 	<div id="content" class="clear">
 		<div id="password-container" class="tab-content">
 			<h2>Set a Password</h2>
-			<form action="/user/me/password" method="POST" class="js-replace-action" id="password_set">
+			<form action="/user/me/password" method="POST" id="password-form">
 				<fieldset>
 					<label for="password">Password</label>
-					<input type="password" name="password" size="75" />
+					<input type="password" name="password" value="{% if data['password'] is True %}-------{% end %}" size="75" />
 					<input type="hidden" name="t" value="{{ data['token'] }}" />
 				</fieldset>
-				<fieldset class="submit-buttons">
-					<input type="submit" value="Set Password" id="password_submit" />
-				</fieldset>
+				<div class="column-one-fourth">
+					<ul class="action-button">
+						<li><a href="#" rel="nofollow" id="password-set" class="top js-button {% if data['password'] is True %}disabled{% end %}">Set Password</a></li>
+					</ul>
+				</div>
 			</form>
 		</div>
 		
 		<div id="details-container" class="tab-content" style="display: none;">
 			<h2>Add Personal Information</h2>
-			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile_set">
+			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile-edit">
 				<fieldset>
 					<label for="firstName">First Name</label>
-					<input type="text" name="firstName" size="75" />
+					<input type="text" name="firstName" size="75" value="{{ data['firstName'] }}" />
 					<label for="lastName">Last Name</label>
-					<input type="text" name="lastName" size="75" />
+					<input type="text" name="lastName" size="75" value="{{ data['lastName'] }}" />
 					<label for="profilePhoto">Photo</label>
 					<input type="file" class="upload" name="profilePhoto" />
 					<label for="email">Email</label>
-					<input type="email" name="email" size="75" />
+					<input type="email" name="email" size="75" value="{{ data['email'] }}" />
 					<label for="telephone">Phone Number</label>
-					<input type="tel" name="telephone" size="75" />
+					<input type="tel" name="telephone" size="75" value="{{ data['telephone'] }}" />
 				</fieldset>
-				<fieldset class="submit-buttons">
+				<div class="column-one-fourth">
+					<ul class="action-button">
+						<li><a href="#" rel="nofollow" id="profile-submit" class="top js-button">Save Personal Details</a></li>
+					</ul>
+				</div>
+				<!-- <fieldset class="submit-buttons">
 					<input type="submit" value="Save Personal Details" />
-				</fieldset>
+				</fieldset> -->
 			</form>
 		</div>
+		
+		{% if data['dwolla']['dwollaID'] is None %}
+		<div id="dwolla-container" class="tab-content" style="display: none;">
+			<div class="column-three-fourth">
+				<h2>Link Your Dwolla Account</h2>
+				
+				<p>Wurk Happy uses Dwolla to process transactions. In order to pay vendors or receive payments from clients,
+					we require each user to have a Dwolla account. If you have an account set up already, you can click the link
+					below to link it with your Wurk Happy account.</p>
+			</div>
+			<div class="clear"></div>
+			<div class="column-three-fourth">
+				<p>Already have a Dwolla account? Great! Click &ldquo;Connect My Account&rdquo; to authorize Wurk Happy and get
+					started. You will be prompted to log in and allow Wurk Happy to send and receive payments on your behalf.</p>
+			</div>
+			<div class="column-one-fourth">
+				<ul class="action-button">
+					<li><a href="#" rel="nofollow" id="dwolla_connect" class="top js-button">Connect My Account</a></li>
+				</ul>
+			</div>
+			<div class="clear"></div>
+			<div class="column-three-fourth">
+				<p>If you don&rsquo;t have a Dwolla account yet, don&rsquo;t worry. Click &ldquo;Create an Account&rdquo; and
+					fill out the form to get started!</p>
+			</div>
+			<div class="column-one-fourth">
+				<ul class="action-button">
+					<li><a href="#" rel="nofollow" id="dwolla_create" class="top js-button">Create an Account</a></li>
+				</ul>
+			</div>
+		</div>
+		{% else %}
+		<div id="dwolla-container" class="tab-content" style="display: none;">
+			<div class="column-three-fourth">
+				<h2>Your Dwolla Account</h2>
+				
+				<p>We already have a Dwolla account set up for you! Cool!</p>
+			</div>
+			<div class="column-one-fourth">
+				<ul class="action-button">
+					<li><a href="#" rel="nofollow" id="dwolla_skip" class="top js-button">Get Started</a></li>
+				</ul>
+			</div>
+		</div>
+		{% end %}
+		
 	</div>
 	
 	{% module Footer() %}
