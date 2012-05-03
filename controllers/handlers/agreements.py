@@ -13,6 +13,7 @@ from collections import defaultdict
 from datetime import datetime
 from random import randint
 import urlparse
+import urllib
 import hashlib
 import logging
 
