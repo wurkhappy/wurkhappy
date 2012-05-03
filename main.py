@@ -41,6 +41,9 @@ class Application(web.Application):
 			# (r'/forgot_password', authhandlers.ForgotPasswordHandler), # /account/forgetpassword
 			# (r'/reset_password', authhandlers.ResetPasswordHandler), # /account/resetpassword
 			
+			(r'/legal/terms/?', legal.TermsHandler),
+			(r'/legal/privacy/?', legal.PrivacyHandler),
+			
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),
 			

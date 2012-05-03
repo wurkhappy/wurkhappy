@@ -122,16 +122,19 @@ class AgreementInviteHandler(QueueHandler):
 		
 		# @todo: This defeats the function of an invitation to prevent it from going out to
 		# non-registered users, but we're keeping things closed for now...
-		if not isinstance(client.getCurrentState(), ActiveUserState):
-			logging.warn(json.dumps({
-				"message": "Attempted to send message to invalid user",
-				"actionType": body['action'],
-				"recipientID": client['id'],
-				"recipientEmail": client['email'],
-				"agreementID": agreement['id']
-			}))
-			
-			return
+		
+		# Turning this off for now... Let's see what happens.
+		
+		# if not isinstance(client.getCurrentState(), ActiveUserState):
+		# 	logging.warn(json.dumps({
+		# 		"message": "Attempted to send message to invalid user",
+		# 		"actionType": body['action'],
+		# 		"recipientID": client['id'],
+		# 		"recipientEmail": client['email'],
+		# 		"agreementID": agreement['id']
+		# 	}))
+		# 	
+		# 	return
 		
 		self.sendEmail({
 			'from': (vendor.getFullName(), "contact@wurkhappy.com"),

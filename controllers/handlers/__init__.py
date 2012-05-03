@@ -3,6 +3,7 @@ __all__ = [
 	"accounts",
 	"agreements",
 	"authhandlers",
+	"legal",
 	"notifications",
 	"payments",
 	"requests",
