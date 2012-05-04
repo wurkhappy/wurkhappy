@@ -68,6 +68,29 @@ var buttonActions = {
 		}
 	},
 	
+	'password-reset': {
+		default: function (self, evt) {
+			var popup = new Popup('#content');
+			var bodyString = self.serialize('password-reset_form');
+			
+			$.ajax({
+				url: '/user/me/password/reset.json',
+				data: bodyString,
+				dataType: 'json',
+				type: 'POST',
+				success: function (data, status, xhr) {
+					popup.setLabel('We have successfully received your request, and we&rsquo;ve sent an email with further instructions. Please check your spam folder if you don&rsquo;t see the email.').open();
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					var error = jQuery.parseJSON(jqXHR.responseText);
+					popup.setLabel(error ? error.display : 'There was a problem communicating with our server. Please try again.').open();
+				}
+			});
+			
+			return evt.preventDefault();
+		}
+	},
+	
 	'profile-submit': {
 		default: function (self, evt) {
 			// Do AJAX form.

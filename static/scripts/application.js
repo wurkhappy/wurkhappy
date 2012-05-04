@@ -122,6 +122,10 @@ $(document).ready(function() {
 	$('.js-button').each(function (idx, elt) {
 		var btn = new Button(elt);
 	});
+	
+	$('.js-form').each(function (idx, elt) {
+		var form = new JSONForm(elt);
+	});
 });
 
 
@@ -169,6 +173,40 @@ Button.prototype.jsonHTTPRequest = function(url, method, data, success, error) {
 		success: success,
 		error: error
 	});
+};
+
+
+
+var JSONForm = function(elt) {
+	var name,
+		self = this;
+	
+	this.$elt = $(elt);
+	this.state = 'default';
+	
+	name = /(.*)_form/.exec(this.$elt.attr('id'));
+	
+	if (name && name[1]) {
+		this.actions = buttonActions[name[1]];
+
+		this.$elt.submit(function(evt) {
+			return self.actions[self.state](self, evt);
+		});
+	}
+};
+
+
+
+JSONForm.prototype.serialize = function(captureID, data) {
+	var data = data || { };
+	data._xsrf = getCookie("_xsrf");
+	var capture = jQuery.param(data);
+	
+	if (captureID) {
+		capture += '&' + $('#' + captureID).serialize();
+	}
+	
+	return capture;
 };
 
 

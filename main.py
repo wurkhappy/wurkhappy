@@ -50,6 +50,7 @@ class Application(web.Application):
 			# Password handler with instructions to request a reset email
 			# and update the password with the token from the email.
 			(r'/user/me/password/?', accounts.PasswordHandler),
+			(r'/user/me/password/reset.json', accounts.PasswordRecoveryJSONHandler),
 			
 			# JSON handlers to update account information
 			(r'/user/me/account\.json', accounts.AccountJSONHandler),

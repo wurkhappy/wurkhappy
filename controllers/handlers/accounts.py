@@ -1,7 +1,7 @@
 from __future__ import division
 
 from base import *
-from models.user import User, UserPrefs, UserDwolla
+from models.user import User, UserPrefs, UserDwolla, ActiveUserState
 from models.paymentmethod import PaymentMethod
 from controllers import fmt
 
@@ -374,20 +374,29 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 # Password Recovery
 # -------------------------------------------------------------------
 
-class PasswordHandler(TokenAuthenticated, BaseHandler):
+class PasswordHandler(BaseHandler):
 	'''Render the password recovery form or verify the token argument
 	and render the password reset form. The form behavior is the same
 	whether the user is authenticated with a cookie or not.'''
 	
 	def get(self):
-		if self.token:
-			data = {}
+		token = self.get_argument("t", None)
+		
+		if token:
+			data = {
+				'token': token,
+				'_xsrf': self.xsrf_token
+			}
+			
 			self.render('user/pw_reset.html', 
 				title="Choose a New Password &ndash; Wurk Happy",
 				data=data
 			)
 		else:
-			data = {}
+			data = {
+				'_xsrf': self.xsrf_token
+			}
+			
 			self.render('user/pw_forgot.html',
 				title="Recover a Forgotten Password &ndash; Wurk Happy",
 				data=data
