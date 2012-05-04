@@ -371,14 +371,164 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 
 
 # -------------------------------------------------------------------
-# PasswordJSONHandler
+# Password Recovery
 # -------------------------------------------------------------------
 
 class PasswordHandler(TokenAuthenticated, BaseHandler):
-	@web.authenticated
+	'''Render the password recovery form or verify the token argument
+	and render the password reset form. The form behavior is the same
+	whether the user is authenticated with a cookie or not.'''
+	
 	def get(self):
-		# TODO: WRITE ME!
-		pass
+		if self.token:
+			data = {}
+			self.render('user/pw_reset.html', 
+				title="Choose a New Password &ndash; Wurk Happy",
+				data=data
+			)
+		else:
+			data = {}
+			self.render('user/pw_forgot.html',
+				title="Recover a Forgotten Password &ndash; Wurk Happy",
+				data=data
+			)
+
+
+
+# -------------------------------------------------------------------
+# Password Recovery JSON Handler
+# -------------------------------------------------------------------
+
+class PasswordRecoveryJSONHandler(BaseHandler):
+	'''Responds to a POST request containing an email address, validates the
+	address is a registered user and enqueues the request the request for the
+	Notification Daemon.'''
+	
+	def post(self):
+		
+		try:
+			args = fmt.Parser(self.request.arguments,
+				required=[
+					('email', fmt.Email())
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		user = User.retrieveByEmail(args['email'])
+		
+		if user and isinstance(user.getCurrentState(), ActiveUserState):
+			msg = {
+				'action': 'userResetPassword',
+				'userID': user['id']
+			}
+		
+			with Beanstalk() as conn:
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(json.dumps(msg))
+				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
+		
+		# We don't want hackers to use the response to determine which
+		# email addresses we have on record, so we lie and return success,
+		# even if the user didn't exist.
+		
+		# TODO: In the future, we should do pretty agressive rate limiting
+		
+		self.renderJSON({'success': True})
+
+# # -------------------------------------------------------------------
+# # Forgot Password
+# # -------------------------------------------------------------------
+# 
+# class ForgotPasswordHandler(BaseHandler):
+# 	def get(self):
+# 		flash = {"error": self.parseErrors()}
+# 		self.render("user/forgot_password.html", title="Forgot Password", flash=flash, logged_in_user=self.current_user)
+# 
+# 	def post(self):
+# 		# Check whether user exists 
+# 		user = User.retrieveByEmail(self.get_argument("email"))
+# 
+# 		# User wasn't found, so redirect with error
+# 		if not user:
+# 			flash = {"error": "That email does not exist in our system. Please use a different email."}
+# 			self.render("user/forgot_password.html", title="Forgot Password", flash=flash, logged_in_user=self.current_user)
+# 		else: # user exists
+# 			# generate a code
+# 			verifier = Verification()
+# 			code = verifier.hashDigest
+# 			# build rest of forgot password model
+# 			forgotPassword = ForgotPassword()
+# 			forgotPassword['userID'] = user['id']
+# 			forgotPassword['code'] = code
+# 			forgotPassword['validUntil'] = datetime.now() + timedelta(hours=24)
+# 			forgotPassword['active'] = 1
+# 			forgotPassword.save()
+# 			# send an email to the user containing a link to reset password with the code
+# 			link = "http://"+self.request.host+"/reset_password?code="+code
+# 			msg = """\
+# 			To reset your password, click on this link and enter a new password. (The link is only valid for the next 24 hours.)
+# 			"""+link
+# 			Email.sendFromApp(user['email'], 'Reset Password', msg)
+# 			# render template to confirm
+# 			self.render("user/forgot_password_confirm.html", title="Forgot Password", logged_in_user=self.current_user)
+
+
+
+# # -------------------------------------------------------------------
+# # Reset Password
+# # -------------------------------------------------------------------
+# 
+# class ResetPasswordHandler(Authenticated, BaseHandler):
+# 	def get(self):
+# 		flash = {"error": self.parseErrors()}
+# 		code = self.get_argument("code", '')
+# 		flash["code"] = code
+# 		forgotPassword = ForgotPassword.retrieveByCode(code)
+# 		if not self.current_user and not forgotPassword:
+# 			self.set_status(403)
+# 			self.write("Forbidden")
+# 			return
+# 		elif not self.current_user and (forgotPassword['validUntil'] < datetime.now() or forgotPassword['active'] == False):
+# 			self.set_status(403)
+# 			self.write("Forbidden")
+# 			return
+# 		else:
+# 			self.render("user/reset_password.html", title="Reset Password", flash=flash, logged_in_user=self.current_user)
+# 
+# 	def post(self):
+# 		password = self.get_argument("password")
+# 		cpassword = self.get_argument("confirm_password")
+# 		code = self.get_argument("code", '')
+# 		forgotPassword = ForgotPassword.retrieveByCode(code)
+# 		if not self.current_user and not forgotPassword:
+# 			self.set_status(403)
+# 			self.write("Forbidden")
+# 			return
+# 		elif password != cpassword:
+# 			flash = {"error":"The passwords you entered do not match, please try again.", "code":code}
+# 			self.render("user/reset_password.html", title="Reset Password", flash=flash, logged_in_user=self.current_user)
+# 		else:
+# 			user = None
+# 			if not forgotPassword:
+# 				user = self.current_user
+# 			else:
+# 				user = User.retrieveByUserID(forgotPassword['userID'])
+# 			user['password'] = Verification.hash_password(str(password))
+# 			user.save()
+# 			flash = {"error": "Your password was reset successfully."}
+# 			if forgotPassword:
+# 				forgotPassword['active'] = 0
+# 				forgotPassword.save()
+# 			if self.current_user:
+# 				# if user is already logged in, redirect to edit profile page
+# 			 	self.redirect("/profile/"+self.current_user.getProfile().urlStub+"/edit?rp=true")
+# 			else:
+# 				self.redirect("/login?rp=true")
 
 
 
