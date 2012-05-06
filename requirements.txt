@@ -1,0 +1,6 @@
+WurkHappy
+
+pycurl
+beanstalkc
+MySQLdb
+etc.
