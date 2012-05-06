@@ -622,8 +622,6 @@ class UserResetPasswordHandler(QueueHandler):
 			'url': 'http://{0}/user/me/password?t={1}'.format(host, digest)
 		}
 		
-		data['user']['firstName'] = user['firstName']
-		
 		t = self.loader.load('user_reset_password.html')
 		htmlString = t.generate(data=data)
 		
@@ -642,7 +640,7 @@ contact@wurkhappy.com
 
 Thanks,
 The Wurk Happy Team
-'''.format(user['firstName'], data['url'])
+'''.format(data['user']['fullName'], data['url'])
 
 		self.sendEmail({
 			'from': ('Wurk Happy', 'contact@wurkhappy.com'),

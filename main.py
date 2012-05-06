@@ -56,6 +56,7 @@ class Application(web.Application):
 			(r'/user/me/account\.json', accounts.AccountJSONHandler),
 			(r'/user/me/connections/?', accounts.AccountConnectionHandler),
 			(r'/user/me/password\.json', accounts.PasswordJSONHandler),
+			
 			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),
 			(r'/user/me/paymentmethod/([0-9]+)\.json', accounts.PaymentMethodJSONHandler),
 			
