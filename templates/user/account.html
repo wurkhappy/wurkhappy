@@ -91,23 +91,7 @@
 		</div>
 		
 		<div id="dwolla-container" class="tab-content" style="display: none;">
-			{% if 'id' in data['dwolla'] %}
-				<h2>Your Dwolla Account</h2>
-				<div class="data-table">
-					<table border="0" cellspacing="0" cellpadding="0">
-						<tr>
-							<!-- <td class="meta">
-								<span><img src="" alt="Verified" width="50" height="50" /></span>
-							</td> -->
-							<td>
-								<h3>{{ data['dwolla']['userName'] }}</h3>
-								<p><strong>Dwolla ID:</strong> {{ data['dwolla']['dwollaID'] }}</p>
-							</td>
-						</tr>
-					</table>
-				</div>
-			{% else %}
-			<div id="dwolla-container" class="tab-content" style="display: none;">
+			{% if data['dwolla']['dwollaID'] is None %}
 				<div class="column-three-fourth">
 					<h2>Link Your Dwolla Account</h2>
 
@@ -135,7 +119,21 @@
 						<li><a href="#" rel="nofollow" id="dwolla_create" class="top js-button">Create an Account</a></li>
 					</ul>
 				</div>
-			</div>
+			{% else %}
+				<h2>Your Dwolla Account</h2>
+				<div class="data-table">
+					<table border="0" cellspacing="0" cellpadding="0">
+						<tr>
+							<!-- <td class="meta">
+								<span><img src="" alt="Verified" width="50" height="50" /></span>
+							</td> -->
+							<td>
+								<h3>{{ data['dwolla']['userName'] }}</h3>
+								<p><strong>Dwolla ID:</strong> {{ data['dwolla']['dwollaID'] }}</p>
+							</td>
+						</tr>
+					</table>
+				</div>
 			{% end %}
 		</div>
 	</div>

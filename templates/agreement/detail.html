@@ -36,7 +36,7 @@
 						<span><img src="{% raw otherUser['profileURL'][0] %}" width="50"></span>
 					</td>
 					<td>
-						<h3><a href="detail.html">{{ otherUser['fullName'] }}</a></h3>
+						<h3><a href="/user/{{ otherUser['id'] }}">{{ otherUser['fullName'] }}</a></h3>
 						<p>{{ otherUser['email'] }} {% if otherUser['telephone'] %} &mdash; {{ otherUser['telephone'] }}{% end %}</p>
 					</td>
 				</tr>

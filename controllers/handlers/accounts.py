@@ -122,7 +122,10 @@ class AccountHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 		if dwolla:
 			userDict['dwolla'] = dwolla.fields
 		else:
-			userDict['dwolla'] = {'authorizeURL': self.buildAuthorizeURL() }
+			userDict['dwolla'] = {
+				'dwollaID': None,
+				'authorizeURL': self.buildAuthorizeURL()
+			}
 		
 		self.render('user/account.html', 
 			title="Wurk Happy &ndash; My Account", data=userDict
