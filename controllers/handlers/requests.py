@@ -36,7 +36,7 @@ class RequestAgreementHandler(BaseHandler):
 			"client": None,
 			"vendor": None,
 			"actions": [ {
-				"id": "action-request",
+				"id": "request-send",
 				"capture-id": "request-form",
 				"name": "Request Agreement",
 				"action": "/agreement/request.json",
@@ -131,6 +131,8 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 		request['message'] = args['message']
 		
 		request.save()
+		
+		# TODO: Enqueue notification!
 		
 		self.set_status(201)
 		self.renderJSON(self.assembleDictionary(request))

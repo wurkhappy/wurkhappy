@@ -1,6 +1,28 @@
 WurkHappy
 
-pycurl
+# need python >= 2.7.2, setuputils
+
+libmysqlclient-dev
+zlib1g-dev
+libpng12-dev
+libjpeg-dev
+openssl-devel
+beanstalkd >=1.4.4
+
+
+# Python packages
+
+mysql-python
+tornado
+boto
+py-bcrypt
+pyyaml
+pil
+pytz
+dulwich
+markdown
+smartypants
 beanstalkc
-MySQLdb
-etc.
+python-daemon
+pycurl
+smtplib
