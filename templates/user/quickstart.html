@@ -53,15 +53,15 @@
 			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile-edit">
 				<fieldset>
 					<label for="firstName">First Name</label>
-					<input type="text" name="firstName" size="75" value="{{ data['firstName'] }}" />
+					<input type="text" name="firstName" size="75" value="{{ data['firstName'] or '' }}" />
 					<label for="lastName">Last Name</label>
-					<input type="text" name="lastName" size="75" value="{{ data['lastName'] }}" />
+					<input type="text" name="lastName" size="75" value="{{ data['lastName'] or '' }}" />
 					<label for="profilePhoto">Photo</label>
 					<input type="file" class="upload" name="profilePhoto" />
 					<label for="email">Email</label>
-					<input type="email" name="email" size="75" value="{{ data['email'] }}" />
+					<input type="email" name="email" size="75" value="{{ data['email'] or '' }}" />
 					<label for="telephone">Phone Number</label>
-					<input type="tel" name="telephone" size="75" value="{{ data['telephone'] }}" />
+					<input type="tel" name="telephone" size="75" value="{{ data['telephone'] or '' }}" />
 				</fieldset>
 				<div class="column-one-fourth">
 					<ul class="action-button">

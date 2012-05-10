@@ -284,7 +284,8 @@ class UserDwolla(MappedObj):
 		'userID': None, # Unique key
 		'dwollaID': None,
 		'userName': None,
-		'oauthToken': None
+		'oauthToken': None,
+		'status': None
 	}
 	
 	@classmethod

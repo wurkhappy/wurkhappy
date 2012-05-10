@@ -214,8 +214,19 @@ class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMi
 								dwolla['userName'] = accountDict['Response']['Name']
 								dwolla['dwollaID'] = accountDict['Response']['Id']
 								dwolla['oauthToken'] = oauthToken
+								dwolla['status'] = 1
 								dwolla.save()
 							
+								logging.info(dwolla)
+							elif accountDict['Message'] == 'Invalid account status for user of this access token.':
+								# I think this is where Ramsey's account authorization failed.
+								dwolla = UserDwolla()
+								dwolla['userID'] = user['id']
+								dwolla['authToken'] = oauthToken
+								dwolla['status'] = 0
+								dwolla.save()
+								
+								logging.warn('User %d has not verified their Dwolla account', user['id'])
 								logging.info(dwolla)
 							else:
 								logging.error('Dwolla request failed. %s', accountDict)

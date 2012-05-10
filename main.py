@@ -38,9 +38,6 @@ class Application(web.Application):
 			(r'/login', authhandlers.LoginHandler),
 			(r'/logout', authhandlers.LogoutHandler),
 			
-			# (r'/forgot_password', authhandlers.ForgotPasswordHandler), # /account/forgetpassword
-			# (r'/reset_password', authhandlers.ResetPasswordHandler), # /account/resetpassword
-			
 			(r'/legal/terms/?', legal.TermsHandler),
 			(r'/legal/privacy/?', legal.PrivacyHandler),
 			
