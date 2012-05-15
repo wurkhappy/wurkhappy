@@ -17,35 +17,42 @@
 
 	{% block header %}
 	{% end %}
-	
-	<div class="clear" style="background: #FFF; border-bottom: 1px solid #007AB1;">
-		<h1>Welcome!</h1>
-		<p>It's just three easy steps to get started creating agreements and managing payments.</p>
-	</div>
-		
-	<div id="internal" class="clear">
-		<ul>
-			<li class="tab current" id="password-button"><a href="#" class="top">Set a Password</a></li>
-			<li class="tab" id="details-button"><a href="#" class="">Add Personal Information</a></li>
-			<li class="tab" id="dwolla-button"><a href="#" class="">Connect a Dwolla Account</a></li>
-		</ul>
-	</div>
-	
+
 	<div id="content" class="clear">
 		<div id="password-container" class="tab-content">
+			{% if data['password'] is True %}
+			<h2>Enter your Password</h2>
+			<p>First, we need to make sure it's really you.</p>
+			
+			<form action="/login" method="POST" id="password-form">
+				<fieldset>
+					<label for="password">Password</label>
+					<input type="password" name="password" size="75" />
+					<input type="hidden" name="email" value="{{ data['email'] }}" />
+				</fieldset>
+				<div class="column-one-fourth">
+					<ul class="action-button">
+						<li><a href="#" rel="nofollow" id="login-button" class="top js-button">Log In</a></li>
+					</ul>
+				</div>
+			</form>
+			{% else %}
 			<h2>Set a Password</h2>
+			<p>First, we need to know how to make sure it's really you.</p>
+			
 			<form action="/user/me/password" method="POST" id="password-form">
 				<fieldset>
 					<label for="password">Password</label>
-					<input type="password" name="password" value="{% if data['password'] is True %}-------{% end %}" size="75" />
+					<input type="password" name="password" size="75" />
 					<input type="hidden" name="t" value="{{ data['token'] }}" />
 				</fieldset>
 				<div class="column-one-fourth">
 					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="password-set" class="top js-button {% if data['password'] is True %}disabled{% end %}">Set Password</a></li>
+						<li><a href="#" rel="nofollow" id="set-pw-button" class="top js-button">Set Password</a></li>
 					</ul>
 				</div>
 			</form>
+			{% end %}
 		</div>
 		
 		<div id="details-container" class="tab-content" style="display: none;">
@@ -150,5 +157,5 @@
 {% block scripts-custom %}
 <script src="{{ static_url('scripts/libs/jquery-autosuggest-1.4.js') }}" type="text/javascript"></script>
 <script src="{{ static_url('scripts/application.js') }}" type="text/javascript" ></script>
-<script src="{{ static_url('scripts/accounts.js') }}" type="text/javascript" ></script>
+<script src="{{ static_url('scripts/quickstart.js') }}" type="text/javascript" ></script>
 {% end %}

@@ -2,7 +2,8 @@ __all__ = [
 	"base",
 	"accounts",
 	"agreements",
-	"authhandlers",
+	"authentication",
+	"authhandlers", # EVENTUALLY REPLACE
 	"legal",
 	"notifications",
 	"payments",

@@ -35,7 +35,12 @@ class Application(web.Application):
 			(r'/', root.RootHandler),
 			
 			(r'/signup', authhandlers.SignupHandler), # /account/create
+			
+			(r'/account/create/?', accounts.AccountCreationHandler),
+			(r'/account/start/?', accounts.AccountSetupHandler),
+			
 			(r'/login', authhandlers.LoginHandler),
+			(r'/login.json', authentication.LoginJSONHandler),
 			(r'/logout', authhandlers.LogoutHandler),
 			
 			(r'/legal/terms/?', legal.TermsHandler),

@@ -56,28 +56,40 @@ class DwollaRedirectMixin(object):
 
 
 # -------------------------------------------------------------------
-# AccountHandler
+# AccountSetupHandler
 # -------------------------------------------------------------------
 
-class AccountHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
+class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 	
-	@web.authenticated
+	def get_current_user(self):
+		self.clear_cookie('user_id')
+		
+		# userID = self.get_secure_cookie("user_id")
+		# user = userID and User.retrieveByID(userID)
+		
+		self.token = self.get_argument("t", None)
+		
+		return self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
+	
 	def get(self):
 		user = self.current_user
 		token = self.token
 		
-		# If the user has provided a temporary token, display the
-		# the user onboarding interface
+		if not user:
+			self.clear_cookie('user_id')
+			self.redirect('/account/create')
+			return
 		
 		if token:
 			dwollaAcct = UserDwolla.retrieveByUserID(user['id'])
-			
+
 			userDict = {
 				'_xsrf': self.xsrf_token,
 				'token': token,
 				'id': user['id'],
 				'firstName': user['firstName'],
 				'lastName': user['lastName'],
+				'fullName': user.getFullName(),
 				'email': user['email'],
 				'telephone': user['telephone'] or '',
 				'profileURL': [
@@ -90,16 +102,25 @@ class AccountHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 					'authorizeURL': self.buildAuthorizeURL(token)
 				}
 			}
-			
+
 			if user['dateVerified'] is None:
 				user['dateVerified'] = datetime.now()
 				user.save()
-			
+
 			self.clear_cookie('user_id')
 			self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
-			return
-		
-		# Otherwise, render the accounts page
+
+
+
+# -------------------------------------------------------------------
+# AccountHandler
+# -------------------------------------------------------------------
+
+class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin):
+	
+	@web.authenticated
+	def get(self):
+		user = self.current_user
 		
 		userDict = {
 			'_xsrf': self.xsrf_token,
@@ -132,6 +153,92 @@ class AccountHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 		)
 
 
+
+# -------------------------------------------------------------------
+# Account Creation Handler
+# -------------------------------------------------------------------
+
+class AccountCreationHandler(BaseHandler):
+	
+	def get(self):
+		self.render("user/signup.html", title="Sign Up", error=None)
+	
+	def post(self):
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[],
+				required=[
+					('email', fmt.Email()),
+					('password', fmt.Enforce(str))
+					# @todo: Should have a password plaintext formatter to
+					# enforce well-formed passwords.
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
+			
+			if e.body_content.find("'password' parameter is required") != -1:
+				# We caught an exception because the password was missing
+				error = {
+					"domain": "authentication",
+					"display": (
+						"I'm sorry, you must choose a password to continue. "
+						"Please pick a password that is easy for you to "
+						"remember, but hard for others to guess."
+					),
+					"debug": "'password' parameter is required"
+				}
+			else:
+				error = {
+					"domain": "authentication",
+					"display": (
+						"I'm sorry, that didn't look like a proper email "
+						"address. Could you please enter a valid email address?"
+					),
+					"debug": "'email' parameter must be well-formed"
+				}
+			
+			self.set_status(e.status_code)
+			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
+			return
+		
+		# Check whether user exists already
+		user = User.retrieveByEmail(args['email'])
+		
+		# User wasn't found, so begin sign up process
+		if not user:
+			user = User()
+			user['email'] = args['email']
+			user['dateCreated'] = datetime.now()
+			# verifier = Verification()
+			# user.setConfirmationHash(verifier.code)
+			user.setPasswordHash(args['password'])
+			user.save()
+			
+			# @todo: This should be better. Static value in config file...
+			# user.profileSmallURL = self.application.configuration['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
+			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
+			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
+			user.save()
+			
+			# self.set_secure_cookie("user_id", str(user['id']), httponly=True)
+			self.redirect('/account/start')
+			# self.redirect('/user/me/account')
+		else:
+			# User exists, render with error
+			error = {
+				"domain": "authentication",
+				"display": (
+					"I'm sorry, that email already exists. Did you mean to "
+					"log in instead?"
+				),
+				"debug": "specified email address is already registered"
+			}
+			
+			self.set_status(400)
+			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
+		
 
 # -------------------------------------------------------------------
 # Account Connection Handler (Currently for Dwolla)
@@ -494,7 +601,8 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 			user.save()
 			
 			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-			self.write(json.dumps({"success": True}))
+			# self.write(json.dumps({"success": True, "user": user.getPublicDict()}))
+			self.renderJSON({"user": user.getPublicDict()})
 			return
 		
 		try:
@@ -549,7 +657,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 		else:
 			user.setPasswordHash(args['newPassword'])
 			user.save()
-			self.write(json.dumps({"success": True}))
+			self.write(json.dumps({"success": True, "user": user.getPublicDict()}))
 
 
 
