@@ -173,7 +173,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 	}
 	
 	# @web.authenticated
-	# @todo: SECURITY AUDIT
+	# TODO: SECURITY AUDIT
 	def get(self, agreementID=None):
 		user = self.current_user
 		agreement = None
@@ -440,7 +440,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
 			# Adding account info here because I'm a dumbass.
-			# @todo: figure out the right way to populate this info
+			# TODO: figure out the right way to populate this info
 			# paymentMethod = user.getDefaultPaymentMethod()
 			userDwolla = UserDwolla.retrieveByUserID(user['id'])
 			templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.getPublicDict()
@@ -534,7 +534,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 		if action == "send":
 			if not agreement['clientID']:
-				# @todo: Check this. I'm pretty sure it makes sense, but uh...
+				# TODO: Check this. I'm pretty sure it makes sense, but uh...
 				error = {
 					"domain": "application.conflict",
 					"display": "You need to choose a recipient in order to send this estimates. Please choose a client in the recipient field.",
@@ -547,7 +547,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 			clientState = client.getCurrentState()
 			logging.info(clientState)
 			if isinstance(clientState, InvitedUserState):
-				# @todo: Generate confirmation code to be sent in email
+				# TODO: Generate confirmation code to be sent in email
 				# data = {'confirmation': client.generateCode()} # or something...
 				data = {"confirmation": "foo"}
 				clientState.performTransition("send_verification", data)
@@ -762,7 +762,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 				if action == "send":
 					if client is None:
-						# @todo: should this be handled in the doTransition method?
+						# TODO: should this be handled in the doTransition method?
 						error = {
 							"domain": "application.consistency",
 							"display": (
@@ -789,7 +789,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				
 				summary['summary'] = args['summary'] or summary['summary']
 
-				# @todo: Defer phase saves until state transition is complete
+				# TODO: Defer phase saves until state transition is complete
 				for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
 					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement['id'], num)
 
@@ -877,7 +877,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					# action to say 'agreementInvite'.
 					
 					if isinstance(clientState, InvitedUserState):
-						# @todo: use a real value here
+						# TODO: use a real value here
 						data = {"confirmation": "foo"}
 						clientState.performTransition("send_verification", data)
 						msg['action'] = 'agreementInvite'
@@ -898,7 +898,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
 		
 		except StateTransitionError as e:
-			# @todo: This is where we would describe each of the possible errors
+			# TODO: This is where we would describe each of the possible errors
 			error = {
 				"domain": "application.consistency",
 				"display": (

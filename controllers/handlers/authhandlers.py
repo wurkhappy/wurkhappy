@@ -1,95 +1,11 @@
 from base import *
 from controllers.verification import Verification
 from controllers import fmt
-from models.user import User
+from models.user import User, ActiveUserState
 from models.forgotpassword import ForgotPassword
 from controllers.email import *
 from datetime import datetime, timedelta
 import logging
-
-# -------------------------------------------------------------------
-# Signup
-# -------------------------------------------------------------------
-
-class SignupHandler(BaseHandler):
-	
-	def get(self):
-		self.render("user/signup.html", title="Sign Up", error=None)
-
-	def post(self):
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[],
-				required=[
-					('email', fmt.Email()),
-					('password', fmt.Enforce(str))
-					# @todo: Should have a password plaintext formatter to
-					# enforce well-formed passwords.
-				]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.__dict__)
-			logging.warn(e.message)
-			
-			if e.body_content.find("'password' parameter is required") != -1:
-				# We caught an exception because the password was missing
-				error = {
-					"domain": "authentication",
-					"display": (
-						"I'm sorry, you must choose a password to continue. "
-						"Please pick a password that is easy for you to "
-						"remember, but hard for others to guess."
-					),
-					"debug": "'password' parameter is required"
-				}
-			else:
-				error = {
-					"domain": "authentication",
-					"display": (
-						"I'm sorry, that didn't look like a proper email "
-						"address. Could you please enter a valid email address?"
-					),
-					"debug": "'email' parameter must be well-formed"
-				}
-			
-			self.set_status(e.status_code)
-			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
-			return
-		
-		# Check whether user exists already
-		user = User.retrieveByEmail(args['email'])
-		
-		# User wasn't found, so begin sign up process
-		if not user:
-			user = User()
-			user['email'] = args['email']
-			user['dateCreated'] = datetime.now()
-			# verifier = Verification()
-			# user.setConfirmationHash(verifier.code)
-			user.setPasswordHash(args['password'])
-			user.save()
-			
-			# @todo: This should be better. Static value in config file...
-			# user.profileSmallURL = self.application.configuration['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
-			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
-			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
-			user.save()
-			
-			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-			self.redirect('/user/me/account')
-		else:
-			# User exists, render with error
-			error = {
-				"domain": "authentication",
-				"display": (
-					"I'm sorry, that email already exists. Did you mean to "
-					"log in instead?"
-				),
-				"debug": "specified email address is already registered"
-			}
-			
-			self.set_status(400)
-			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
 
 
 
@@ -145,9 +61,27 @@ class LoginHandler(BaseHandler):
 			
 			self.set_status(401)
 			self.render("user/login.html", title="Sign In to Wurk Happy", error=error)
+			return
+		
+		userState = user.getCurrentState()
+		
+		if not isinstance(userState, ActiveUserState):
+			# User has not been activated or is locked
+			error = {
+				"domain": 'authentication',
+				'display': (
+					'The account you are trying to access has not been set up '
+					'yet. Please check your email for instructions to activate '
+					'your account.'
+				),
+				'debug': 'non-active user'
+			}
+			
+			self.set_status(401)
+			self.render('user/login.html', title="Sign In to Wurk Happy", error=error)
 		else:
 			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-			self.redirect('/user/me/account') #TODO: Should go to dashboard...
+			self.redirect('/') #TODO: Should go to dashboard...
 
 
 
@@ -194,8 +128,8 @@ class PasswordJSONHandler(Authenticated, BaseHandler):
 		
 		if not (user and user.passwordIsValid(args['currentPassword'])):
 			# User wasn't found, or password is wrong, display error
-			# @todo: Exponential back-off when user enters incorrect password.
-			# @todo: Flag accounds if passwords change too often.
+			# TODO: Exponential back-off when user enters incorrect password.
+			# TODO: Flag accounds if passwords change too often.
 			error = {
 				"domain": "web.request",
 				"debug": "please validate authentication credentials"

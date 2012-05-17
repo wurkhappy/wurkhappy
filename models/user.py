@@ -28,8 +28,8 @@ class User(MappedObj):
 		'confirmation': None,
 		'fingerprint': None,
 		'invitedBy': None,
-		# 'confirmed': None, # @todo: Delete field from schema
-		# 'subscriberStatus': 0, # @todo: Delete field from schema
+		# 'confirmed': None, # TODO: Delete field from schema
+		# 'subscriberStatus': 0, # TODO: Delete field from schema
 		'firstName': None,
 		'lastName': None,
 		'telephone': None,
@@ -113,7 +113,7 @@ class User(MappedObj):
 				result = cursor.fetchone()
 	
 	def setProfileImage(self, data, ext, headers=None):
-		# @todo: Move this method to a more appropriate class. (Some sort of aux class or something?)
+		# TODO: Move this method to a more appropriate class. (Some sort of aux class or something?)
 		# hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
 		
 		digest = sha1(uuid.uuid4().bytes).digest()

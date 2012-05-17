@@ -48,8 +48,8 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		if not user: # (user and user.passwordIsValid(args['password'])):
 			# User wasn't found, or password is wrong, display error
-			# @todo: Exponential back-off when user enters incorrect password.
-			# @todo: Flag accounds if incorrect password is presented too often.
+			# TODO: Exponential back-off when user enters incorrect password.
+			# TODO: Flag accounds if incorrect password is presented too often.
 			error = {
 				"domain": "web.request",
 				"debug": "please validate authentication credentials",
@@ -135,7 +135,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 		
 		# For now, we look for a Dwolla account for the user.
 		
-		# @TODO: LOOK FOR DWOLLA ACCOUNT
+		# TODO: LOOK FOR DWOLLA ACCOUNT
 		
 		transaction = Transaction.retrieveByAgreementPhaseID(phase['id'])
 		
@@ -245,7 +245,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 				)
 				error['final'] = True
 			
-			# @TODO: Handle authorization errors (most likely because the user
+			# TODO: Handle authorization errors (most likely because the user
 			# deauthorized the Wurk Happy app from within Dwolla.)
 			
 			self.transaction['dateDeclined'] = datetime.now()

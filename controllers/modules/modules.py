@@ -46,7 +46,7 @@ actions.push(function() {{
 }});"""
 
 
-	# @todo: don't hard-code the range (where to put it?)
+	# TODO: don't hard-code the range (where to put it?)
 	def render(self, pickerID, name=None, datestamp="now", yearRange=range(2011, 2025)):
 		if datestamp == "now":
 			datestamp = datetime.now()

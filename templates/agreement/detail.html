@@ -48,7 +48,7 @@
 			<ul>
 				{% for num, phase in enumerate(data['phases'], 1) %}
 					<li>
-						{% comment @todo: This smells. Move some of this logic into the controller. %}
+						{% comment TODO: This smells. Move some of this logic into the controller. %}
 						{% if phase['dateVerified'] %}
 							<span>Paid {{ phase['dateVerified'].strftime('%B %d, %Y').replace(' 0', ' ') }}</span>
 						{% elif phase['dateCompleted'] and (not phase['dateContested'] or (phase['dateContested'] and phase['dateContested'] < phase['dateCompleted'])) %}

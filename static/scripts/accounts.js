@@ -171,7 +171,7 @@ var buttonActions = {
 	},
 	
 	profile_update: function (data, status, xhr) {
-		// @todo: Manually check the status code
+		// TODO: Manually check the status code
 		data.telephone = data.telephone || '';
 		$('#profile_preview').replaceWith('<div id="profile_preview">\
 			<h2>Profile Preview</h2>\
@@ -193,7 +193,7 @@ var buttonActions = {
 	},
 	
 	card_update: function (data, status, xhr) {
-		// @todo: Clear the form fields!
+		// TODO: Clear the form fields!
 		$('#stored-card').remove();
 		$('#card-container').prepend('<div id="stored-card">\
 			<h2>Stored Credit Card</h2>\
@@ -213,7 +213,7 @@ var buttonActions = {
 	},
 	
 	bank_update: function (data, status, xhr) {
-		// @todo: Clear the form fields!
+		// TODO: Clear the form fields!
 		$('#stored-bank').remove();
 		$('#bank-container').prepend('<div id="stored-bank">\
 			<h2>Stored Bank Account</h2>\

@@ -11,10 +11,10 @@ var wurkHappy = {
 
 var buttonActions = {
 	
-	'set-pw-button': {
+	'set-pw': {
 		default: function (self, evt) {
-			var popup = new Popup('#internal');
-			var bodyString = self.serialize('password-form');
+			var popup = new Popup('#content');
+			var bodyString = self.serialize('set-pw_form');
 			
 			$.ajax({
 				url: '/user/me/password.json',
@@ -35,7 +35,7 @@ var buttonActions = {
 				error: function (jqXHR, textStatus, errorThrown) {
 					var error = jQuery.parseJSON(jqXHR.responseText);
 					popup.setLabel(error ? error.display : 'There was a problem setting your password.').open();
-					$('#password-form input').val('');
+					$('#set-pw_form input[type=password]').val('');
 				}
 			});
 			
@@ -43,10 +43,10 @@ var buttonActions = {
 		}
 	},
 	
-	'login-button': {
+	'login': {
 		default: function (self, evt) {
-			var popup = new Popup('#internal');
-			var bodyString = self.serialize('password-form');
+			var popup = new Popup('#content');
+			var bodyString = self.serialize('login_form');
 			
 			$.ajax({
 				url: '/login.json',
@@ -66,8 +66,9 @@ var buttonActions = {
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
 					var error = jQuery.parseJSON(jqXHR.responseText);
+					error.display = error.display.replace("email and password combination", "password").replace("any of", "");
 					popup.setLabel(error ? error.display : 'Your password was incorrect.').open();
-					$('#password-form input').val('');
+					$('#login_form input[type=password]').val('');
 				}
 			});
 			
@@ -75,15 +76,21 @@ var buttonActions = {
 		}
 	},
 	
-	'profile-submit': {
+	'profile-edit': {
 		default: function (self, evt) {
-			// Do AJAX form.
-			// TODO: Note that we're not specifying success and error functions here and we should.
-			$('form#profile-edit').submit();
+			var agree = $('form#profile-edit_form input#agree').attr('checked');
 			
-			$('#details-container').slideUp(300).fadeOut(300);
-			$('#dwolla-container').slideDown(300).fadeIn(300);
+			if (true) {
+				// Do AJAX form.
+				// TODO: Note that we're not specifying success and error functions here and we should.
+				$('form#profile-edit_form').submit();
 			
+				$('#details-container').slideUp(300).fadeOut(300);
+				$('#dwolla-container').slideDown(300).fadeIn(300);
+			} else {
+				var popup = new Popup('#content');
+				popup.setLabel("You must agree to the Wurk Happy Terms of Use to continue.").open();
+			}
 			return evt.preventDefault();
 		}
 	},

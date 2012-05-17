@@ -78,7 +78,7 @@ var buttonActions = {
 			var popup = new Popup('#content');
 			
 			if (commentLength > 0) {
-				// @todo: Don't allow comments? Figure this out...
+				// TODO: Don't allow comments? Figure this out...
 				alert('By accepting the estimate, no additional comments are allowed so your notes will not be sent&mdash;save them while you can!');
 				return evt.preventDefault();
 			}
@@ -108,7 +108,7 @@ var buttonActions = {
 			var popup = new Popup('#content');
 			
 			if (commentLength < 10) {
-				// @todo: Better UI here please, thank you.
+				// TODO: Better UI here please, thank you.
 				alert('Please add a few comments (reasons for declining, questions, etc.) regarding the estimate.');
 				return evt.preventDefault();
 			}

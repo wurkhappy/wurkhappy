@@ -103,9 +103,12 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 				}
 			}
 
-			if user['dateVerified'] is None:
-				user['dateVerified'] = datetime.now()
-				user.save()
+			# We're gonna try doing this in the account JSON handler if the
+			# 'agree' parameter is true.
+			
+			# if user['dateVerified'] is None:
+			# 	user['dateVerified'] = datetime.now()
+			# 	user.save()
 
 			self.clear_cookie('user_id')
 			self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
@@ -170,7 +173,7 @@ class AccountCreationHandler(BaseHandler):
 				required=[
 					('email', fmt.Email()),
 					('password', fmt.Enforce(str))
-					# @todo: Should have a password plaintext formatter to
+					# TODO: Should have a password plaintext formatter to
 					# enforce well-formed passwords.
 				]
 			)
@@ -211,20 +214,36 @@ class AccountCreationHandler(BaseHandler):
 			user = User()
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
-			# verifier = Verification()
-			# user.setConfirmationHash(verifier.code)
 			user.setPasswordHash(args['password'])
 			user.save()
 			
-			# @todo: This should be better. Static value in config file...
+			# TODO: This should be better. Static value in config file...
 			# user.profileSmallURL = self.application.configuration['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
 			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
 			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
 			user.save()
+
+			with Beanstalk() as bconn:
+				msg = {
+					'action': 'userInvite',
+					'userID': user['id']
+				}
+				
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(json.dumps(msg))
+				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 			
 			# self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-			self.redirect('/account/start')
-			# self.redirect('/user/me/account')
+			
+			# TODO: In the future, the setup process will be slightly more
+			# robust. At that point we can redirect to the setup page without
+			# forcing email verification. Until then, we'll render a "hang
+			# tight and check your email" page.
+			
+			# self.redirect('/account/setup')
+			
+			self.render('user/wait.html', title="Check Your Email for Further Instructions")
 		else:
 			# User exists, render with error
 			error = {
@@ -281,7 +300,7 @@ class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMi
 			
 			httpClient = HTTPClient()
 			
-			# @TODO: UGLY HACK EW EW EW EW
+			# TODO: UGLY HACK EW EW EW EW
 			
 			try:
 				exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
@@ -342,7 +361,7 @@ class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMi
 						else:
 							logging.error('Dwolla account lookup returned an unexpected response. %s', accountResponse)
 			
-			# @TODO: If there was an error and you know it, clap your hands!
+			# TODO: If there was an error and you know it, clap your hands!
 			
 		self.set_status(200)
 		self.set_secure_cookie("user_id", str(user['id']), httponly=True)
@@ -379,7 +398,8 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 					('firstName', fmt.Enforce(str)),
 					('lastName', fmt.Enforce(str)),
 					('email', fmt.Email()),
-					('telephone', fmt.PhoneNumber())
+					('telephone', fmt.PhoneNumber()),
+					('agree', fmt.Enforce(bool, False))
 				],
 				required=[]
 			)
@@ -389,7 +409,7 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			self.write(e.body_content)
 			return
 		
-		# @todo:
+		# TODO:
 		# The HTTPErrorBetter raised by fmt.Parser could be, uhh, better.
 		# Errors that are responses to AJAX calls include a display message
 		# that is intended to be helpful to the user, in addition to 
@@ -431,8 +451,10 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			user['lastName'] = args['lastName']
 		if args['telephone']:
 			user['telephone'] = args['telephone']
+		if args['agree']:
+			user['dateVerified'] = datetime.now()
 		
-		# @todo: This needs refactoring
+		# TODO: This needs refactoring
 		if 'profilePhoto' in self.request.files:
 			fileDict = self.request.files['profilePhoto'][0]
 			base, ext = os.path.splitext(fileDict['filename'])
@@ -487,7 +509,6 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 					user[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
 		
 		user.save()
-		logging.warn(user.getPublicDict())
 		self.renderJSON(user.getPublicDict())
 
 
@@ -676,11 +697,11 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 		try:
 			args = fmt.Parser(self.request.arguments,
 				optional=[
-					# @todo: create routing, account number formatters
+					# TODO: create routing, account number formatters
 					('routingNumber', fmt.Enforce(str)),
 					('accountNumber', fmt.Enforce(str)),
 					
-					# @todo: create CC number formatter
+					# TODO: create CC number formatter
 					('cardNumber', fmt.Enforce(str)),
 					('expirationMonth', fmt.Enforce(int)),
 					('expirationYear', fmt.Enforce(int)),
@@ -699,7 +720,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 		if args['routingNumber'] and args['accountNumber']:
 			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(user['id'])
 		
-			# @todo: this is hackety until we actually verify this info through
+			# TODO: this is hackety until we actually verify this info through
 			# a payment gateway
 		
 			abaDisplay = args['routingNumber'][-3:]
@@ -723,7 +744,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 				paymentMethod['dateDeleted'] = datetime.now()
 				paymentMethod.save()
 		
-			# @todo: this is hackety until we actually verify this info through
+			# TODO: this is hackety until we actually verify this info through
 			# a payment gateway
 		
 			displayString = args['cardNumber'][-4:]
@@ -751,7 +772,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 			paymentMethod['cardExpires'] = cardExpiration
 		
 		else:
-			# @todo: Handle this error. there were not proper args
+			# TODO: Handle this error. there were not proper args
 			error = {
 				"domain": "web.request",
 				"display": "",
@@ -806,7 +827,7 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 		
 		if not paymentMethod:
 			error = {
-			# @todo: FIX THIS PLEASE
+			# TODO: FIX THIS PLEASE
 				"domain": "",
 				"display": "",
 				"debug": ""

@@ -21,7 +21,7 @@ class QueueHandler(object):
 	def __init__(self, application):
 		self.application = application
 		
-		# @todo: This should be set in a config file.
+		# TODO: This should be set in a config file.
 		self.loader = template.Loader('templates/notification')
 	
 	def sendEmail(self, message):
@@ -116,11 +116,11 @@ class AgreementInviteHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s just sent you an estimate using Wurk Happy" % vendor.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		# @todo: This defeats the function of an invitation to prevent it from going out to
+		# TODO: This defeats the function of an invitation to prevent it from going out to
 		# non-registered users, but we're keeping things closed for now...
 		
 		# Turning this off for now... Let's see what happens.
@@ -137,7 +137,7 @@ class AgreementInviteHandler(QueueHandler):
 		# 	return
 		
 		self.sendEmail({
-			'from': (vendor.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
 			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
@@ -184,7 +184,7 @@ class AgreementSentHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s just sent you an estimate using Wurk Happy" % vendor.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
@@ -200,7 +200,7 @@ class AgreementSentHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': (vendor.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
 			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
@@ -245,7 +245,7 @@ class AgreementAcceptedHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s just accepted your proposed agreement on Wurk Happy" % client.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
@@ -261,7 +261,7 @@ class AgreementAcceptedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -306,7 +306,7 @@ class AgreementDeclinedHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s requested changes to your proposed agreement on Wurk Happy" % client.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
@@ -322,7 +322,7 @@ class AgreementDeclinedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -370,7 +370,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s just completed a phase of work on your agreement on Wurk Happy" % vendor.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
@@ -386,7 +386,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': (vendor.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
 			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
@@ -437,7 +437,7 @@ class AgreementPaidHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s just submitted payment via Wurk Happy" % client.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
@@ -453,7 +453,7 @@ class AgreementPaidHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -500,7 +500,7 @@ class AgreementDisputedHandler(QueueHandler):
 		htmlString = t.generate(data=data)
 		
 		subject = "%s needs more information about the work you completed" % client.getFullName()
-		# @todo: work on this so the plaintext version is a parallel version of the HTML
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
@@ -516,7 +516,7 @@ class AgreementDisputedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': (client.getFullName(), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -554,7 +554,7 @@ class UserInviteHandler(QueueHandler):
 		data = {
 			'hostname': host,
 			'user': user.getPublicDict(),
-			'url': 'http://{0}/user/me/account?t={1}'.format(host, digest)
+			'url': 'http://{0}/account/setup?t={1}'.format(host, digest)
 		}
 		
 		t = self.loader.load('user_invite.html')

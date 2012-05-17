@@ -34,10 +34,8 @@ class Application(web.Application):
 			# Redirect as appropriate based on user state
 			(r'/', root.RootHandler),
 			
-			(r'/signup', authhandlers.SignupHandler), # /account/create
-			
 			(r'/account/create/?', accounts.AccountCreationHandler),
-			(r'/account/start/?', accounts.AccountSetupHandler),
+			(r'/account/setup/?', accounts.AccountSetupHandler),
 			
 			(r'/login', authhandlers.LoginHandler),
 			(r'/login.json', authentication.LoginJSONHandler),

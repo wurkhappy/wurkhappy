@@ -71,7 +71,7 @@ class Agreement(MappedObj):
 	
 	@classmethod
 	def amountWithClientID(clz, clientID):
-		# @todo: this needs to be checked. Not sure it's getting the right sum
+		# TODO: this needs to be checked. Not sure it's getting the right sum
 		with Database() as (conn, cursor):
 			query = """SELECT SUM(b.amount) FROM %s AS a
 				LEFT JOIN agreementPhase AS b ON b.agreementID = a.id
@@ -172,7 +172,7 @@ class Agreement(MappedObj):
 		dateVerified = phase and phase['dateVerified']
 		dateContested = phase and phase['dateContested']
 		
-		# @todo: Unit test these against some example cases. Also make this fit the diagram above more closely.
+		# TODO: Unit test these against some example cases. Also make this fit the diagram above more closely.
 		states = [
 			# TODO: Final state as distinct from paid state. IMPORTANT
 			# (Introduced phaseCount check to work around issue)
@@ -354,7 +354,7 @@ class AgreementState(object):
 		try:
 			return self._prepareFields(role, action, unsavedRecords)
 		except StateTransitionError as e:
-			# @todo: We need to separate this from model code. UGHHHH
+			# TODO: We need to separate this from model code. UGHHHH
 			error = {
 				"domain": "application.consistency",
 				"display": (

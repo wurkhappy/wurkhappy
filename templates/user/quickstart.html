@@ -24,7 +24,7 @@
 			<h2>Enter your Password</h2>
 			<p>First, we need to make sure it's really you.</p>
 			
-			<form action="/login" method="POST" id="password-form">
+			<form action="#" method="POST" id="login_form" class="js-form">
 				<fieldset>
 					<label for="password">Password</label>
 					<input type="password" name="password" size="75" />
@@ -32,7 +32,7 @@
 				</fieldset>
 				<div class="column-one-fourth">
 					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="login-button" class="top js-button">Log In</a></li>
+						<li><a href="#" rel="nofollow" id="login" class="top js-button">Log In</a></li>
 					</ul>
 				</div>
 			</form>
@@ -40,7 +40,7 @@
 			<h2>Set a Password</h2>
 			<p>First, we need to know how to make sure it's really you.</p>
 			
-			<form action="/user/me/password" method="POST" id="password-form">
+			<form action="#" method="POST" id="set-pw_form" class="js-form">
 				<fieldset>
 					<label for="password">Password</label>
 					<input type="password" name="password" size="75" />
@@ -48,7 +48,7 @@
 				</fieldset>
 				<div class="column-one-fourth">
 					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="set-pw-button" class="top js-button">Set Password</a></li>
+						<li><a href="#" rel="nofollow" id="set-pw" class="top js-button">Set Password</a></li>
 					</ul>
 				</div>
 			</form>
@@ -57,7 +57,7 @@
 		
 		<div id="details-container" class="tab-content" style="display: none;">
 			<h2>Add Personal Information</h2>
-			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile-edit">
+			<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile-edit_form">
 				<fieldset>
 					<label for="firstName">First Name</label>
 					<input type="text" name="firstName" size="75" value="{{ data['firstName'] or '' }}" />
@@ -69,10 +69,12 @@
 					<input type="email" name="email" size="75" value="{{ data['email'] or '' }}" />
 					<label for="telephone">Phone Number</label>
 					<input type="tel" name="telephone" size="75" value="{{ data['telephone'] or '' }}" />
+					<label>Terms of Use</label>
+					<input type="checkbox" name="agree" id="agree" /> <label for="agree" style="display: inline">I agree to the <a href="/legal/terms">Terms of Use</a>.</label>
 				</fieldset>
 				<div class="column-one-fourth">
 					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="profile-submit" class="top js-button">Save Personal Details</a></li>
+						<li><a href="#" rel="nofollow" id="profile-edit" class="top js-button">Save Personal Details</a></li>
 					</ul>
 				</div>
 				<!-- <fieldset class="submit-buttons">

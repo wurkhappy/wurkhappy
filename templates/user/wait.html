@@ -9,26 +9,10 @@
 	{% end %}
 
 	<div id="content" class="clear">
-		{% if error and error.get("display") %}
-			<p class="error">
-				{{ error['display'] }}
-			</p>
-		{% end %}
-	</div>
-
-	<div id="content" class="clear">
-		<form action="/account/create" method="POST" accept-charset="utf-8">
-			{% raw xsrf_form_html() %}
-			<fieldset>
-				<label for="email">Email Address</label>
-				<input type="email" name="email" size="60" />
-				<label for="password">Password</label>
-				<input type="password" name="password" size="60" />
-			</fieldset>
-			<fieldset class="submit-buttons">
-				<input type="submit" value="Get Started" /><!-- populate from agreement state info -->
-			</fieldset>
-		</form>
+		<h1>Check Your Email!</h1>
+		<p>We've sent instructions to continue the registration process to the email address you provided. If it doesn&rsquo;t arrive
+			in your inbox shortly, please make sure it wasn&rsquo;t intercepted by your spam filter before contacting support.</p>
+		<p>If you have any questions you can get in touch with us by emailing <a href="mailto:contact@wurkhappy.com">contact@wurkhappy.com</a>.</p>
 	</div>
 
 	{% module Footer() %}
@@ -58,7 +42,7 @@
 {% block header %}
 	<div id="intro" class="clear">
 		<div class="column-three-fourth">
-			<h1>{{ title }}</h1>
+			<h1>Thanks for Your Interest in Wurk Happy</h1>
 		</div>
 	</div>
 {% end %}
