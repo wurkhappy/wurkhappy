@@ -2,6 +2,8 @@
 var wurkHappy = {
 	User: function (properties) {
 		this.id = properties['id'];
+		this.firstName = properties['firstName'];
+		this.lastName = properties['lastName'];
 		this.fullName = properties['fullName'];
 		this.email = properties['email'];
 		this.profileURL = properties['profileURL'];
@@ -80,9 +82,10 @@ var buttonActions = {
 		default: function (self, evt) {
 			var agree = $('form#profile-edit_form input#agree').attr('checked');
 			
-			if (true) {
+			if (agree) {
 				// Do AJAX form.
 				// TODO: Note that we're not specifying success and error functions here and we should.
+				// Also, the success function should update the current_user property.
 				$('form#profile-edit_form').submit();
 			
 				$('#details-container').slideUp(300).fadeOut(300);
@@ -149,6 +152,21 @@ var buttonActions = {
 	
 	'dwolla_create': {
 		default: function (self, evt) {
+			$('#dwolla-submit_form input#email').val(wurkHappy.current_user['email']);
+			$('#dwolla-submit_form input#firstName').val(wurkHappy.current_user['firstName']);
+			$('#dwolla-submit_form input#lastName').val(wurkHappy.current_user['lastName']);
+			$('#dwolla-submit_form input#phone').val(wurkHappy.current_user['telephone']);
+			
+			$('#dwolla-container').slideUp(300).fadeOut(300);
+			$('#dwolla-create-container').slideDown(300).fadeIn(300);
+			
+			return evt.preventDefault();
+		}
+	},
+	
+	'dwolla-submit': {
+		default: function (self, evt) {
+			
 			return evt.preventDefault();
 		}
 	},
@@ -160,4 +178,14 @@ var buttonActions = {
 		}
 	},
 	
-}
+};
+
+actions.push(function () {
+	$('#dwolla-account-type').change(function(evt) {
+		if ($(evt.target).val() === 'Commercial') {
+			$('#dwolla-business-info').slideDown(300).fadeIn(300);
+		} else {
+			$('#dwolla-business-info').slideUp(300).fadeOut(300);
+		}
+	});
+});

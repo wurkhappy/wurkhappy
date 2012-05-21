@@ -107,24 +107,24 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			if agreementType == 'Client':
 				other = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
 				
-				if stateClass in [DraftState, DeclinedState, ContestedState]:
+				if isinstance(stateClass, (DraftState, DeclinedState, ContestedState)):
 					appendAgreement(actionItems, agreement, other)
-				elif stateClass in [EstimateState, CompletedState]:
+				elif isinstance(stateClass, (EstimateState, CompletedState)):
 					appendAgreement(awaitingReply, agreement, other)
-				elif stateClass in [InProgressState]:
+				elif isinstance(stateClass, (InProgressState)):
 					appendAgreement(inProgress, agreement, other)
-				elif stateClass in [PaidState]:
+				elif isinstance(stateClass, PaidState):
 					templateDict['agreementCount'] -= 1
 			else:
 				other = User.retrieveByID(agreement['vendorID'])
 
-				if stateClass in [EstimateState, CompletedState]:
+				if isinstance(stateClass, (EstimateState, CompletedState)):
 					appendAgreement(actionItems, agreement, other)
-				elif stateClass in [DeclinedState, ContestedState]:
+				elif isinstance(stateClass, (DeclinedState, ContestedState)):
 					appendAgreement(awaitingReply, agreement, other)
-				elif stateClass in [InProgressState]:
+				elif isinstance(stateClass, InProgressState):
 					appendAgreement(inProgress, agreement, other)
-				elif stateClass in [PaidState]:
+				elif isinstance(stateClass, PaidState):
 					templateDict['agreementCount'] -= 1
 
 		templateDict['agreementType'] = agreementType
@@ -241,7 +241,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		elif agreement['clientID'] == user['id']:
 			stateClass = agreement.getCurrentState().__class__
 
-			if stateClass in [DraftState, InvalidState]:
+			if isinstance(stateClass, (DraftState, InvalidState)):
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement['id'], agreement['vendorID'], agreement['clientID']
 					)
@@ -434,7 +434,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
 		
-		if agreement['vendorID'] == user['id'] and templateDict['state'] in ['DraftState', 'DeclinedState']:
+		if agreement['vendorID'] == user['id'] and isinstance(currentState, (DraftState, DeclinedState)):
 			templateDict['uri'] = self.request.uri
 			logging.info(templateDict)
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))

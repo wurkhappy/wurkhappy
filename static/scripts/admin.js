@@ -80,4 +80,4 @@ var buttonActions = {
 			return evt.preventDefault();
 		}
 	}
-}
+};

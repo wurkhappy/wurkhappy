@@ -37,12 +37,13 @@ class Application(web.Application):
 			(r'/account/create/?', accounts.AccountCreationHandler),
 			(r'/account/setup/?', accounts.AccountSetupHandler),
 			
-			(r'/login', authhandlers.LoginHandler),
+			(r'/login', authentication.LoginHandler),
 			(r'/login.json', authentication.LoginJSONHandler),
-			(r'/logout', authhandlers.LogoutHandler),
+			(r'/logout', authentication.LogoutHandler),
 			
 			(r'/legal/terms/?', legal.TermsHandler),
 			(r'/legal/privacy/?', legal.PrivacyHandler),
+			# (r'/legal/dwolla/?', legal.DwollaHandler),
 			
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/profile/?', users.ProfileHandler),

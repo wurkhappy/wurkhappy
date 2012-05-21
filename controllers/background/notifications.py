@@ -542,7 +542,7 @@ class UserInviteHandler(QueueHandler):
 		if not user:
 			raise Exception("No such user")
 		
-		if user.getCurrentState().__class__ not in [NewUserState, InvitedUserState, BetaUserState]:
+		if not isinstance(user.getCurrentState(), (NewUserState, InvitedUserState, BetaUserState)):
 			raise Exception("User may not be invited")
 		
 		digest = Verification.generateHashDigest()

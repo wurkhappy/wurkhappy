@@ -10,6 +10,17 @@ import logging
 
 
 # -------------------------------------------------------------------
+# Login
+# -------------------------------------------------------------------
+
+class LoginHandler(BaseHandler):
+	def get(self):
+		data = { "_xsrf": self.xsrf_token }
+		self.render("auth/login.html", title="Sign In to Wurk Happy", data=data)
+
+
+
+# -------------------------------------------------------------------
 # JSON Login Handler
 # -------------------------------------------------------------------
 
@@ -61,9 +72,50 @@ class LoginJSONHandler(BaseHandler):
 			
 			self.set_status(401)
 			self.renderJSON(error)
+		
+		# TODO: We should figure out how to enforce that all users who log in
+		# are active users without preventing new users from providing their
+		# passwords.
+		
+		# userState = user.getCurrentState()
+		# 
+		# if not isinstance(userState, ActiveUserState):
+		# 	# User has not been activated or is locked
+		# 	error = {
+		# 		"domain": 'authentication',
+		# 		'display': (
+		# 			'The account you are trying to access has not been set up '
+		# 			'yet. Please check your email for instructions to activate '
+		# 			'your account.'
+		# 		),
+		# 		'debug': 'non-active user'
+		# 	}
+		# 	
+		# 	self.set_status(401)
+		# 	self.renderJSON(error)
 		else:
 			success = {
 				"user": user.getPublicDict()
 			}
 			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
 			self.renderJSON(success)
+
+
+
+# -------------------------------------------------------------------
+# Logout 
+# -------------------------------------------------------------------
+
+class LogoutHandler(Authenticated, BaseHandler):
+	@web.authenticated
+	def get(self):
+		self.clear_cookie("user_id")
+		self.redirect('/login')
+
+	# I'm not sure why the POST method was stubbed out to return 404.
+	# I've commented it out and if it breaks anything, I'll add it back.
+	
+	# @web.authenticated
+	# def post(self):
+	# 	self.set_status(404)
+	# 	self.write("Not found")

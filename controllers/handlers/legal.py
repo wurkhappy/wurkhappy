@@ -23,3 +23,15 @@ class TermsHandler(BaseHandler):
 class PrivacyHandler(BaseHandler):
 	def get(self):
 		self.render('legal/privacy.html', title='Privacy Policy &ndash; Wurk Happy')
+
+
+
+# -------------------------------------------------------------------
+# Dwolla Terms of Service
+# -------------------------------------------------------------------
+# This is mostly static and should probably be handled by a rewrite
+# rule in Nginx to an HTML document in the static directory.
+
+# class DwollaHandler(BaseHandler):
+# 	def get(self):
+# 		self.render('legal/dwolla.html', title='Dwolla Terms of Service')

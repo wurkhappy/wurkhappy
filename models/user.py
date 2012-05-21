@@ -224,6 +224,8 @@ class User(MappedObj):
 	def getPublicDict(self):
 		return {
 			'id': self['id'],
+			'firstName': self['firstName'],
+			'lastName': self['lastName'],
 			'fullName': self.getFullName(),
 			'email': self['email'],
 			'telephone': self['telephone'],

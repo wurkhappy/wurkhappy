@@ -22,6 +22,7 @@ from MySQLdb import IntegrityError
 
 # Required for resizing profile image uploads
 import Image, ImageOps
+from ExifTags import TAGS
 from StringIO import StringIO
 
 # Required for generating remote resource ID strings (S3 keys)
@@ -489,10 +490,29 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 				raise HTTPErrorBetter(400, "Failed to read image", 
 					json.dumps(error))
 			
+			# To handle images that have EXIF transform data, we grab the tags
+			# from the original image and look up the transform ID. We then
+			# apply the lambda with the appropriate PIL transforms to the image
+			
+			exif = imgs['o']._getexif() or {}
+			logging.info(exif)
+			transforms = {
+				1: lambda x: (x),
+				2: lambda x: (x.transpose(Image.FLIP_LEFT_RIGHT)),
+				3: lambda x: (x.transpose(Image.ROTATE_180)),
+				4: lambda x: (x.transpose(Image.FLIP_TOP_BOTTOM)),
+				5: lambda x: (x.transpose(Image.FLIP_TOP_BOTTOM).transpose(Image.ROTATE_270)),
+				6: lambda x: (x.transpose(Image.ROTATE_270)),
+				7: lambda x: (x.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.ROTATE_270)),
+				8: lambda x: (x.transpose(Image.ROTATE_90))
+			}
+			
+			if 0x112 in exif:
+				imgs['o'] = transforms[exif[0x112]](imgs['o'])
+			
 			imgs['s'] = ImageOps.fit(imgs['o'], (50, 50), Image.ANTIALIAS)
 			imgs['l'] = ImageOps.fit(imgs['o'], (150, 150), Image.ANTIALIAS)
 			
-			# hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
 			hashString = Data(sha1(uuid.uuid4().bytes).digest()).stringWithEncoding(Base58)
 			nameFormat = '%s_%%s.jpg' % hashString
 			

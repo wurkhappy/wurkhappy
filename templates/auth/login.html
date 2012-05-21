@@ -1,6 +1,11 @@
 {% extends "../base.html" %}
 
 {% block main %}
+
+{% set slug = {"_xsrf": data['_xsrf']} %}
+
+{% module Slug(slug) %}
+
 <div class="container">
 	{% block navigation %}
 	{% end %}
@@ -9,16 +14,7 @@
 	{% end %}
 
 	<div id="content" class="clear">
-		{% if error and error.get("display") %}
-			<p class="error">
-				{{ error['display'] }}
-			</p>
-		{% end %}
-	</div>
-
-	<div id="content" class="clear">
-		<form action="/login" method="POST" accept-charset="utf-8">
-			{% raw xsrf_form_html() %}
+		<form action="/login" method="POST" accept-charset="utf-8" id="login_form" class="js-form">
 			<fieldset>
 				<label for="email">Email</label>
 				<input type="email" name="email" value="" size="60" />
@@ -27,7 +23,7 @@
 				<p class="faux-label"><span><a href="/user/me/password">Forgot your password?</a></span></p>
 			</fieldset>
 			<fieldset class="submit-buttons">
-				<input type="submit" value="Sign In" /><!-- populate from agreement state info -->
+				<input type="submit" value="Sign In" />
 			</fieldset>
 		</form>
 	</div>
@@ -64,3 +60,10 @@
 	</div>
 {% end %}
 
+
+
+{% block scripts-custom %}
+<script src="{{ static_url('scripts/libs/jquery-autosuggest-1.4.js') }}" type="text/javascript"></script>
+<script src="{{ static_url('scripts/application.js') }}" type="text/javascript" ></script>
+<script src="{{ static_url('scripts/login.js') }}" type="text/javascript" ></script>
+{% end %}
