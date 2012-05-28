@@ -152,20 +152,48 @@ var buttonActions = {
 	
 	'dwolla_create': {
 		default: function (self, evt) {
-			$('#dwolla-submit_form input#email').val(wurkHappy.current_user['email']);
-			$('#dwolla-submit_form input#firstName').val(wurkHappy.current_user['firstName']);
-			$('#dwolla-submit_form input#lastName').val(wurkHappy.current_user['lastName']);
-			$('#dwolla-submit_form input#phone').val(wurkHappy.current_user['telephone']);
-			
-			$('#dwolla-container').slideUp(300).fadeOut(300);
-			$('#dwolla-create-container').slideDown(300).fadeIn(300);
-			
+			window.location = 'https://www.dwolla.com/register';
 			return evt.preventDefault();
+			// $('#dwolla-submit_form input#email').val(wurkHappy.current_user['email']);
+			// $('#dwolla-submit_form input#firstName').val(wurkHappy.current_user['firstName']);
+			// $('#dwolla-submit_form input#lastName').val(wurkHappy.current_user['lastName']);
+			// $('#dwolla-submit_form input#phone').val(wurkHappy.current_user['telephone']);
+			// 
+			// $('#dwolla-container').slideUp(300).fadeOut(300);
+			// $('#dwolla-create-container').slideDown(300).fadeIn(300);
+			// 
+			// return evt.preventDefault();
 		}
 	},
 	
 	'dwolla-submit': {
 		default: function (self, evt) {
+			var popup = new Popup('#content');
+			var bodyString = self.serialize('dwolla-submit_form');
+			
+			$.ajax({
+				url: '/login.json',
+				data: bodyString,
+				dataType: 'json',
+				type: 'POST',
+				success: function (data, status, xhr) {
+					// self.state = 'disabled';
+					// $(evt.target).addClass('disabled');
+					// 
+					// $('#password-form input').val('');
+					// 
+					// wurkHappy.current_user = new wurkHappy.User(data['user']);
+					// 
+					// $('#password-container').slideUp(300).fadeOut(300);
+					// $('#details-container').slideDown(300).fadeIn(300);
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					// var error = jQuery.parseJSON(jqXHR.responseText);
+					// error.display = error.display.replace("email and password combination", "password").replace("any of", "");
+					// popup.setLabel(error ? error.display : 'Your password was incorrect.').open();
+					// $('#login_form input[type=password]').val('');
+				}
+			});
 			
 			return evt.preventDefault();
 		}
