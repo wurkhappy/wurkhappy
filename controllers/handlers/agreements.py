@@ -97,34 +97,36 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			})
 
 		for agreement in agreements:
-			stateClass = agreement.getCurrentState().__class__
+			state = agreement.getCurrentState()
 			
-			if stateClass == InvalidState:
+			if isinstance(state, InvalidState):
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement['id'], agreement['vendorID'], agreement['clientID']
 					)
 				)
+			
+			
 			if agreementType == 'Client':
 				other = User.retrieveByID(agreement['clientID']) if agreement['clientID'] else None
 				
-				if isinstance(stateClass, (DraftState, DeclinedState, ContestedState)):
+				if isinstance(state, (DraftState, DeclinedState, ContestedState)):
 					appendAgreement(actionItems, agreement, other)
-				elif isinstance(stateClass, (EstimateState, CompletedState)):
+				elif isinstance(state, (EstimateState, CompletedState)):
 					appendAgreement(awaitingReply, agreement, other)
-				elif isinstance(stateClass, (InProgressState)):
+				elif isinstance(state, (InProgressState)):
 					appendAgreement(inProgress, agreement, other)
-				elif isinstance(stateClass, PaidState):
+				elif isinstance(state, PaidState):
 					templateDict['agreementCount'] -= 1
 			else:
 				other = User.retrieveByID(agreement['vendorID'])
 
-				if isinstance(stateClass, (EstimateState, CompletedState)):
+				if isinstance(state, (EstimateState, CompletedState)):
 					appendAgreement(actionItems, agreement, other)
-				elif isinstance(stateClass, (DeclinedState, ContestedState)):
+				elif isinstance(state, (DeclinedState, ContestedState)):
 					appendAgreement(awaitingReply, agreement, other)
-				elif isinstance(stateClass, InProgressState):
+				elif isinstance(state, InProgressState):
 					appendAgreement(inProgress, agreement, other)
-				elif isinstance(stateClass, PaidState):
+				elif isinstance(state, PaidState):
 					templateDict['agreementCount'] -= 1
 
 		templateDict['agreementType'] = agreementType
@@ -239,9 +241,9 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if agreement['vendorID'] == user['id']:
 			agreementType = 'Client'
 		elif agreement['clientID'] == user['id']:
-			stateClass = agreement.getCurrentState().__class__
+			state = agreement.getCurrentState()
 
-			if isinstance(stateClass, (DraftState, InvalidState)):
+			if isinstance(state, (DraftState, InvalidState)):
 				logging.error('Agreement %d (vendor: %d, client: %d) is invalid' % (
 						agreement['id'], agreement['vendorID'], agreement['clientID']
 					)
