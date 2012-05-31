@@ -561,7 +561,7 @@ class SendAgreementRequestHandler(QueueHandler):
 		t = self.loader.load('request_proposal.html')
 		htmlString = t.generate(data=data)
 		
-		subject = "%s requested an agreement proposal from you" % vendor.getFullName()
+		subject = "%s requested an agreement proposal from you" % client.getFullName()
 		# TODO: work on this so the plaintext version is a parallel version of the HTML
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
