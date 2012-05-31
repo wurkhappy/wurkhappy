@@ -652,6 +652,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 				required=[
 					('currentPassword', fmt.Enforce(str)),
 					('newPassword', fmt.Enforce(str)),
+					('confirmPassword', fmt.Enforce(str))
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
@@ -677,6 +678,21 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 			
 			self.set_status(401)
 			self.renderJSON(error)
+		elif args['newPassword'] != args['confirmPassword']:
+			# Passwords don't match.
+			
+			error = {
+				"domain": "authentication.password",
+				"display": (
+					"The new password you chose does not match the "
+					"password you typed in the confirmation field. "
+					"Please type the same password in both fields."
+				),
+				"debug": "passwords don't match"
+			}
+			
+			self.set_status(400)
+			self.renderJSON(error)
 		elif user.passwordIsValid(args['newPassword']):
 			# New password is the same as old password, and that's bad.
 			
@@ -698,7 +714,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 		else:
 			user.setPasswordHash(args['newPassword'])
 			user.save()
-			self.write(json.dumps({"success": True, "user": user.getPublicDict()}))
+			self.renderJSON({"success": True, "user": user.getPublicDict()})
 
 
 
