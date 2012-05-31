@@ -22,7 +22,14 @@
 
 	{% block header %}
 	{% end %}
-
+	
+	{% if 'request' in data %}
+	<div id="content" class="clear" style="background: #EEE; border-bottom: 1px solid #DDD; border-top: 1px solid #FFF">
+		<h3>Personal Request from {{ data['client']['fullName'] }}</h3>
+		<p>{% raw escape(data['request']['message']).replace('\n', '<br/>') %}</p>
+	</div>
+	{% end %}
+	
 	<div id="content" class="clear">
 		<form action="/agreement{% if data['id'] %}/{{ data['id'] }}{% end %}" method="POST" accept-charset="utf-8" class="js-replace-action agreements" id="agreement-form">
 			{% raw xsrf_form_html() %}

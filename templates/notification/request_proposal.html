@@ -1,0 +1,11 @@
+{% extends "email_base.html" %}
+
+{% block body %}
+
+	<h1 style="font-weight: bold; font-size: 24px; line-height: 32px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ data['vendor']['fullName'] }} has requested a new agreement proposal from you with the following message:</h1>
+	
+	<h2 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ data['request']['message'] }}</h2>
+
+	<h2 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Click the following link to respond with a new agreement. <a href="http://{{ data['hostname'] }}/agreement/new?request={{ data['request']['id'] }}" style="text-decoration: none; color: #0099DD;">Create a New Agreement</a></h2>
+	
+{% end %}

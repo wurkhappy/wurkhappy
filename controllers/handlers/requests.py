@@ -133,6 +133,16 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 		request.save()
 		
 		# TODO: Enqueue notification!
+		with Beanstalk() as bconn:
+			msg = {
+				'action': 'sendAgreementRequest',
+				'requestID': request['id']
+			}
+			
+			tube = self.application.configuration['notifications']['beanstalk_tube']
+			bconn.use(tube)
+			r = bconn.put(json.dumps(msg))
+			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
 		self.set_status(201)
 		self.renderJSON(self.assembleDictionary(request))

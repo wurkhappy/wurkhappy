@@ -367,7 +367,7 @@ div.prompt-box h3 {
 	color: rgb(84,90,96);
 }
 
-#navigation p {
+#navigation p.logo {
   font-family: Museo;
   font-size: 24px;
   font-weight: 100;
@@ -378,11 +378,31 @@ div.prompt-box h3 {
   float: left;
 }
 
-#navigation p a:link,
-#navigation p a:visited {
+#navigation p.logo-sm {
+  font-family: Museo;
+  font-size: 18px;
+  font-weight: 100;
+  line-height: 18px;
+  padding: 0;
+  margin: 0;
+  background: transparent url(/static/images/logo.png) no-repeat left;
+  background-size: 32px 32px;
+  float: left;
+}
+
+#navigation p.logo a:link,
+#navigation p.logo a:visited {
   color: rgb(0,0,0);
   display: block;
   padding: 18px 20px 22px 70px;
+  text-decoration: none;
+}
+
+#navigation p.logo-sm a:link,
+#navigation p.logo-sm a:visited {
+  color: rgb(0,0,0);
+  display: block;
+  padding: 23px 20px 20px 36px;
   text-decoration: none;
 }
 

@@ -46,6 +46,8 @@ class MailController (BackgroundController):
 			'agreementPaid': notifications.AgreementPaidHandler,
 			'agreementDisputed': notifications.AgreementDisputedHandler,
 			
+			'sendAgreementRequest': notifications.SendAgreementRequestHandler,
+			
 			'userInvite': notifications.UserInviteHandler,
 			'userResetPassword': notifications.UserResetPasswordHandler
 		}

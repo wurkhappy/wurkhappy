@@ -1,1 +1,7 @@
-__all__ = ["agreement", "paymentmethod", "request", "transaction", "user"]
+__all__ = [
+	"agreement",
+	"paymentmethod",
+	"request",
+	"transaction",
+	"user"
+]

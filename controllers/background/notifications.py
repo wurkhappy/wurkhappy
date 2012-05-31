@@ -1,5 +1,6 @@
 from models.user import User, UserState, ActiveUserState, NewUserState, InvitedUserState, BetaUserState
 from models.agreement import Agreement, AgreementPhase
+from models.request import Request
 from models.transaction import Transaction
 from models.paymentmethod import PaymentMethod
 from controllers.email import Email
@@ -531,6 +532,67 @@ class AgreementDisputedHandler(QueueHandler):
 			"vendorID": vendor['id'],
 			"vendorEmail": vendor['email'],
 			"agreementID": agreement['id']
+		}))
+
+
+
+class SendAgreementRequestHandler(QueueHandler):
+	def receive(self, body):
+		request = Request.retrieveByID(body['requestID'])
+		# agreement = Agreement.retrieveByID(body['agreementID'])
+		
+		if not request:
+			raise Exception("No such request")
+		
+		client = User.retrieveByID(request['clientID'])
+		vendor = User.retrieveByID(request['vendorID'])
+		# phase = AgreementPhase.retrieveByID(body['agreementPhaseID'])
+		
+		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
+			'client': client.getPublicDict(),
+			'vendor': vendor.getPublicDict(),
+			'request': request.getPublicDict()
+			# 'phase': phase.getPublicDict()
+		}
+		
+		# data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
+		
+		t = self.loader.load('request_proposal.html')
+		htmlString = t.generate(data=data)
+		
+		subject = "%s requested an agreement proposal from you" % vendor.getFullName()
+		# TODO: work on this so the plaintext version is a parallel version of the HTML
+		# (We might have pairs of templates or something...)
+		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
+		
+		if not isinstance(vendor.getCurrentState(), ActiveUserState):
+			logging.warn(json.dumps({
+				"message": "Attempted to send message to invalid user",
+				"actionType": body['action'],
+				"recipientID": vendor['id'],
+				"recipientEmail": vendor['email'],
+				"requestID": request['id']
+			}))
+			
+			return
+		
+		self.sendEmail({
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
+			'to': (vendor.getFullName(), vendor['email']),
+			'subject': subject,
+			'multipart': [
+				(textString, 'text'),
+				(htmlString, 'html')
+			]
+		})
+		
+		logging.info(json.dumps({
+			"message": "Successfully sent email",
+			"actionType": body['action'],
+			"vendorID": vendor['id'],
+			"vendorEmail": vendor['email'],
+			"requestID": request['id']
 		}))
 
 

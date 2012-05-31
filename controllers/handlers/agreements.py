@@ -4,6 +4,7 @@ import re
 from base import *
 from models.user import *
 from models.agreement import *
+from models.request import Request
 from models.profile import Profile
 from controllers import fmt
 from controllers.orm import ORMJSONEncoder
@@ -209,6 +210,18 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			# Must have been routed from /agreement/new
 			title = "New Agreement &ndash; Wurk Happy"
 			
+			try:
+				args = fmt.Parser(self.request.arguments,
+					optional=[
+						('request', fmt.PositiveInteger())
+					]
+				)
+			except fmt.HTTPErrorBetter as e:
+				logging.warn(e.__dict__)
+				self.set_status(e.status_code)
+				self.write(e.body_content)
+				return
+			
 			empty = {
 				"_xsrf": self.xsrf_token,
 				"id": None,
@@ -226,6 +239,13 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				],
 				"self": "vendor"
 			}
+			
+			request = args['request'] and Request.retrieveByID(args['request'])
+			
+			if request and request['vendorID'] == user['id']:
+				client = User.retrieveByID(request['clientID'])
+				empty['request'] = request.getPublicDict()
+				empty['client'] = client and client.getPublicDict()
 			
 			self.render("agreement/edit.html", title=title, data=empty, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 			return

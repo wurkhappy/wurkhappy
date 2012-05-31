@@ -495,7 +495,7 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			# apply the lambda with the appropriate PIL transforms to the image
 			
 			exif = imgs['o']._getexif() or {}
-			logging.info(exif)
+			
 			transforms = {
 				1: lambda x: (x),
 				2: lambda x: (x.transpose(Image.FLIP_LEFT_RIGHT)),
