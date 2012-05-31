@@ -2,6 +2,7 @@ from base import *
 from models.user import *
 from models.request import Request
 from controllers.verification import Verification
+from controllers.beanstalk import Beanstalk
 
 from datetime import datetime
 import logging
