@@ -1,0 +1,6 @@
+<form action="{{ action }}" method="GET">
+	{% for name, value in data.iteritems() %}
+		<input type="hidden" name="{{ name }}" value="{{ value }}" />
+	{% end %}
+	<input type="image" src="{{ buttonImageURL }}" border="0" />
+</form>
