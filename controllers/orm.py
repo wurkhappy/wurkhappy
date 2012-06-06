@@ -78,11 +78,15 @@ class MappedObj(object):
 		
 		return clz.initWithDict(result)
 	
-	def __init__(self):
+	def __init__(self, **kwargs):
 		self.fields = {}
+		self.dirty = []
+		
 		for name, value in self.columns.iteritems():
 			self.fields[name] = value
-		self.dirty = []
+		
+		for name, value in kwargs.iteritems():
+			self[name] = value
 	
 	def __getitem__(self, name):
 		return self.fields[name]

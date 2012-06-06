@@ -20,7 +20,7 @@ from controllers.beanstalk import Beanstalk
 import os
 import os.path
 
-from controllers.modules import modules
+from controllers.modules import modules, amazon
 
 # -------------------------------------------------------------------
 # Application main
@@ -84,6 +84,9 @@ class Application(web.Application):
 			(r'/agreement/request/?', requests.RequestAgreementHandler),
 			(r'/agreement/request\.json', requests.RequestAgreementJSONHandler),
 			
+			# Callbacks
+			(r'/callbacks/amazon/simplepay/paymentnotification', callbacks.AmazonSimplePayIPNHandler),
+			
 			# JSON handler to test server configuration
 			(r'/test/http_server\.json', tests.HTTPServerTestHandler)
 		]
@@ -95,7 +98,7 @@ class Application(web.Application):
 			"login_url": "/login",
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
-			"ui_modules": modules,
+			"ui_modules": [modules, amazon],
 			"debug": config['tornado'].get('debug', False),
 		}
 		

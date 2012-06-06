@@ -126,6 +126,29 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin):
 	def get(self):
 		user = self.current_user
 		
+		logging.info(self.request.arguments)
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[
+					('tokenID', fmt.Enforce(str)),
+					('refundTokenID', fmt.Enforce(str)),
+					('recipientEmail', fmt.Enforce(str)),
+					('callerReference', fmt.Enforce(str)),
+					('status', fmt.Enforce(str)),
+					
+					# signatureMethod
+					# signatureVersion
+					# signature
+				]
+			)
+		
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			logging.warn(e.message)
+			
+			# Pretend we didn't get anything if the args were bad
+			args = []
+		
 		userDict = {
 			'_xsrf': self.xsrf_token,
 			# 'error': dwollaError,
@@ -139,8 +162,33 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin):
 				user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
 				user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
 			],
-			'self': 'account'
+			'self': 'account',
+			'amazonFPSAccount': UserPrefs.retrieveByUserIDAndName(user['id'], 'amazonFPSAccountToken')
 		}
+		
+		if args['status'] == 'SR' and args['tokenID'] and args['refundTokenID'] and args['recipientEmail']:
+			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
+			tokenPref['value'] = args['tokenID']
+			tokenPref.save()
+		
+			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id') or UserPrefs(userID=user['id'], name='amazon_refund_token_id')
+			refundPref['value'] = args['refundTokenID']
+			refundPref.save()
+			
+			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email') or UserPrefs(userID=user['id'], name='amazon_recipient_email')
+			emailPref['value'] = args['recipientEmail']
+			emailPref.save()
+		else:
+			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
+			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')
+		
+		if tokenPref and refundPref:
+			userDict['amazonFPSAccount'] = {
+				'tokenID': tokenPref['value'],
+				'refundTokenID': refundPref['value']
+			}
+		else:
+			userDict['amazonFPSAccount'] = None
 		
 		dwolla = UserDwolla.retrieveByUserID(user['id'])
 		

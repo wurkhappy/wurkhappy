@@ -300,8 +300,8 @@ class AgreementPhase (MappedObj):
 			cursor.execute(query % clz.tableName, (agreementID, phaseNumber))
 			return clz.initWithDict(cursor.fetchone())
 	
-	def getCostString(self):
-		return "${:,.2f}".format(self['amount'] / 100) if self['amount'] else ""
+	def getCostString(self, prefix='$', default=''):
+		return "{0}{1:,.2f}".format(prefix, self['amount'] / 100) if self['amount'] else default
 	
 	def getPublicDict(self):
 		return OrderedDict([

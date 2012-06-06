@@ -230,7 +230,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"amount": "",
 				"summary": "",
 				"client": None,
-				"vendor": None,
+				"vendor": user.getPublicDict(),
 				"phases": [],
 				"state": 'DraftState',
 				"actions": [
@@ -240,6 +240,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"self": "vendor"
 			}
 			
+			# Pre-populate data from a client request.
+			
 			request = args['request'] and Request.retrieveByID(args['request'])
 			
 			if request and request['vendorID'] == user['id']:
@@ -247,6 +249,17 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				empty['request'] = request.getPublicDict()
 				empty['client'] = client and client.getPublicDict()
 			
+			# Modify behavior to prompt for Amazon configuration if no
+			# confirmation is on file.
+			
+			amzAcctConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed')
+
+			if amzAcctConfirmed and amzAcctConfirmed['value'] == 'True':
+				empty['amazonAccountConfirmed'] = True
+			else:
+				empty['amazonAccountConfirmed'] = False
+				empty['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
+
 			self.render("agreement/edit.html", title=title, data=empty, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 			return
 
@@ -389,6 +402,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		if currentPhase:
 			templateDict["currentPhase"] = {
 				"amount": currentPhase.getCostString(),
+				"phaseID": currentPhase['id'],
 				"phaseNumber": currentPhase['phaseNumber'],
 				"description": currentPhase['description']
 			}
@@ -444,12 +458,12 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		
 		userDwolla = UserDwolla.retrieveByUserID(user['id'])
 		
-		if not userDwolla:
-			templateDict['actions'] = [
-				('action-connect', 'Connect an Account')
-			]
-		else:
-			templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
+		# if not userDwolla:
+		# 	templateDict['actions'] = [
+		# 		('action-connect', 'Connect an Account')
+		# 	]
+		# else:
+		templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
 
 		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
@@ -457,8 +471,16 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
 		
 		if agreement['vendorID'] == user['id'] and isinstance(currentState, (DraftState, DeclinedState)):
+			amzAcctConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed')
+			
 			templateDict['uri'] = self.request.uri
-			logging.info(templateDict)
+			
+			if amzAcctConfirmed and amzAcctConfirmed['value'] == 'True':
+				templateDict['amazonAccountConfirmed'] = True
+			else:
+				templateDict['amazonAccountConfirmed'] = False
+				templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
+			
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
 			# Adding account info here because I'm a dumbass.

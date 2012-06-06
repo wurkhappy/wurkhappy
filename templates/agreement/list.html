@@ -57,9 +57,7 @@
 		<div class="column-one-fourth">
 
 			<ul class="action-button">
-				{% if not data['paymentEnabled'] %}
-					<li><a href="/user/me/account#dwolla" class="single">Connect an Account</a></li>
-				{% elif data['agreementType'] == 'Client' %}
+				{% if data['agreementType'] == 'Client' %}
 					<li><a href="/agreement/new" class="single">Create New Agreement</a></li>
 				{% elif data['agreementType'] == 'Vendor' %}
 					<li><a href="/agreement/request" class="single">Request Agreement</a></li>

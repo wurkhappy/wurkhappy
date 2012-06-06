@@ -88,8 +88,9 @@ var buttonActions = {
 				// Also, the success function should update the current_user property.
 				$('form#profile-edit_form').submit();
 			
-				$('#details-container').slideUp(300).fadeOut(300);
-				$('#dwolla-container').slideDown(300).fadeIn(300);
+				// $('#details-container').slideUp(300).fadeOut(300);
+				// $('#dwolla-container').slideDown(300).fadeIn(300);
+				document.location.href = '/';
 			} else {
 				var popup = new Popup('#content');
 				popup.setLabel("You must agree to the Wurk Happy Terms of Use to continue.").open();

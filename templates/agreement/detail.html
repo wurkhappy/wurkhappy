@@ -127,6 +127,19 @@
 
 	{% module Footer() %}
 </div>
+
+	{% if data['self'] == 'client' and data['state'] == 'CompletedState' %}
+	<div class="clear prompt-box" id="confirmation-div" style="display:none;">
+		<div class="column-three-fourth">
+			<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>
+			<p>You can pay quickly and securely with Amazon Payments.</p>
+		</div>
+		<div class="column-one-fourth">
+			{% module PayWithAmazonButton(data['currentPhase']['phaseID']) %}
+		</div>
+	</div>
+	{% end %}
+
 {% end %}
 
 

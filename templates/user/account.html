@@ -23,7 +23,7 @@
 		<ul>
 			<li class="tab current" id="details-button"><a href="#" class="top">Personal Details</a></li>
 			<li class="tab" id="password-button"><a href="#" class="">Change Your Password</a></li>
-			<li class="tab" id="dwolla-button"><a href="#" class="">Payment Information</a></li>
+			<li class="tab" id="amazon-button"><a href="#" class="">Payment Information</a></li>
 			<!-- <li class="tab" id="bank-button"><a href="#" class="">Bank Account Details</a></li> -->
 			<!-- <li class="tab" id="card-button"><a href="#" class="">Credit Card Details</a></li> -->
 		</ul>
@@ -90,49 +90,34 @@
 			</form>
 		</div>
 		
-		<div id="dwolla-container" class="tab-content" style="display: none;">
-			{% if data['dwolla']['dwollaID'] is None %}
+		<div id="amazon-container" class="tab-content" style="display: none;">
+			{% if data['amazonFPSAccount'] is None %}
 				<div class="column-three-fourth">
-					<h2>Link Your Dwolla Account</h2>
-
-					<p>Wurk Happy uses Dwolla to process transactions. In order to pay vendors or receive payments from clients,
-						we require each user to have a Dwolla account. If you have an account set up already, you can click the link
-						below to link it with your Wurk Happy account.</p>
-				</div>
-				<div class="clear"></div>
-				<div class="column-three-fourth">
-					<p>Already have a Dwolla account? Great! Click &ldquo;Connect My Account&rdquo; to authorize Wurk Happy and get
-						started. You will be prompted to log in and allow Wurk Happy to send and receive payments on your behalf.</p>
+					<h2>Connect an Amazon Marketplace Account</h2>
+					
+					<p>Wurk Happy uses the Amazon Payments Marketplace to send and receive payments. In order
+						to receive payments from clients, you need to accept the marketplace fees.</p>
+					
+					<h2>Frequently Asked Questions</h2>
+					
+					<h3>What does Wurk Happy charge?</h3>
+					
+					<p>We charge <strong>1%</strong> per transaction on top of Amazon's transaction fees.</p>
+					
+					<h3>Why use Amazon Payments?</h3>
+					
+					<p>We like it.</p>
 				</div>
 				<div class="column-one-fourth">
-					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="dwolla_connect" class="top js-button">Connect My Account</a></li>
-					</ul>
-				</div>
-				<div class="clear"></div>
-				<div class="column-three-fourth">
-					<p>If you don&rsquo;t have a Dwolla account yet, don&rsquo;t worry. Click &ldquo;Create an Account&rdquo; and
-						fill out the form to get started!</p>
-				</div>
-				<div class="column-one-fourth">
-					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="dwolla_create" class="top js-button">Create an Account</a></li>
-					</ul>
+					{% module AcceptMarketplaceFeeButton(data['id']) %}
 				</div>
 			{% else %}
-				<h2>Your Dwolla Account</h2>
-				<div class="data-table">
-					<table border="0" cellspacing="0" cellpadding="0">
-						<tr>
-							<!-- <td class="meta">
-								<span><img src="" alt="Verified" width="50" height="50" /></span>
-							</td> -->
-							<td>
-								<h3>{{ data['dwolla']['userName'] }}</h3>
-								<p><strong>Dwolla ID:</strong> {{ data['dwolla']['dwollaID'] }}</p>
-							</td>
-						</tr>
-					</table>
+				<div class="column-three-fourth">
+					<h2>Amazon Marketplace Account</h2>
+					
+					<h1 style="color:green;font-size:50px;float:left">&#9745;</h1>
+					
+					<p>Your Amazon Marketplace Account has been successfully connected. You are ready to start receiving payments through Wurk Happy!</p>
 				</div>
 			{% end %}
 		</div>

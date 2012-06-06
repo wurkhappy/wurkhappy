@@ -1,108 +1,113 @@
 from tornado.web import UIModule
 from controllers.orm import ORMJSONEncoder
 from controllers.data import Data, Base64
+from controllers.amazonaws import AmazonFPS
 
-import json
-import logging
+from models.agreement import Agreement, AgreementPhase
+from models.user import User, UserPrefs
+
 from datetime import datetime
-from hashlib import sha1
 from collections import OrderedDict
-import hmac
+import logging
 import urllib
+import json
+from uuid import uuid4
 
 
-class Amazon(object):
-	def generateSignature(self, httpVerb, host, uri, data, key):
-		'''Generate an Amazon FPS signature for an API request or button form.
-		More information can be found at the following URL:
-		http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/Sig2CreateSignature.html
-		'''
-		
-		canonicalData = OrderedDict()
-		
-		for k in sorted(data.keys()):
-			canonicalData[urllib.quote(k, '~')] = urllib.quote(data[k], '~')
-		
-		canonicalString = '&'.join('{0}={1}'.format(k, v) for k, v in canonicalData.iteritems())
-		
-		plaintext = '{0}\n{1}\n{2}\n{3}'.format(
-			httpVerb,
-			host.lower(),
-			'/{0}'.format(uri),
-			canonicalString
-		)
-		
-		hashObj = hmac.new(key, plaintext, sha1)
-		data = Data(hashObj.digest())
-		return data.stringWithEncoding(Base64)
-		
 
-class AcceptMarketplaceFeeButton(UIModule, Amazon):
-	""" Presents an HTML form to initiate the vendor's acceptance of Amazon's
+class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
+	'''Presents an HTML form to initiate the vendor's acceptance of Amazon's
 	marketplace fees and terms and conditions. Documentation at the following URL:
 	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-fee-input.html
-	"""
+	'''
 	
-	def render(self, vendor, amazon):
-		accessKey = amazon['key_id']
-		secretKey = amazon['key_secret']
+	def render(self, vendorID):
+		accessKey = self.handler.application.configuration['amazonaws']['key_id']
+		secretKey = self.handler.application.configuration['amazonaws']['key_secret']
 		httpVerb = 'GET'
-		host = 'authorize.payments.amazon.com' # amazon['fps_host']
-		uri = 'cobranded-ui/actions/start' # amazon['fps_accept_fee_uri']
+		fpsHost = self.handler.application.configuration['amazonaws']['fps_host']
+		fpsURI = self.handler.application.configuration['amazonaws']['fps_accept_fee_uri']
+		
+		vendor = User.retrieveByID(vendorID)
 		
 		data = OrderedDict()
 		
-		data['accessKey'] = accessKey
-		# data['callerReference'] = "Some kind of transaction UID"
+		data['callerKey'] = accessKey
+		data['callerReference'] = str(uuid4()) # str(vendor['id']) # "Some kind of transaction UID"
+		data['collectEmailAddress'] = "true"
 		data['maxVariableFee'] = "1.00"
 		data['pipelineName'] = "Recipient"
 		data['recipientPaysFee'] = "false"
-		data['returnURL'] = 'http://foo.bar/baz' # TODO: Fixme!
+		data['returnURL'] = '{0}://{1}/user/me/account'.format(
+			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
+		)
 		data['signatureMethod'] = "HmacSHA1"
 		data['signatureVersion'] = "2"
 		
-		data['signature'] = self.generateSignature(httpVerb, host, uri, data, secretKey)
+		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data, secretKey)
 		
 		return self.render_string(
 			"modules/amazon/simplepaybutton.html",
 			method=httpVerb,
-			action='https://{0}/{1}'.format(host, uri),
-			buttonImageURL='http://g-ecx.images-amazon.com/images/G/01/asp/MarketPlaceFeeWithLogo.gif',
+			action='https://{0}/{1}'.format(fpsHost, fpsURI),
+			buttonImageURL='https://payments.amazon.com/img/marketplace_fee_with_logo_orange.gif',
 			data=data
 		)
 
 
 
-class PayWithSimplePayButton(UIModule):
-	def render(self, phase, amazon):
-		accessKey = amazon['key_id']
-		secretKey = amazon['key_secret']
+class PayWithAmazonButton(UIModule, AmazonFPS):
+	'''Presents an HTML form to initiate a payment via the Amazon Simple Pay Marketplace. Documentation here:
+	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-pay-input.html
+	'''
+	
+	def render(self, phaseID):
+		accessKey = self.handler.application.configuration['amazonaws']['key_id']
+		secretKey = self.handler.application.configuration['amazonaws']['key_secret']
 		httpVerb = 'POST'
-		host = 'authorize.payments.amazon.com' # amazon['fps_host']
-		uri = 'pba/paypipeline' # amazon['fps_make_payment_uri']
+		fpsHost = self.handler.application.configuration['amazonaws']['fps_host']
+		fpsURI = self.handler.application.configuration['amazonaws']['fps_make_payment_uri']
+		
+		phase = AgreementPhase.retrieveByID(phaseID)
+		agreement = Agreement.retrieveByID(phase['agreementID'])
+		vendor = User.retrieveByID(agreement['vendorID'])
+		email = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
+		token = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_token_id')
 		
 		data = OrderedDict()
-		
-		data['abandonURL'] = 'http://foo.bar/baz' # TODO: Fixme!
+	
+		data['abandonURL'] = '{0}://{1}/agreement/{2}'.format(
+			self.request.protocol,
+			self.handler.application.configuration['wurkhappy']['hostname'],
+			agreement['id']
+		) # TODO: Fixme!
 		data['accessKey'] = accessKey
-		data['amount'] = 'USD {0}'.format(phase['amount']) # TODO: Fixme!
-		data['description'] = phase['description'] #!
-		# data['immediateReturn'] = '1'
-		data['ipnUrl'] = 'http://foo.bar/baz' #!
-		data['recipientEmail'] = vendor['email']
-		data['returnUrl'] = 'http://foo.bar/baz' #!
+		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
+		data['description'] = phase['description']
+		data['immediateReturn'] = 'true'
+		data['ipnUrl'] = '{0}://{1}/callbacks/amazon/simplepay/paymentnotification'.format(
+			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
+		)
+		data['processImmediate'] = 'true'
+		data['recipientEmail'] = email['value']
+		data['referenceId'] = str(uuid4())
+		data['returnUrl'] = '{0}://{1}/agreement/{2}'.format(
+			self.request.protocol,
+			self.handler.application.configuration['wurkhappy']['hostname'],
+			agreement['id']
+		)
 		data['signatureMethod'] = "HmacSHA1"
 		data['signatureVersion'] = "2"
 		data['variableMarketplaceFee'] = "1.00"
 		
-		data['signature'] = self.generateSignature(httpVerb, host, uri, data, secretKey)
+		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data, secretKey)
 		
 		return self.render_string(
 			"modules/amazon/simplepaybutton.html",
 			method=httpVerb,
-			action='https://{0}/{1}'.format(host, uri),
-			buttonImageURL='',
+			action='https://{0}/{1}'.format(fpsHost, fpsURI),
+			buttonImageURL='https://images-na.ssl-images-amazon.com/images/G/01/asp/golden_large_paynow_withlogo_darkbg.gif',
 			data=data
 		)
-	
+
 
