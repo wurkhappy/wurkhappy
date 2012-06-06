@@ -85,7 +85,7 @@ class Application(web.Application):
 			(r'/agreement/request\.json', requests.RequestAgreementJSONHandler),
 			
 			# Callbacks
-			(r'/callbacks/amazon/simplepay/paymentnotification', callbacks.AmazonSimplePayIPNHandler),
+			(r'/callbacks/amazon/simplepay/paymentnotification', callbacks.AmazonPaymentsIPNHandler),
 			
 			# JSON handler to test server configuration
 			(r'/test/http_server\.json', tests.HTTPServerTestHandler)

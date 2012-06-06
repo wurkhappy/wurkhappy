@@ -16,6 +16,7 @@ class Transaction(MappedObj):
 	tableName = 'transaction'
 	columns = {
 		'id': None,
+		'transactionReference': None,
 		'agreementPhaseID': None,
 		'senderID': None, # fromClientID
 		'recipientID': None, # toVendorID
@@ -70,6 +71,14 @@ class Transaction(MappedObj):
 			while result:
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
+	
+	@classmethod
+	def retrieveByTransactionReference(clz, txnRef):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} WHERE transactionReference = %s"
+			cursor.execute(query.format(clz.tableName), txnRef)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
 	
 	@classmethod
 	def retrieveByAgreementPhaseID(clz, phaseID):
