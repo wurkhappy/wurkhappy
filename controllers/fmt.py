@@ -1,3 +1,4 @@
+from __future__ import division
 from tornado.web import HTTPError
 
 from collections import defaultdict
@@ -187,8 +188,9 @@ class URL(Enforce):
 
 
 class Currency(Enforce):
-	def __init__(self, default=None):
+	def __init__(self, r=[None, None], default=None):
 		Enforce.__init__(self, int, default)
+		self.range = r
 	
 	def filter(self, value):
 		logging.warn(value)
@@ -204,6 +206,12 @@ class Currency(Enforce):
 		
 		if m.groups()[1]:
 			d += int(m.groups()[1])
+		
+		if self.range[0] is not None and d < self.range[0]:
+			raise Exception("value must be greater than ${0:,.2f}".format(self.range[0] / 100))
+		
+		if self.range[1] is not None and d > self.range[1]:
+			raise Exception("value must be less than ${0:,.2f}".format(self.range[1] / 100))
 		
 		return d
 	

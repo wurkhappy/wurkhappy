@@ -109,18 +109,18 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 		# transactionId
 		
 		# Look up the transaction ID and update the record
+		if args['referenceId'] and args['transactionAmount'] and args['transactionDate']:
+			transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
 		
-		transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
-		
-		if transaction is None:
-			amtParser = re.compile('USD ([0-9]+(?:\.[0-9]{0,2})?)')
-			amountString = amtParser.match(args['transactionAmount']).groups()[0]
+			if transaction is None:
+				amtParser = re.compile('USD ([0-9]+(?:\.[0-9]{0,2})?)')
+				amountString = amtParser.match(args['transactionAmount']).groups()[0]
 			
-			transaction = Transaction(
-				transactionReference=args['referenceId'],
-				amount=int(float(amountString) * 100),
-				dateInitiated=datetime.fromtimestamp(args['transactionDate'])
-			)
+				transaction = Transaction(
+					transactionReference=args['referenceId'],
+					amount=int(float(amountString) * 100),
+					dateInitiated=datetime.fromtimestamp(args['transactionDate'])
+				)
 		
 		if args['status'] == 'PS':
 			transaction['dateApproved'] = datetime.now()
