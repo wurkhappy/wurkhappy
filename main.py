@@ -45,6 +45,8 @@ class Application(web.Application):
 			(r'/legal/privacy/?', legal.PrivacyHandler),
 			# (r'/legal/dwolla/?', legal.DwollaHandler),
 			
+			(r'/help/faq/?', help.FAQHandler),
+			
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/profile/?', users.ProfileHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),

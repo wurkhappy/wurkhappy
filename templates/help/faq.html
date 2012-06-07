@@ -1,0 +1,122 @@
+{% extends "../base.html" %}
+
+{% block main %}
+
+<div class="container">
+
+	{% block navigation %}
+	{% end %}
+
+	{% block header %}
+	{% end %}
+
+	<div id="content" class="clear">
+		<div><p></p></div>
+		<div class="column-three-fourth">
+			<h2>Getting Started</h2>
+
+			<p><strong>How much does it cost to join?</strong><br />
+			Nothing! Wurk Happy is free to join!</p>
+
+			<p><strong>How long does it take to sign up?</strong><br />
+			It only takes a few minutes create a Wurk Happy account.</p>
+
+			<p><strong>What information do I need to sign up?</strong><br />
+			Wurk Happy requires your name, email address, and telephone number. In
+			order to receive payments, you will need to set up an Amazon Payments
+			business account. Amazon needs additional personal information to
+			verify your identity.</p>
+
+			<p><strong>Why do I need to sign up for an Amazon Payments account?</strong><br />
+			Contractors who want to collect payment from their clients need an
+			Amazon Payments account to receive payment. We believe Amazon provides
+			the right mix of reliability, security, and simplicity our customers
+			need in order to feel confident sending and receiving funds online.</p>
+
+			<p><strong>How do I sign up for an Amazon Payments account?</strong><br />
+			Go to the Payment Information tab in your account settings and click
+			the "Accept Marketplace Fee" button to get started with Amazon. You
+			will be guided through Amazon's sign up process and you'll have to
+			verify your email address and bank account information.</p>
+
+
+			<h2>Using Wurk Happy</h2>
+
+			<p><strong>How much does it cost to use Wurk Happy?</strong><br />
+			Wurk Happy charges a 3% fee for each transaction. There are no monthly charges.</p>
+
+			<p><strong>Will my clients like using Wurk Happy?</strong><br />
+			...</p>
+
+			<p><strong>Will my independent contractors or freelancers like Wurk Happy?</strong><br />
+			...</p>
+
+			<p><strong>How do I create an agreement?</strong><br />
+			To create an agreement, you must first configure your Amazon Payments account
+			to receive payments. Click the &ldquo;Accept Marketplace Fee&rdquo; button on
+			the &ldquo;Payment Information&rdquo; tab of the 
+			<a href="/user/me/account">Account</a> page.</p>
+
+
+			<h2>Security and Policies</h2>
+
+			<p><strong>Is Wurk Happy safe?</strong><br />
+			Yes. We take security seriously. We do not store bank account, credit
+			card, or other sensitive personal information, and we rely on Amazon's
+			sophisticated fraud prevention service.</p>
+
+			<p><strong>How does Wurk Happy handle chargebacks?</strong><br />
+			...</p>
+
+			<p><strong>How can I make sure my clients pay me?</strong><br />
+			...</p>
+
+			<p><strong>How can I make sure my contractors deliver?</strong><br />
+			...</p>
+
+			<p><strong>How does Wurk Happy handle refunds?</strong><br />
+			...</p>
+			
+		</div>
+	</div>
+</div>
+
+{% end %}
+
+
+
+{% block header %}
+
+<div id="intro" class="clear">
+	<div class="column-three-fouth">
+		<h1>Frequently Asked Questions</h1>
+	</div>
+	<div class="column-one-fouth">
+	</div>
+</div>
+
+{% end %}
+
+
+
+{% block navigation %}
+
+<div id="navigation" class="clear">
+	<div class="column-three-fourth">
+		<ul class="clear">
+			<li><p class="logo-sm"><a href="/">Wurk Happy</a></p></li>
+			<li><a href="/agreements/with/clients"><strong>Agreements with Clients</strong></a></li>
+			<li><a href="/agreements/with/vendors"><strong>Agreements with Contractors</strong></a></li>
+			<!--<li><a href="/templates">Templates</a></li>-->
+		</ul>
+	</div>
+	<div class="column-one-fourth">
+		<ul id="admin" class="clear">
+			<li><a href="/logout">Log Out</a></li>
+			<li><a href="/user/me/account">Account</a></li>
+			<!--<li><a href="#">Preferences</a></li>-->
+		</ul>
+	</div>
+</div>
+
+{% end %}

@@ -35,7 +35,7 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		data['callerKey'] = accessKey
 		data['callerReference'] = Data(uuid4().get_bytes()).stringWithEncoding(Base58)
 		data['collectEmailAddress'] = "true"
-		data['maxVariableFee'] = "1.00"
+		data['maxVariableFee'] = "3.00"
 		data['pipelineName'] = "Recipient"
 		data['recipientPaysFee'] = "false"
 		data['returnURL'] = '{0}://{1}/user/me/account'.format(
@@ -98,7 +98,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		)
 		data['signatureMethod'] = "HmacSHA256"
 		data['signatureVersion'] = "2"
-		data['variableMarketplaceFee'] = "1.00"
+		data['variableMarketplaceFee'] = "3.00"
 		
 		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data, secretKey)
 		
