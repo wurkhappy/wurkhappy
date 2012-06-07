@@ -17,6 +17,24 @@ import urlparse
 import urllib
 import re
 
+# 	A	The pipeline was abandoned.
+# 	ME	Merchant error. Either the button parameter names are invalid, or there is a shipping address error from the co-branded user interface.
+# 	PS	The payment transaction was successful.
+# 	PF	The payment or reserve transaction failed and the money was not transferred.
+# 		If the account is not suspended, you can redirect your customer to the Amazon Payments Payment Authorization page to select a different payment method.
+# 	PI	Payment has been initiated.
+# 		It will take between five seconds and 48 hours to complete, based on the availability of external payment networks and the riskiness of the transaction.
+# 	PR	The reserve transaction was successful.
+# 	RS	The refund transaction was successful.
+# 	RF	The refund transaction failed.
+# 	SE	A service error has occurred.
+# 	SF	The subscription failed.
+# 	SI	The subscription has initiated.
+# 	SR	The marketplace fee transaction was accepted by the recipient.
+# 	SS	The subscription was completed.
+# 	UE	User error for donations. The donation amount was less than the minimum donation amount.
+# 	UF	Subscription update failed. The subscriber has failed to update the subscription payment method.
+# 	US	Subscription update was successful. The subscriber succeeded updating the subscription payment method.
 
 
 class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):

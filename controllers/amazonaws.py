@@ -2,10 +2,10 @@ from controllers.data import Data, Base64
 
 from boto.s3.connection import S3Connection
 from collections import OrderedDict
-from hashlib import sha1
+from hashlib import sha256
 import hmac
 import urllib
-
+import logging
 
 
 class AmazonAWSConnectionError(Exception):
@@ -54,17 +54,15 @@ class AmazonFPS(object):
 			canonicalData[urllib.quote(k, '~')] = urllib.quote(data[k], '~')
 
 		canonicalString = '&'.join('{0}={1}'.format(k, v) for k, v in canonicalData.iteritems())
-
+		
 		plaintext = '{0}\n{1}\n{2}\n{3}'.format(
-			httpVerb,
+			httpVerb.upper(),
 			host.lower(),
 			'/{0}'.format(uri),
 			canonicalString
 		)
-
-		hashObj = hmac.new(key, plaintext, sha1)
-		data = Data(hashObj.digest())
-		return data.stringWithEncoding(Base64)
+		
+		return Data(hmac.new(key, plaintext, sha256).digest()).stringWithEncoding(Base64)
 	
 	def verifySignature(self):
 		'''This is obviously not right.'''

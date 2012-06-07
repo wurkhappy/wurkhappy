@@ -6,6 +6,7 @@ from models.user import *
 from models.agreement import *
 from models.request import Request
 from models.profile import Profile
+from models.transaction import Transaction
 from controllers import fmt
 from controllers.orm import ORMJSONEncoder
 from controllers.beanstalk import Beanstalk
@@ -271,6 +272,34 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 			self.write("Not Found")
 			return
 
+		# Capture return data from an Amazon pay pipeline
+		# paymentReason
+		# signatureMethod
+		# transactionAmount
+		# status
+		# referenceId
+		# recipientEmail
+		# transactionDate
+		# operation
+		# recipientName
+		# signatureVersion
+		# certificateUrl
+		# paymentMethod
+		# signature
+
+		try:
+			args = fmt.Parser(self.request.arguments,
+				optional=[
+					('status', fmt.Enforce(str)),
+					('referenceId', fmt.Enforce(str)),
+					('transactionDate', fmt.PositiveInteger())
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.__dict__)
+			self.set_status(e.status_code)
+			return
+		
 		if agreement['vendorID'] == user['id']:
 			agreementType = 'Client'
 		elif agreement['clientID'] == user['id']:
@@ -375,6 +404,38 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 		currentState = agreement.getCurrentState()
 		currentPhase = agreement.getCurrentPhase()
+
+		
+		if args['status'] is not None:
+			transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
+			
+			if not transaction:
+				transaction = Transaction(
+					transactionReference=args['referenceId'],
+					dateInitiated=datetime.fromtimestamp(args['transactionDate'])
+				)
+			
+			if not transaction['agreementPhaseID']:
+				transaction['agreementPhaseID'] = currentPhase['id']
+
+			if args['status'] == 'PS':
+				transaction['dateApproved'] = datetime.now()
+				
+				# If the transaction was approved, update the agreement state
+				# (This should have some more granularity. Ugh.)
+				unsavedRecords = []
+				
+				try:
+					currentState.performTransition('client', 'verify', unsavedRecords)
+				except StateTransitionError as e:
+					pass
+				
+				for record in unsavedRecords:
+					record.save()
+			elif args['status'] in ['ME', 'PF', 'SE']:
+				transaction['dateDeclined'] = datetime.now()
+
+			transaction.save()
 
 		templateDict["phases"] = []
 
