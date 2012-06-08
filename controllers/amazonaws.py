@@ -74,7 +74,7 @@ class AmazonFPS(object):
 			'Action': 'VerifySignature',
 			'AWSAccessKeyId': amazonSettings['key_id'],
 			'UrlEndPoint': requestURL,
-			'HttpParameters': '&'.join('{0}={1}'.format(key, val) for key, val in httpParams.iteritems()),
+			'HttpParameters': httpParams, # '&'.join('{0}={1}'.format(key, val) for key, val in httpParams.iteritems()),
 			'SignatureVersion': '2',
 			'SignatureMethod': 'HmacSHA256',
 			'Timestamp': datetime.now().isoformat(),

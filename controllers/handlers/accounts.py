@@ -172,7 +172,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 					self.application.configuration['wurkhappy']['hostname'],
 					self.request.path
 				),
-				self.request.arguments,
+				self.request.query,
 				self.application.configuration['amazonaws']
 			)
 			
