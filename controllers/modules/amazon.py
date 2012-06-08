@@ -25,7 +25,7 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		accessKey = self.handler.application.configuration['amazonaws']['key_id']
 		secretKey = self.handler.application.configuration['amazonaws']['key_secret']
 		httpVerb = 'GET'
-		fpsHost = self.handler.application.configuration['amazonaws']['fps_host']
+		fpsHost = self.handler.application.configuration['amazonaws']['simple_pay_host']
 		fpsURI = self.handler.application.configuration['amazonaws']['fps_accept_fee_uri']
 		
 		vendor = User.retrieveByID(vendorID)
@@ -65,7 +65,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		accessKey = self.handler.application.configuration['amazonaws']['key_id']
 		secretKey = self.handler.application.configuration['amazonaws']['key_secret']
 		httpVerb = 'POST'
-		fpsHost = self.handler.application.configuration['amazonaws']['fps_host']
+		fpsHost = self.handler.application.configuration['amazonaws']['simple_pay_host']
 		fpsURI = self.handler.application.configuration['amazonaws']['fps_make_payment_uri']
 		
 		phase = AgreementPhase.retrieveByID(phaseID)

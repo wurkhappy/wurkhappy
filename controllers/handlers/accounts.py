@@ -31,7 +31,7 @@ from hashlib import sha1
 from controllers.data import Data, Base58
 
 # Required for uploading images to S3
-from controllers.amazonaws import AmazonS3
+from controllers.amazonaws import AmazonS3, AmazonFPS
 from boto.s3.key import Key
 
 
@@ -120,7 +120,7 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 # AccountHandler
 # -------------------------------------------------------------------
 
-class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin):
+class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS):
 	
 	@web.authenticated
 	def get(self):
@@ -167,6 +167,15 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin):
 		}
 		
 		if args['status'] == 'SR' and args['tokenID'] and args['refundTokenID'] and args['recipientEmail']:
+			self.verifySignature('{0}://{1}{2}'.format(
+					self.request.protocol,
+					self.application.configuration['wurkhappy']['hostname'],
+					self.request.path
+				),
+				self.request.arguments,
+				self.application.configuration['amazonaws']
+			)
+			
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
 			tokenPref['value'] = args['tokenID']
 			tokenPref.save()

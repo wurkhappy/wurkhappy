@@ -1,8 +1,10 @@
 from controllers.data import Data, Base64
+from tornado.httpclient import HTTPClient, HTTPError
 
 from boto.s3.connection import S3Connection
 from collections import OrderedDict
 from hashlib import sha256
+from datetime import datetime
 import hmac
 import urllib
 import logging
@@ -64,6 +66,37 @@ class AmazonFPS(object):
 		
 		return Data(hmac.new(key, plaintext, sha256).digest()).stringWithEncoding(Base64)
 	
-	def verifySignature(self):
+	def verifySignature(self, requestURL, httpParams, amazonSettings):
 		'''This is obviously not right.'''
+		
+		baseURL = 'https://{0}/'.format(amazonSettings['fps_host'])
+		queryArgs = {
+			'Action': 'VerifySignature',
+			'AWSAccessKeyId': amazonSettings['key_id'],
+			'UrlEndPoint': requestURL,
+			'HttpParameters': '&'.join('{0}={1}'.format(key, val) for key, val in httpParams.iteritems()),
+			'SignatureVersion': '2',
+			'SignatureMethod': 'HmacSHA256',
+			'Timestamp': datetime.now().isoformat(),
+			'Version': '2008-09-17'
+		}
+		
+		queryArgs['Signature'] = self.generateSignature(
+			'GET', amazonSettings['fps_host'], '', queryArgs, amazonSettings['key_secret']
+		)
+		
+		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '~')) for key, val in queryArgs.iteritems())
+		logging.info('Verify Signature URL: %s', baseURL + '?' + queryString)
+		
+		httpClient = HTTPClient()
+		
+		try:
+			exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
+		except HTTPError as e:
+			logging.error('Amazon FPS signature validation failed: %s', e)
+			logging.info(dir(e))
+		else:
+			logging.info(exchangeResponse.code)
+			logging.info(exchangeResponse.body)
+		
 		return True
