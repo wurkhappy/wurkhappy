@@ -1,6 +1,7 @@
 from controllers.data import Data, Base64
 from tornado.httpclient import HTTPClient, HTTPError
 
+from elementtree import ElementTree as ET
 from boto.s3.connection import S3Connection
 from collections import OrderedDict
 from hashlib import sha256
@@ -94,9 +95,14 @@ class AmazonFPS(object):
 			exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
 		except HTTPError as e:
 			logging.error('Amazon FPS signature validation failed: %s', e)
-			logging.info(dir(e))
 		else:
-			logging.info(exchangeResponse.code)
-			logging.info(exchangeResponse.body)
+			try:
+				xml = ET.XML(exchangeResponse.body)
+			except SyntaxError as e:
+				logging.error('Amazon FPS signature validation response did not contain valid XML: %s', e)
+			else:
+				xmlns = 'http://fps.amazonaws.com/doc/2008-09-17/'
+				success = xml.findtext('{0}VerifySignatureResult/{0}VerificationStatus/'.format(xmlns))
+				return success == 'Success'
 		
-		return True
+		return False

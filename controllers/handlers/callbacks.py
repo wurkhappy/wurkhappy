@@ -110,7 +110,7 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 		
 		# Look up the transaction ID and update the record
 		if args['referenceId'] and args['transactionAmount'] and args['transactionDate']:
-			self.verifySignature('{0}://{1}{2}'.format(
+			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
 					self.application.configuration['wurkhappy']['hostname'],
 					self.request.path
@@ -118,6 +118,8 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 				self.request.arguments,
 				self.application.configuration['amazonaws']
 			)
+			
+			logging.info(signatureIsValid)
 			
 			transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
 		
