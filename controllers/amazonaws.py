@@ -101,7 +101,7 @@ class AmazonFPS(object):
 			except SyntaxError as e:
 				logging.error('Amazon FPS signature validation response did not contain valid XML: %s', e)
 			else:
-				xmlns = 'http://fps.amazonaws.com/doc/2008-09-17/'
+				xmlns = '{http://fps.amazonaws.com/doc/2008-09-17/}'
 				success = xml.findtext('{0}VerifySignatureResult/{0}VerificationStatus/'.format(xmlns))
 				return success == 'Success'
 		

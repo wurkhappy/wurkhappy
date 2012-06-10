@@ -167,7 +167,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 		}
 		
 		if args['status'] == 'SR' and args['tokenID'] and args['refundTokenID'] and args['recipientEmail']:
-			self.verifySignature('{0}://{1}{2}'.format(
+			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
 					self.application.configuration['wurkhappy']['hostname'],
 					self.request.path
@@ -175,6 +175,8 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				self.request.query,
 				self.application.configuration['amazonaws']
 			)
+			
+			logging.info(signatureIsValid)
 			
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
 			tokenPref['value'] = args['tokenID']
