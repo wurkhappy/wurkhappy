@@ -135,10 +135,6 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 					('recipientEmail', fmt.Enforce(str)),
 					('callerReference', fmt.Enforce(str)),
 					('status', fmt.Enforce(str)),
-					
-					# signatureMethod
-					# signatureVersion
-					# signature
 				]
 			)
 		
@@ -167,6 +163,10 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 		}
 		
 		if args['status'] == 'SR' and args['tokenID'] and args['refundTokenID'] and args['recipientEmail']:
+			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
+			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id') or UserPrefs(userID=user['id'], name='amazon_refund_token_id')
+			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email') or UserPrefs(userID=user['id'], name='amazon_recipient_email')
+
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
 					self.application.configuration['wurkhappy']['hostname'],
@@ -176,19 +176,18 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				self.application.configuration['amazonaws']
 			)
 			
-			logging.info(signatureIsValid)
-			
-			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
-			tokenPref['value'] = args['tokenID']
-			tokenPref.save()
+			if signatureIsValid:
+				tokenPref['value'] = args['tokenID']
+				tokenPref.save()
+	
+				refundPref['value'] = args['refundTokenID']
+				refundPref.save()
 		
-			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id') or UserPrefs(userID=user['id'], name='amazon_refund_token_id')
-			refundPref['value'] = args['refundTokenID']
-			refundPref.save()
+				emailPref['value'] = args['recipientEmail']
+				emailPref.save()
 			
-			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email') or UserPrefs(userID=user['id'], name='amazon_recipient_email')
-			emailPref['value'] = args['recipientEmail']
-			emailPref.save()
+			self.redirect('{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.path))
+			return
 		else:
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
 			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')

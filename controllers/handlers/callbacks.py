@@ -110,12 +110,18 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 		
 		# Look up the transaction ID and update the record
 		if args['referenceId'] and args['transactionAmount'] and args['transactionDate']:
+			
+			# This is complicated because we need to decompose list values in
+			# the dictionary into two key-value pairs with the same key
+			paramString = '&'.join('&'.join('{0}={1}'.format(k, v) for v in vs)
+				for k, vs in self.request.arguments.iteritems())
+			
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
 					self.application.configuration['wurkhappy']['hostname'],
 					self.request.path
 				),
-				self.request.arguments,
+				paramString,
 				self.application.configuration['amazonaws']
 			)
 			
