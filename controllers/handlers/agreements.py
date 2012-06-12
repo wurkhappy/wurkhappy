@@ -572,7 +572,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					('email', fmt.Enforce(str)),
 					('clientID', fmt.PositiveInteger()),
 					('summary', fmt.Enforce(str)),
-					('cost', fmt.List(fmt.Currency([1000, 1000000]))),
+					('cost', fmt.List(fmt.Currency([100, 1000000]))),
 					('details', fmt.List(fmt.Enforce(str))),
 					('estDateCompleted', fmt.List(fmt.Enforce(str))),
 					('date', fmt.List(fmt.Date()))

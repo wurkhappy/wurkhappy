@@ -62,11 +62,12 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 	'''
 	
 	def render(self, phaseID):
-		accessKey = self.handler.application.configuration['amazonaws']['key_id']
-		secretKey = self.handler.application.configuration['amazonaws']['key_secret']
+		amazonConfig = self.handler.application.configuration['amazonaws']
+		accessKey = amazonConfig['key_id']
+		secretKey = amazonConfig['key_secret']
 		httpVerb = 'POST'
-		fpsHost = self.handler.application.configuration['amazonaws']['simple_pay_host']
-		fpsURI = self.handler.application.configuration['amazonaws']['fps_make_payment_uri']
+		fpsHost = amazonConfig['simple_pay_host']
+		fpsURI = amazonConfig['fps_make_payment_uri']
 		
 		phase = AgreementPhase.retrieveByID(phaseID)
 		agreement = Agreement.retrieveByID(phase['agreementID'])
@@ -82,9 +83,10 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			agreement['id']
 		) # TODO: Fixme!
 		data['accessKey'] = accessKey
+		data['amazonPaymentsAccountId'] = amazonConfig['fps_account_id']
 		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
 		data['description'] = phase['description']
-		data['immediateReturn'] = 'true'
+		data['immediateReturn'] = 'false'
 		data['ipnUrl'] = '{0}://{1}/callbacks/amazon/simplepay/paymentnotification'.format(
 			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
 		)

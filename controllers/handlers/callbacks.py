@@ -38,7 +38,7 @@ import re
 
 
 class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
-	
+		
 	def check_xsrf_cookie(self):
 		'''Disable XSRF protection for IPN callbacks. Ideally, this should
 		verify the signature with Amazon.'''
@@ -139,12 +139,14 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 					dateInitiated=datetime.fromtimestamp(args['transactionDate'])
 				)
 		
-		if args['status'] == 'PS':
-			transaction['dateApproved'] = datetime.now()
-		elif args['status'] in ['ME', 'PF', 'SE']:
-			transaction['dateDeclined'] = datetime.now()
-		
-		transaction.save()
-		
-		self.renderJSON(["OK"])
+			if args['status'] == 'PS':
+				transaction['dateApproved'] = datetime.now()
+			elif args['status'] in ['ME', 'PF', 'SE']:
+				transaction['dateDeclined'] = datetime.now()
+			
+			transaction.save()
+			
+			self.renderJSON(["OK"])
+		else:
+			self.renderJSON(["MEH"])
 		return
