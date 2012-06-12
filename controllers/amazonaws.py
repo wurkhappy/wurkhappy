@@ -23,6 +23,10 @@ class AmazonS3(object):
 	def configure(clz, settings, tag=None):
 		clz.settings[tag] = settings
 	
+	@classmethod
+	def getSettingWithTag(clz, name, tag=None):
+		return clz.settings.get(tag, {}).get(name, None)
+	
 	def __init__(self, tag=None):
 		self._tag = tag if tag in self.settings else None
 	
@@ -45,12 +49,13 @@ class AmazonS3(object):
 class AmazonFPS(object):
 	'''Helper method mix-in for Amazon Payments'''
 	
-	def generateSignature(self, httpVerb, host, uri, data, key):
+	def generateSignature(self, httpVerb, host, uri, data):
 		'''Generate an Amazon FPS signature for an API request or button form.
 		More information can be found at the following URL:
 		http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/Sig2CreateSignature.html
 		'''
 
+		key = AmazonS3.getSettingWithTag('key_secret')
 		canonicalData = OrderedDict()
 
 		for k in sorted(data.keys()):
@@ -68,12 +73,14 @@ class AmazonFPS(object):
 		return Data(hmac.new(key, plaintext, sha256).digest()).stringWithEncoding(Base64)
 	
 	def verifySignature(self, requestURL, httpParams, amazonSettings):
-		'''This is obviously not right.'''
+		'''Verifies the signature of an Amazon FPS callback or IPN notification
+		by making a signed API request to the verification endpoint of the
+		Amazon FPS API.'''
 		
-		baseURL = 'https://{0}/'.format(amazonSettings['fps_host'])
+		baseURL = 'https://{0}/'.format(AmazonS3.getSettingWithTag('fps_host'))
 		queryArgs = {
 			'Action': 'VerifySignature',
-			'AWSAccessKeyId': amazonSettings['key_id'],
+			'AWSAccessKeyId': AmazonS3.getSettingWithTag('key_id'),
 			'UrlEndPoint': requestURL,
 			'HttpParameters': httpParams, # '&'.join('{0}={1}'.format(key, val) for key, val in httpParams.iteritems()),
 			'SignatureVersion': '2',
@@ -82,9 +89,7 @@ class AmazonFPS(object):
 			'Version': '2008-09-17'
 		}
 		
-		queryArgs['Signature'] = self.generateSignature(
-			'GET', amazonSettings['fps_host'], '', queryArgs, amazonSettings['key_secret']
-		)
+		queryArgs['Signature'] = self.generateSignature('GET', AmazonS3.getSettingWithTag('fps_host'), '', queryArgs)
 		
 		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '~')) for key, val in queryArgs.iteritems())
 		logging.info('Verify Signature URL: %s', baseURL + '?' + queryString)

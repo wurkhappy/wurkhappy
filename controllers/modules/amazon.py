@@ -1,7 +1,7 @@
 from tornado.web import UIModule
 from controllers.orm import ORMJSONEncoder
 from controllers.data import Data, Base64, Base58
-from controllers.amazonaws import AmazonFPS
+from controllers.amazonaws import AmazonS3, AmazonFPS
 
 from models.agreement import Agreement, AgreementPhase
 from models.user import User, UserPrefs
@@ -22,11 +22,11 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 	'''
 	
 	def render(self, vendorID):
-		accessKey = self.handler.application.configuration['amazonaws']['key_id']
-		secretKey = self.handler.application.configuration['amazonaws']['key_secret']
+		accessKey = AmazonS3.getSettingWithTag('key_id')
+		secretKey = AmazonS3.getSettingWithTag('key_secret')
 		httpVerb = 'GET'
-		fpsHost = self.handler.application.configuration['amazonaws']['simple_pay_host']
-		fpsURI = self.handler.application.configuration['amazonaws']['fps_accept_fee_uri']
+		fpsHost = AmazonS3.getSettingWithTag('simple_pay_host')
+		fpsURI = AmazonS3.getSettingWithTag('fps_accept_fee_uri')
 		
 		vendor = User.retrieveByID(vendorID)
 		
@@ -44,7 +44,7 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		data['signatureMethod'] = "HmacSHA256"
 		data['signatureVersion'] = "2"
 		
-		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data, secretKey)
+		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
 		return self.render_string(
 			"modules/amazon/simplepaybutton.html",
@@ -62,12 +62,11 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 	'''
 	
 	def render(self, phaseID):
-		amazonConfig = self.handler.application.configuration['amazonaws']
-		accessKey = amazonConfig['key_id']
-		secretKey = amazonConfig['key_secret']
+		accessKey = AmazonS3.getSettingWithTag('key_id')
+		secretKey = AmazonS3.getSettingWithTag('key_secret')
 		httpVerb = 'POST'
-		fpsHost = amazonConfig['simple_pay_host']
-		fpsURI = amazonConfig['fps_make_payment_uri']
+		fpsHost = AmazonS3.getSettingWithTag('simple_pay_host')
+		fpsURI = AmazonS3.getSettingWithTag('fps_make_payment_uri')
 		
 		phase = AgreementPhase.retrieveByID(phaseID)
 		agreement = Agreement.retrieveByID(phase['agreementID'])
@@ -83,7 +82,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			agreement['id']
 		) # TODO: Fixme!
 		data['accessKey'] = accessKey
-		data['amazonPaymentsAccountId'] = amazonConfig['fps_account_id']
+		data['amazonPaymentsAccountId'] = AmazonS3.getSettingWithTag('fps_account_id')
 		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
 		data['description'] = phase['description']
 		data['immediateReturn'] = 'false'
@@ -102,7 +101,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		data['signatureVersion'] = "2"
 		data['variableMarketplaceFee'] = "3.00"
 		
-		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data, secretKey)
+		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
 		return self.render_string(
 			"modules/amazon/simplepaybutton.html",

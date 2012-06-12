@@ -84,13 +84,13 @@ var buttonActions = {
 			
 			if (agree) {
 				// Do AJAX form.
-				// TODO: Note that we're not specifying success and error functions here and we should.
+				// TODO: Note that we're not specifying an error function here and we should.
 				// Also, the success function should update the current_user property.
 				$('form#profile-edit_form').submit();
 			
 				// $('#details-container').slideUp(300).fadeOut(300);
 				// $('#dwolla-container').slideDown(300).fadeIn(300);
-				document.location.href = '/';
+				// document.location.href = '/';
 			} else {
 				var popup = new Popup('#content');
 				popup.setLabel("You must agree to the Wurk Happy Terms of Use to continue.").open();
@@ -99,6 +99,12 @@ var buttonActions = {
 		}
 	},
 	
+	
+	// Success action loaded from application.js
+	'profile-edit_form': function(responseText, statusText, xhr, $elt) {
+		document.location.href = '/';
+	},
+
 	'dwolla_connect': {
 		default: function (self, evt) {
 			var width = window.outerWidth, height = window.outerHeight, x = 0, y = 0;
