@@ -152,6 +152,9 @@ class AboutPersonHandler(BaseHandler):
 	def get(self, person):
 		self.render('landing/about/%s.html' % person, title='Wurk Happy')
 
+class LegalHandler(BaseHandler):
+	def get(self, which):
+		self.render('landing/legal/%s.html' % which, title='Wurk Happy &mdash; Legal')
 
 class TechstarsHandler(BaseHandler):
 	def get(self):

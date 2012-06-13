@@ -31,6 +31,7 @@ class Application(web.Application):
 			(r'/signup.json', landing.SignupJSONHandler),
 			(r'/about/?', landing.AboutHandler),
 			(r'/about/(\w+)/?', landing.AboutPersonHandler),
+			(r'/legal/(\w+)/?', landing.LegalHandler),
 			(r'/jobs/?', landing.JobsHandler),
 			(r'/techstars/?', landing.TechstarsHandler),
 		]
