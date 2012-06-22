@@ -21,8 +21,55 @@
 					{% end %}
 				{% end %}
 			{% else %}
-				<h2>You Don't Have Any Current Agreements</h2>
-				<p>Wurk Happy can help you organize and negotiate agreements with your {% if data['agreementType'] == 'Client' %}clients {% elif data['agreementType'] == 'Vendor' %}contractors {% end %}. Click the "Create New Agreement" button to get started! [In the future, we'll have a better tutorial here.]</p>
+				<div class="column-three-fourth">
+				<h2>Welcome to Wurk Happy!</h2>
+				{% if data['agreementType'] == 'Client' %}
+					<p>The Wurk Happy platform allows you to easily create basic basic work agreements that
+						help streamline your business. Once you and your clients agree on deliverables,
+						deadlines, and other terms, you can notify clients when work is done and receive
+						payment online.</p>
+					
+					<div class="carosel">
+						<a href="#" onclick="javascript:return false;"><img src="{{ static_url('images/graphics/vendor-compose.jpg') }}" alt="" /></a>
+						<a href="#" onclick="javascript:return false;"><img class="dim" src="{{ static_url('images/graphics/vendor-requestpayment.jpg') }}" alt="" /></a>
+						<a href="#" onclick="javascript:return false;"><img class="dim" src="{{ static_url('images/graphics/vendor-receivepayment.jpg') }}" alt="" /></a>
+						<ul>
+							<li>Send agreement proposals to clients for approval.</li>
+							<li>Notify your client when you complete a phase of work. We send your client
+								a professional request for payment.</li>
+							<li>You receive payment from your client online.*</li>
+						</ul>
+					</div>
+					
+					<small style="clear:both;">* In order to receive payment, you must sign up for an Amazon Payments Business
+						Account and have a valid credit card on file.</small>
+					
+					<h3>To get started, try creating a <a href="/agreement/new">New Agreement</a>.</h3>
+					
+					<p class="smaller">You will need to know your client's email address, what services you
+						plan to provide, how much you will be charging for those services, and when you
+						expect to complete the work and receive payment.</p>
+				{% elif data['agreementType'] == 'Vendor' %}
+					<p>The Wurk Happy platform allows you to easily request agreements from contractors,
+						organize working relationships and pay contractors quickly and securely online.</p>
+					
+					<div class="carosel">
+						<img class="dim" src="{{ static_url('images/graphics/client-accept.jpg') }}" alt="" />
+						<img class="dim" src="{{ static_url('images/graphics/client-manage.jpg') }}" alt="" />
+						<img class="dim" src="{{ static_url('images/graphics/client-submitpayment.jpg') }}" alt="" />
+						<ul>
+							<li class="offleft">Approve agreement proposals from contractors.</li>
+							<li>Manage working relationships and track project progress.</li>
+							<li class="offright">Pay online via credit card or bank transfer.</li>
+						</ul>
+					</div>
+					
+					<h3>To get started, try requesting a <a href="/agreement/request">New Agreement</a>.</h3>
+					
+					<p class="smaller">You will need to know the email address of your service provider
+						and you will be asked to describe the services you're requesting.</p>
+				{% end %}
+				</div>
 			{% end %}
 		</div>
 	</div>
@@ -46,7 +93,7 @@
 
 		<div class="column-three-fourth">
 			{% if data['agreementCount'] == 0 %}
-				<h1>No {{ escape(data['agreementType']) }} Agreements</h1>
+				<h1>{{ data['agreementType'] }} Agreements</h1>
 			{% elif data['agreementCount'] == 1 %}
 				<h1><strong>1</strong> {{ data['agreementType'] }} Agreement ({{ data['aggregateCost'] }})</h1>
 			{% else %}
