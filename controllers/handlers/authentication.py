@@ -2,7 +2,6 @@ from base import *
 from controllers.verification import Verification
 from controllers import fmt
 from models.user import User
-from models.forgotpassword import ForgotPassword
 from controllers.email import *
 from datetime import datetime, timedelta
 import logging

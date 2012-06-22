@@ -5,7 +5,6 @@ from base import *
 from models.user import *
 from models.agreement import *
 from models.request import Request
-from models.profile import Profile
 from models.transaction import Transaction
 from controllers import fmt
 from controllers.orm import ORMJSONEncoder
