@@ -128,7 +128,7 @@
 	{% module Footer() %}
 </div>
 
-	{% if data['self'] == 'client' and data['state'] == 'CompletedState' %}
+	{% if data.get('recipientEmail', None) %}
 	<div class="clear prompt-box" id="confirmation-div" style="display:none;">
 		<div class="column-three-fourth">
 			<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>
@@ -138,6 +138,14 @@
 			{% module PayWithAmazonButton(data['currentPhase']['phaseID']) %}
 		</div>
 	</div>
+	{% else %}
+		<div class="clear prompt-box" id="confirmation-div" style="display:none;">
+			<div class="column-three-fourth">
+				<h3>The recipient of this payment does not have a valid Amazon Payments account.</h3>
+				<p>We have reminded the recipient to complete the steps to configure an Amazon Payments account
+					and will notify you when the recipient is able to receive funds.</p>
+			</div>
+		</div>
 	{% end %}
 
 {% end %}

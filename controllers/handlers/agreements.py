@@ -9,6 +9,7 @@ from models.transaction import Transaction
 from controllers import fmt
 from controllers.orm import ORMJSONEncoder
 from controllers.beanstalk import Beanstalk
+from controllers.amazonaws import AmazonFPS
 
 from collections import defaultdict
 from datetime import datetime
@@ -145,7 +146,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		self.render("agreement/list.html", title=title, data=templateDict)
 
 
-class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
+class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 	buttonTable = {
 		'vendor': defaultdict(lambda: [], {
 			DraftState: [
@@ -406,35 +407,57 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 		
 		if args['status'] is not None:
-			transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
+			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
+					self.request.protocol,
+					self.application.configuration['wurkhappy']['hostname'],
+					self.request.path
+				),
+				self.request.query,
+				self.application.configuration['amazonaws']
+			)
 			
-			if not transaction:
-				transaction = Transaction(
-					transactionReference=args['referenceId'],
-					dateInitiated=datetime.fromtimestamp(args['transactionDate'])
-				)
-			
-			if not transaction['agreementPhaseID']:
-				transaction['agreementPhaseID'] = currentPhase['id']
+			if not signatureIsValid:
+				logging.error("Bad Amazon payments response payload\n%s", self.request.query)
+			else:
+				transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
+				
+				if not transaction:
+					transaction = Transaction(
+						transactionReference=args['referenceId'],
+						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
+					)
+				
+				if not transaction['amount']:
+					currencyParser = fmt.Currency()
+					transaction['amount'] = currencyParser.filter(args['transactionAmount'].replace('USD','').strip())
 
-			if args['status'] == 'PS':
-				transaction['dateApproved'] = datetime.now()
-				
-				# If the transaction was approved, update the agreement state
-				# (This should have some more granularity. Ugh.)
-				unsavedRecords = []
-				
-				try:
-					currentState.performTransition('client', 'verify', unsavedRecords)
-				except StateTransitionError as e:
-					pass
-				
-				for record in unsavedRecords:
-					record.save()
-			elif args['status'] in ['ME', 'PF', 'SE']:
-				transaction['dateDeclined'] = datetime.now()
+				if not transaction['agreementPhaseID']:
+					transaction['agreementPhaseID'] = currentPhase['id']
 
-			transaction.save()
+				if args['status'] == 'PS':
+					transaction['dateApproved'] = datetime.now()
+					
+					logging.warn(currentState)
+					
+					# If the transaction was approved, update the agreement state
+					# (This should have some more granularity. Ugh.)
+					unsavedRecords = []
+				
+					try:
+						currentState.performTransition('client', 'verify', unsavedRecords)
+					except StateTransitionError as e:
+						pass
+					
+					logging.warn(unsavedRecords)
+					logging.warn(currentState)
+					
+					for record in unsavedRecords:
+						record.save()
+				elif args['status'] in ['ME', 'PF', 'SE']:
+					transaction['dateDeclined'] = datetime.now()
+					logging.error("Transaction declined by Amazon\n%s", transaction)
+
+				transaction.save()
 
 		templateDict["phases"] = []
 
@@ -524,11 +547,18 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		# 	]
 		# else:
 		templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
-
+		
+		if templateDict['self'] == 'vendor' and len(phases) == 0:
+			templateDict['actions'] = []
+		
 		logging.info(templateDict['actions'])
 		logging.info(currentState.__class__.__name__)
 
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
+		
+		# We use the presence of the recipient email key to selectively render the Amazon button UI module.
+		if templateDict['self'] == 'client' and isinstance(currentState, CompletedState):
+			templateDict['recipientEmail'] = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		
 		if agreement['vendorID'] == user['id'] and isinstance(currentState, (DraftState, DeclinedState)):
 			amzAcctConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed')

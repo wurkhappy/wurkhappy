@@ -193,14 +193,10 @@ class Currency(Enforce):
 		self.range = r
 	
 	def filter(self, value):
-		logging.warn(value)
-		
 		r = re.compile(r'\$?([0-9,]+)(?:\.([0-9]{2}))?')
 		m = r.match(value)
 		if not m or len(m.groups()) != 2:
 			raise Exception("value must be well-formed")
-		
-		logging.warn(m.groups())
 		
 		d = int(m.groups()[0].replace(',', '')) * 100
 		
