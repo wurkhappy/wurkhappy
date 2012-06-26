@@ -21,14 +21,90 @@
 					{% end %}
 				{% end %}
 			{% else %}
-				<h2>You Don't Have Any Current Agreements</h2>
-				<p>Wurk Happy can help you organize and negotiate agreements with your {% if data['agreementType'] == 'Client' %}clients {% elif data['agreementType'] == 'Vendor' %}contractors {% end %}. Click the "Create New Agreement" button to get started! [In the future, we'll have a better tutorial here.]</p>
+				<div class="column-three-fourth">
+				<h2>Welcome to Wurk Happy!</h2>
+				{% if data['agreementType'] == 'Client' %}
+					<p>The Wurk Happy platform allows you to easily create basic basic work agreements that
+						help streamline your business. Once you and your clients agree on deliverables,
+						deadlines, and other terms, you can notify clients when work is done and receive
+						payment online.</p>
+					
+					<div id="process_slides" class="slideshow">
+						<ul class="pagination" style="text-align: center;">
+							<li><a href="#"><img src="{{ static_url('images/graphics/vendor-compose.jpg') }}" alt="" /></a></li>
+							<li><a href="#"><img src="{{ static_url('images/graphics/vendor-requestpayment.jpg') }}" alt="" /></a></li>
+							<li><a href="#"><img src="{{ static_url('images/graphics/vendor-receivepayment.jpg') }}" alt="" /></a></li>
+						</ul>
+						<div class="slides_container">
+							<div style="height: 75px;">
+								<p>Send agreement proposals to clients for approval.</p>
+							</div>
+							<div style="height: 75px;">
+								<p>Notify your client when you complete a phase of work. We send your client
+									a professional request for payment.</p>
+							</div>
+							<div style="height: 75px;">
+								<p>You receive payment from your client online.*</p>
+								<p style="font-size: 12px">* In order to receive payment, you must sign up for an Amazon Payments Business
+									Account and have a valid credit card on file.</p>
+							</div>
+						</div>
+					</div>
+					
+					<h3 style="clear: both;">To get started, try creating a <a href="/agreement/new">New Agreement</a>.</h3>
+					
+					<p class="smaller">You will need to know your client's email address, what services you
+						plan to provide, how much you will be charging for those services, and when you
+						expect to complete the work and receive payment.</p>
+				{% elif data['agreementType'] == 'Vendor' %}
+					<p>The Wurk Happy platform allows you to easily request agreements from contractors,
+						organize working relationships and pay contractors quickly and securely online.</p>
+					
+					<div id="process_slides" class="slideshow">
+						<ul class="pagination" style="text-align: center;">
+							<li><a href="#"><img src="{{ static_url('images/graphics/client-accept.jpg') }}" alt="" /></a></li>
+							<li><a href="#"><img src="{{ static_url('images/graphics/client-manage.jpg') }}" alt="" /></a></li>
+							<li><a href="#"><img src="{{ static_url('images/graphics/client-submitpayment.jpg') }}" alt="" /></a></li>
+						</ul>
+						<div class="slides_container">
+							<div style="height: 75px;">
+								<p>Approve agreement proposals from contractors.</p>
+							</div>
+							<div style="height: 75px;">
+								<p>Manage working relationships and track project progress.</p>
+							</div>
+							<div style="height: 75px;">
+								<p>Pay online via credit card or bank transfer.</p>
+							</div>
+						</div>
+					</div>
+					
+					<h3 style="clear: both;">To get started, try requesting a <a href="/agreement/request">New Agreement</a>.</h3>
+					
+					<p class="smaller">You will need to know the email address of your service provider
+						and you will be asked to describe the services you're requesting.</p>
+				{% end %}
+				</div>
 			{% end %}
 		</div>
 	</div>
 
 	{% module Footer() %}
 </div>
+{% end %}
+
+### Scripts
+
+{% block scripts-custom %}
+	<script src="{{ static_url("scripts/libs/slides.min.jquery.js") }}" type="text/javascript"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$('#process_slides').slides({
+				play: 2500,
+				generatePagination: false
+			});
+		});
+	</script>
 {% end %}
 
 
@@ -46,7 +122,7 @@
 
 		<div class="column-three-fourth">
 			{% if data['agreementCount'] == 0 %}
-				<h1>No {{ escape(data['agreementType']) }} Agreements</h1>
+				<h1>{{ data['agreementType'] }} Agreements</h1>
 			{% elif data['agreementCount'] == 1 %}
 				<h1><strong>1</strong> {{ data['agreementType'] }} Agreement ({{ data['aggregateCost'] }})</h1>
 			{% else %}

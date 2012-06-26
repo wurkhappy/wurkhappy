@@ -100,7 +100,6 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		data['signatureMethod'] = "HmacSHA256"
 		data['signatureVersion'] = "2"
 		data['variableMarketplaceFee'] = "0"
-		
 		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
 		return self.render_string(

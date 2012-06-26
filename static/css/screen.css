@@ -788,3 +788,48 @@ h2.steps span {
 	color: rgb(84,90,96);
 	text-align: center;
 }
+
+/* SLIDES
+================================================================================ */
+
+div.slideshow div.slides_container {
+	overflow-x: hidden;
+	overflow-y: hidden;
+	position: relative;
+	display: block;
+	clear: both;
+/*	background-image: url(http://slidesjs.com/examples/product/img/loading.gif);
+*/	background-attachment: initial;
+	background-origin: initial;
+	background-clip: initial;
+	background-color: initial;
+	background-position: 50% 50%;
+	background-repeat: no-repeat no-repeat;
+}
+
+div.slideshow ul {
+	list-style: none;
+}
+
+div.slideshow li {
+	display: block;
+	float: left;
+}
+
+/*div.slideshow .pagination li {
+}
+*/
+div.slideshow .pagination li a {
+	-webkit-transition: opacity 0.5s;
+	opacity: 0.4;
+}
+
+div.slideshow .pagination li.current a {
+	opacity: 1;
+}
+
+div.slideshow div.slides_container div p {
+	padding-bottom: 5px;
+	margin-bottom: 0;
+	padding-top: 5px;
+}

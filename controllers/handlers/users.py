@@ -5,7 +5,6 @@ from base import *
 from controllers import fmt
 from models.user import User, UserPrefs
 from models.agreement import *
-from models.profile import Profile
 import json
 
 from tornado.web import HTTPError
