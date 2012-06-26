@@ -176,7 +176,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				self.application.configuration['amazonaws']
 			)
 			
-			if signatureIsValid:
+			if signatureIsValid or self.application.configuration['tornado']['debug'] == True:
 				tokenPref['value'] = args['tokenID']
 				tokenPref.save()
 	

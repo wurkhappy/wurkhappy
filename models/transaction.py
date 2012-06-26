@@ -25,8 +25,17 @@ class Transaction(MappedObj):
 		'dateInitiated': None,
 		'dateApproved': None,
 		'dateDeclined': None,
-		'dwollaTransactionID': None # Temporary until we use paymentMethods for this
+		'amazonTransactionID': None,
+		'amazonPaymentMethod': None
 	}
+	
+	@classmethod
+	def count(clz):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT COUNT(*) FROM {0}".format(clz.tableName))
+			result = cursor.fetchone()
+		
+		return result['COUNT(*)']
 	
 	@classmethod
 	def iteratorWithSenderID(clz, senderID):
@@ -73,6 +82,39 @@ class Transaction(MappedObj):
 				result = cursor.fetchone()
 	
 	@classmethod
+	def iteratorWithRecipientIDAndPage(clz, recipientID, page):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} WHERE recipientID = %s ORDER BY id ASC LIMIT %s, %s".format(clz.tableName)
+			cursor.execute(query, (recipientID, page[0], page[1]))
+			result = cursor.fetchone()
+
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+
+	@classmethod
+	def iteratorWithSenderIDAndPage(clz, senderID, page):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} WHERE senderID = %s ORDER BY id ASC LIMIT %s, %s".format(clz.tableName)
+			cursor.execute(query, (senderID, page[0], page[1]))
+			result = cursor.fetchone()
+
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+
+	@classmethod
+	def iteratorWithPage(clz, page):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} ORDER BY id ASC LIMIT %s, %s".format(clz.tableName)
+			cursor.execute(query, (page[0], page[1]))
+			result = cursor.fetchone()
+			
+			while result:
+				yield clz.initWithDict(result)
+				result = cursor.fetchone()
+	
+	@classmethod
 	def retrieveByTransactionReference(clz, txnRef):
 		with Database() as (conn, cursor):
 			query = "SELECT * FROM {0} WHERE transactionReference = %s"
@@ -88,11 +130,22 @@ class Transaction(MappedObj):
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	
+	# TODO: refactor this into some 'amount'->'costString' mixin?
+	def getCostString(self, prefix='$', default=''):
+		return "{0}{1:,.2f}".format(prefix, self['amount'] / 100) if self['amount'] else default
+	
 	def getPublicDict(self):
 		return OrderedDict([
 			('id', self['id']),
+			('transactionReference', self['transactionReference']),
+			('agreementPhaseID', self['agreementPhaseID']),
 			('senderID', self['senderID']),
 			('recipientID', self['recipientID']),
 			('paymentMethodID', self['paymentMethodID']),
-			('amount', self['amount'])
+			('costString', self.getCostString()),
+			('dateInitiated', self['dateInitiated']),
+			('dateApproved', self['dateApproved']),
+			('dateDeclined', self['dateDeclined']),
+			('amazonTransactionID', self['amazonTransactionID']),
+			('amazonPaymentMethod', self['amazonPaymentMethod'])
 		])

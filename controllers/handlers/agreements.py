@@ -425,6 +425,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 					transaction = Transaction(
 						transactionReference=args['referenceId'],
 						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
+						senderID=agreement['clientID'],
+						recipientID=agreement['vendorID']
 					)
 				
 				if not transaction['amount']:
@@ -433,7 +435,11 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 
 				if not transaction['agreementPhaseID']:
 					transaction['agreementPhaseID'] = currentPhase['id']
-
+				
+				if not (transaction['senderID'] and transaction['recipientID']):
+					transaction['senderID'] = agreement['clientID']
+					transaction['recipientID'] = agreement['vendorID']
+				
 				if args['status'] == 'PS':
 					transaction['dateApproved'] = datetime.now()
 					

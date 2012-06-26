@@ -248,13 +248,14 @@ class UserPrefs(MappedObj):
 		'id': None,
 		'userID': None,
 		'name': None,
-		'value': None
+		'value': None,
+		'dateDeleted': None
 	}
 	
 	@classmethod
 	def iteratorWithUserID(clz, userID):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM {0} WHERE userID = %s".format(clz.tableName), userID)
+			cursor.execute("SELECT * FROM {0} WHERE userID = %s AND dateDeleted is NULL".format(clz.tableName), userID)
 			result = cursor.fetchone()
 			while result:
 				yield clz.initWithDict(result)
@@ -263,7 +264,7 @@ class UserPrefs(MappedObj):
 	@classmethod
 	def retrieveByUserIDAndName(clz, userID, name):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM {0} WHERE userID = %s AND name = %s".format(clz.tableName), (userID, name))
+			cursor.execute("SELECT * FROM {0} WHERE userID = %s AND name = %s AND dateDeleted is NULL".format(clz.tableName), (userID, name))
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 	

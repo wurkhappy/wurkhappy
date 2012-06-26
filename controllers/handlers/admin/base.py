@@ -24,7 +24,8 @@ class BaseHandler(web.RequestHandler):
 
 class Authenticated(object):
 	def get_current_user(self):
-		user = User.retrieveByID(self.get_secure_cookie("user_id"))
+		# Nasty hack below, but get_secure_cookie returns None on failure, which breaks the MySQL query
+		user = User.retrieveByID(self.get_secure_cookie("user_id") or 0)
 		if user:
 			admin = UserPrefs.retrieveByUserIDAndName(user['id'], 'isSuperuser')
 			return admin and user

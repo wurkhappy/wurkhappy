@@ -63,6 +63,8 @@ class UserDetailHandler(Authenticated, BaseHandler):
 			return
 		
 		data = user.getPublicDict()
+		amazon = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
+		data['amazon'] = amazon and amazon['value']
 		
 		if user['invitedBy']:
 			sender = User.retrieveByID(user['invitedBy'])
@@ -120,6 +122,13 @@ class UserActionJSONHandler(Authenticated, BaseHandler):
 			msg = None
 			user['dateLocked'] = None
 			user.save()
+		elif args['action'] == 'reset_amazon':
+			msg = None
+			for name in ['amazon_recipient_email', 'amazon_token_id', 'amazon_refund_token_id']:
+				p = UserPrefs.retrieveByUserIDAndName(user['id'], name)
+				if p:
+					p['dateDeleted'] = datetime.now()
+				p.save()
 		else:
 			self.set_status(400)
 			return

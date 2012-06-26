@@ -49,6 +49,10 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 					<li><a href="#" id="action-send-password-reset" class="top js-button">Send Password Reset</a></li>
 				{% end %}
 				
+				{% if data['amazon'] %}
+					<li><a href="#" id="action-reset-amazon-payments" class="top js-button">Reset AWS FPS Acct</a></li>
+				{% end %}
+				
 				{% if data['state'].__class__.__name__ != 'InvalidUserState' %}
 					<li><a href="#" id="action-lock-account" class="top js-button">Lock Account</a></li>
 				{% else %}
@@ -66,7 +70,8 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 		<div class="column-three-fourth">
 			<ul class="clear">
 				<li class="current"><a href="/users"><strong>Users</strong></a></li>
-				<li ><a href="/agreements"><strong>Agreements</strong></a></li>
+				<li><a href="/agreements"><strong>Agreements</strong></a></li>
+				<li><a href="/transactions"><strong>Transactions</strong></a></li>
 			</ul>
 		</div>
 		<div class="column-one-fourth">
