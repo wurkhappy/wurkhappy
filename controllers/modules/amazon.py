@@ -35,9 +35,9 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		data['callerKey'] = accessKey
 		data['callerReference'] = Data(uuid4().get_bytes()).stringWithEncoding(Base58)
 		data['collectEmailAddress'] = "true"
-		data['maxVariableFee'] = "3.00"
+		data['maxVariableFee'] = "2.9"
 		data['pipelineName'] = "Recipient"
-		data['recipientPaysFee'] = "false"
+		data['recipientPaysFee'] = "true"
 		data['returnURL'] = '{0}://{1}/user/me/account'.format(
 			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
 		)
@@ -82,7 +82,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			agreement['id']
 		) # TODO: Fixme!
 		data['accessKey'] = accessKey
-		data['amazonPaymentsAccountId'] = AmazonS3.getSettingWithTag('fps_account_id')
+		# data['amazonPaymentsAccountId'] = AmazonS3.getSettingWithTag('fps_account_id')
 		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
 		data['description'] = phase['description']
 		data['immediateReturn'] = 'false'
@@ -99,7 +99,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		)
 		data['signatureMethod'] = "HmacSHA256"
 		data['signatureVersion'] = "2"
-		data['variableMarketplaceFee'] = "3.00"
+		data['variableMarketplaceFee'] = "0"
 		
 		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
