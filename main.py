@@ -19,6 +19,7 @@ from controllers.beanstalk import Beanstalk
 
 import os
 import os.path
+import logging
 
 from controllers.modules import modules, amazon
 
@@ -152,6 +153,8 @@ if __name__ == "__main__":
 
 	if not address:
 		address = conf['tornado']['address']
+
+	logging.info('Starting up on %s:%s', address, port)
 
 	server.listen(port, address)
 	IOLoop.instance().start()
