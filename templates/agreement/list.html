@@ -21,53 +21,63 @@
 					{% end %}
 				{% end %}
 			{% else %}
-				<div class="column-three-fourth">
+			<div class="column-three-fourth">
 				<h2>Welcome to Wurk Happy!</h2>
+				
 				{% if data['agreementType'] == 'Client' %}
-					<p>The Wurk Happy platform allows you to easily create basic basic work agreements that
-						help streamline your business. Once you and your clients agree on deliverables,
-						deadlines, and other terms, you can notify clients when work is done and receive
-						payment online.</p>
+				
+					<p>Wurk Happy allows you to easily create work agreements that will automate billing and payments between you and your clients. To get started, <a id="greenLink" href="/agreement/new">create an agreement</a>. To create a simple agreement, all you will need to know is:</p>
+
+						<ul id="content" class="features">
+							<li>The services you plan to provide</li>
+							<li>How much you're charging your client</li>
+							<li>When you want payments to be due</li>
+						</ul>
 					
-					<div class="carosel">
-						<a href="#" onclick="javascript:return false;"><img src="{{ static_url('images/graphics/vendor-compose.jpg') }}" alt="" /></a>
-						<a href="#" onclick="javascript:return false;"><img class="dim" src="{{ static_url('images/graphics/vendor-requestpayment.jpg') }}" alt="" /></a>
-						<a href="#" onclick="javascript:return false;"><img class="dim" src="{{ static_url('images/graphics/vendor-receivepayment.jpg') }}" alt="" /></a>
+					<h2>The Wurk Happy Process for Freelancers:</h2>
+					
+					<div class="column-one-fourth">
 						<ul>
-							<li>Send agreement proposals to clients for approval.</li>
-							<li>Notify your client when you complete a phase of work. We send your client
-								a professional request for payment.</li>
-							<li>You receive payment from your client online.*</li>
+							<li class="listImage"><img src="{{ static_url('images/graphics/vendor-compose.jpg') }}" /></li>
+							<li class="listImage"><img src="{{ static_url('images/graphics/vendor-requestpayment.jpg') }}" /></li>
+							<li class="listImage"><img src="{{ static_url('images/graphics/vendor-receivepayment.jpg') }}" /></li>
 						</ul>
 					</div>
+					<div class="column-two-fourth">
+						<ol>
+							<li class="orderedList">Easily create agreements</li>
+							<li class="orderedList">Notify Wurk Happy when you've finished the work described in a payment milestone</li>
+							<li class="orderedList">Have payment directly deposited into your account</li>
+						</ol>
+					</div>
 					
-					<small style="clear:both;">* In order to receive payment, you must sign up for an Amazon Payments Business
-						Account and have a valid credit card on file.</small>
-					
-					<h3>To get started, try creating a <a href="/agreement/new">New Agreement</a>.</h3>
-					
-					<p class="smaller">You will need to know your client's email address, what services you
-						plan to provide, how much you will be charging for those services, and when you
-						expect to complete the work and receive payment.</p>
 				{% elif data['agreementType'] == 'Vendor' %}
-					<p>The Wurk Happy platform allows you to easily request agreements from contractors,
-						organize working relationships and pay contractors quickly and securely online.</p>
+				
+					<p>Wurk Happy allows you to easily manage work agreements, billing, and payments with the freelancers you’re working with.To get started, <a id="greenLink" href="/agreement/new">Request an agreement from your freelancer through our site. To request an agreement you will need to know:</a></p>
 					
-					<div class="carosel">
-						<img class="dim" src="{{ static_url('images/graphics/client-accept.jpg') }}" alt="" />
-						<img class="dim" src="{{ static_url('images/graphics/client-manage.jpg') }}" alt="" />
-						<img class="dim" src="{{ static_url('images/graphics/client-submitpayment.jpg') }}" alt="" />
+						<ul id="content" class="features">
+							<li>The email address of the freelancer you want to work with</li>
+						</ul>
+				
+					<h2>The Wurk Happy Process for Freelancers:</h2>
+				
+					<div class="column-one-fourth">
 						<ul>
-							<li class="offleft">Approve agreement proposals from contractors.</li>
-							<li>Manage working relationships and track project progress.</li>
-							<li class="offright">Pay online via credit card or bank transfer.</li>
+							<li><img src="{{ static_url('images/graphics/vendor-compose.jpg') }}" /></li>
+							<li><img src="{{ static_url('images/graphics/vendor-requestpayment.jpg') }}" /></li>
+							<li><img src="{{ static_url('images/graphics/vendor-receivepayment.jpg') }}" /></li>
 						</ul>
 					</div>
+				
+					<div class="column-three-fourth">
+						<ol>
+							<li>Request an agreement from a freelancer</li>
+							<li>Accept the agreement the freelancer has sent you or request changes be made</li>
+							<li>Receive instantaneous notifications when work has been completed</li>
+							<li>Pay for the services provided to you online</li>
+						</ol>
+					</div>
 					
-					<h3>To get started, try requesting a <a href="/agreement/request">New Agreement</a>.</h3>
-					
-					<p class="smaller">You will need to know the email address of your service provider
-						and you will be asked to describe the services you're requesting.</p>
 				{% end %}
 				</div>
 			{% end %}
