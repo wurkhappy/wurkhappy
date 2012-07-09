@@ -206,6 +206,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 				return
 			
 			user = User.retrieveByID(agreement['clientID'])
+			self.set_secure_cookie('user_id', str(user['id']))
 		
 		if not agreementID:
 			# Must have been routed from /agreement/new
