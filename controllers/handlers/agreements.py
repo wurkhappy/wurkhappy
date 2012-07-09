@@ -182,9 +182,10 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 		user = self.current_user
 		agreement = None
 
-		if not user:
+		token = self.get_argument("t", None)
+		
+		if token:
 			logging.warn(self.request.arguments)
-			token = self.get_argument("t", None)
 
 			agreement = agreementID and Agreement.retrieveByID(agreementID)
 
