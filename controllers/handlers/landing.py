@@ -10,7 +10,7 @@ import re
 class RootHandler(BaseHandler):
 	def get(self):
 		self.render('landing/index.html',
-			title="Wurk Happy &ndash; Our platform gets you paid faster.")
+			title="Wurk Happy &ndash; Online Agreements, Billing, and Payment.")
 
 
 
@@ -30,7 +30,7 @@ class SignupHandler(BaseHandler):
 		except fmt.HTTPErrorBetter as e:
 			self.set_status(e.status_code)
 			self.render('landing/index.html',
-				title="Wurk Happy &ndash; Our platform gets you paid faster.")
+				title="Wurk Happy &ndash; Online Agreements, Billing, and Payment.")
 		
 		if args['email'].count('@') != 1:
 			self.set_status(400)
@@ -59,7 +59,7 @@ class SignupHandler(BaseHandler):
 			user.save()
 		
 		self.render('landing/thankyou.html',
-			title="Wurk Happy &ndash; Our platform gets you paid faster.")
+			title="Wurk Happy &ndash; Online Agreements, Billing, and Payment.")
 	
 class SignupJSONHandler(BaseHandler):
 	def get(self):
