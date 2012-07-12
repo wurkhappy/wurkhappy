@@ -82,7 +82,7 @@ class TokenAuthenticated(object):
 		
 		if self.token:
 			user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
-			self.set_secure_cookie("user_id", user['id'])
+			self.set_secure_cookie("user_id", str(user['id']))
 		else:
 			userID = self.get_secure_cookie("user_id")
 			user = userID and User.retrieveByID(userID)
