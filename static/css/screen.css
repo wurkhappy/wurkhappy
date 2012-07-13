@@ -798,8 +798,7 @@ div.slideshow div.slides_container {
 	position: relative;
 	display: block;
 	clear: both;
-/*	background-image: url(http://slidesjs.com/examples/product/img/loading.gif);
-*/	background-attachment: initial;
+	background-attachment: initial;
 	background-origin: initial;
 	background-clip: initial;
 	background-color: initial;
@@ -819,6 +818,7 @@ div.slideshow li {
 /*div.slideshow .pagination li {
 }
 */
+
 div.slideshow .pagination li a {
 	-webkit-transition: opacity 0.5s;
 	opacity: 0.4;
@@ -832,4 +832,31 @@ div.slideshow div.slides_container div p {
 	padding-bottom: 5px;
 	margin-bottom: 0;
 	padding-top: 5px;
+}
+
+
+/* Empty List Views [Client & Freelancer] - Marcus Edit
+================================================================================ */
+
+/* Lists and Ordered Lists [first two ul styles borrowed from landing.css]*/
+
+#content ul.features {
+  margin: 0 0 15px 0;
+}
+
+#content ul.features li {
+  background: transparent url(/static/images/tick-16x16.png) no-repeat left;
+  padding: 10px 10px 10px 25px;
+  list-style: none;
+  border-top: 1px solid rgb(245,245,245);
+}
+
+li.listImage {
+	list-style-type: none;
+	margin-top: -40px;
+	margin-left: -20px;
+}
+
+li.orderedList {
+	height: 35px;
 }
