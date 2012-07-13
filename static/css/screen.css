@@ -853,13 +853,6 @@ li.listImage {
 }
 
 li.orderedList {
-	height: 120px;
+	height: 35px;
 }
 
-li.orderedList:first-child {
-	margin-top: 35px;
-}
-
-#greenLink {
-	color: rgb(138 , 205, 89);
-}
