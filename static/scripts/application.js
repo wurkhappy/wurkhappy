@@ -82,14 +82,18 @@ $(document).ready(function() {
 			// the request agreement form
 			if (data['id'] === "") {
 				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="email" value="'+data.fullName+'" />');
+				$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
+				$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
 			} else {
 				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="'+slug['autosuggestCapture']+'" value="'+data.id+'" />');
-			}
+				$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
+				$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
+				}
 		},
 		selectionRemoved: function(elem) {
 			elem.remove();
 			$('#wh-'+elem.attr('id')).remove();
-		}
+		},	
 	});
 	
 	$(".js-replace-action").ajaxForm({
@@ -116,7 +120,6 @@ $(document).ready(function() {
 			}
 		}
 	});
-	
 	
 	// Hook up button handlers to each element with the appropriate class
 	$('.js-button').each(function (idx, elt) {

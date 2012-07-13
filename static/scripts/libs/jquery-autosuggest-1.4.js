@@ -167,7 +167,10 @@
 							moveSelection("down");
 							break;
 						case 8:  // delete
-							if(input.val() == ""){							
+							if ($('#as-selection-'+x).hasClass('as-selection-item.selected')) {
+									e.preventDefault();
+							}
+							if(input.val() == ""){					
 								var last = values_input.val().split(",");
 								last = last[last.length - 2];
 								selections_holder.children().not(org_li.prev()).removeClass("selected");
@@ -187,10 +190,16 @@
 								if (timeout){ clearTimeout(timeout); }
 								timeout = setTimeout(function(){ keyChange(); }, opts.keyDelay);
 							}
+							//Code added by marcus to make it so hitting delete works when blur is selected
+							//var selectedItem = $("ul.as-selections li.as-selection-item.selected");
+						//	if (selectedItem){
+								
+						//	}
 							break;
-						case 9: case 188:  // tab or comma
+						case 9: case 188: case 13:  // tab or comma or return [marcus added return -case 13]
 							tab_press = true;
 							var i_input = input.val().replace(/(,)/g, "");
+							results_holder.hide(); // Added by marcus to fix shown results holder.
 							if(i_input != "" && values_input.val().search(","+i_input+",") < 0 && i_input.length >= opts.minChars){	
 								// Bb: 08 December 2011
 								// Only add an item if it appears to be a valid email.
@@ -358,14 +367,18 @@
 					var close = $('<a class="as-close">&times;</a>').click(function(){
 							values_input.val(values_input.val().replace(","+data[opts.selectedValuesProp]+",",","));
 							opts.selectionRemoved.call(this, item, data);
+							//marcus added line here to show input box when close is clicked because of adjusted focus/hide in application.js
+							$('ul.as-selections li.as-original input').show();
+							//$('ul.as-selections li.as-original').css('opacity', '1');
 							input_focus = true;
 							input.focus();
 							return false;
 						});
+						
 					org_li.before(item.html(data[opts.selectedItemProp]).prepend(close));
 					opts.selectionAdded.call(this, org_li.prev(), data);	
 				}
-				
+		
 				function moveSelection(direction){
 					if($(":visible",results_holder).length > 0){
 						var lis = $("li", results_holder);
@@ -386,7 +399,7 @@
 						start.addClass("active");
 					}
 				}
-									
+
 			});
 		}
 	}
