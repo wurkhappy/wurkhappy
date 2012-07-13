@@ -61,6 +61,8 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-pay-input.html
 	'''
 	
+	# TODO: replace phaseID with transactionID, have a payment / transaction endpoint that creates a new transaction record
+	
 	def render(self, phaseID):
 		accessKey = AmazonS3.getSettingWithTag('key_id')
 		secretKey = AmazonS3.getSettingWithTag('key_secret')
@@ -74,6 +76,8 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		email = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		token = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_token_id')
 		
+		uniquingAgent = Data(uuid4().get_bytes()).stringWithEncoding(Base58)[:5]
+		
 		data = OrderedDict()
 	
 		data['abandonURL'] = '{0}://{1}/agreement/{2}'.format(
@@ -82,7 +86,6 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			agreement['id']
 		) # TODO: Fixme!
 		data['accessKey'] = accessKey
-		# data['amazonPaymentsAccountId'] = AmazonS3.getSettingWithTag('fps_account_id')
 		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
 		data['description'] = phase['description']
 		data['immediateReturn'] = 'false'
@@ -91,7 +94,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		)
 		data['processImmediate'] = 'true'
 		data['recipientEmail'] = email['value']
-		data['referenceId'] = Data(uuid4().get_bytes()).stringWithEncoding(Base58)
+		data['referenceId'] = '{0}.{1}'.format(phaseID, uniquingAgent)
 		data['returnUrl'] = '{0}://{1}/agreement/{2}'.format(
 			self.request.protocol,
 			self.handler.application.configuration['wurkhappy']['hostname'],

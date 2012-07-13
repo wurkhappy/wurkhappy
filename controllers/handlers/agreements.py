@@ -345,11 +345,17 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 			if not (signatureIsValid or self.application.configuration['tornado']['debug'] == True):
 				logging.error("Bad Amazon payments response payload\n%s", self.request.query)
 			else:
-				transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
+				# '{0}.{1}'.format(phaseID, uniquingAgent)
+				phaseID, reference = args['referenceId'].split('.')
+				
+				if currentPhase['id'] != phaseID:
+					logging.error('Current phase does not match phase in Amazon callback.')
+				
+				transaction = Transaction.retrieveByTransactionReference(reference)
 
 				if not transaction:
 					transaction = Transaction(
-						transactionReference=args['referenceId'],
+						transactionReference=reference,
 						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
 						senderID=agreement['clientID'],
 						recipientID=agreement['vendorID']
@@ -360,7 +366,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 					transaction['amount'] = currencyParser.filter(args['transactionAmount'].replace('USD','').strip())
 
 				if not transaction['agreementPhaseID']:
-					transaction['agreementPhaseID'] = currentPhase['id']
+					transaction['agreementPhaseID'] = phaseID
 
 				if not (transaction['senderID'] and transaction['recipientID']):
 					transaction['senderID'] = agreement['clientID']
@@ -669,7 +675,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 
 			if not client:
-				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
+				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 4))
 				client = User()
 				client['email'] = args['email']
 				client['invitedBy'] = user['id']
