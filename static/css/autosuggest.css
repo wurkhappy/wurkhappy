@@ -2,7 +2,7 @@
 
 ul.as-selections {
 	list-style-type: none;
-  border: 1px solid #969696;
+  border: none;
 	padding: 3px;
 	margin: 0;
 	overflow: auto;
@@ -15,8 +15,8 @@ ul.as-selections.loading {
 }
 
 ul.as-selections li {
-	float: left;
 	margin: 0 4px 0 0;
+	float: left;
 }
 
 ul.as-selections li.as-selection-item {
@@ -96,16 +96,17 @@ ul.as-selections li.as-selection-item a:active.as-close {
 
 ul.as-selections li.as-original {
 	margin-left: 0;
+	display: block;
+	width: 100%;
 }
 
 #content ul.as-selections li.as-original input {
-	border: none;
-	outline: none;
-	float: left;
+	padding: 0px;
 	font-size: 13px;
-	width: auto;
-	height: 18px;
+	width: 100%;
+	height: 24px;
 	padding-top: 3px;
+	display: block;
 }
 
 ul.as-list {
@@ -212,3 +213,4 @@ ul.as-list,  x:-moz-any-link, x:default {
 BODY:first-of-type ul.as-list, x:-moz-any-link, x:default { /* Target FF 3.5+ */
 	border: none;
 }
+
