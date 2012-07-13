@@ -31,7 +31,7 @@
 {% block header %}
 	<div id="intro" class="clear">
 		<div class="column-three-fourth">
-			<h1>Users</h1>
+			<h1>Transactions</h1>
 		</div>
 	</div>
 {% end %}
@@ -42,9 +42,9 @@
 	<div id="navigation" class="clear">
 		<div class="column-three-fourth">
 			<ul class="clear">
-				<li class="current"><a href="/users"><strong>Users</strong></a></li>
+				<li><a href="/users"><strong>Users</strong></a></li>
 				<li><a href="/agreements"><strong>Agreements</strong></a></li>
-				<li><a href="/transactions"><strong>Transactions</strong></a></li>
+				<li class="current"><a href="/transactions"><strong>Transactions</strong></a></li>
 			</ul>
 		</div>
 		<div class="column-one-fourth">
@@ -65,7 +65,7 @@
 
 {% block list-group %}
 	<div class="data-table">
-		{% for user in data['users'] %}
+		{% for transaction in data['transactions'] %}
 			{% block list-item %}
 			{% end %}
 		{% end %}
@@ -77,13 +77,18 @@
 {% block list-item %}
 	<table border="0" cellspacing="0" cellpadding="0">
 		<tr>
-			<td class="meta">
-				<!-- TODO: move the style to CSS and use a background placeholder image -->
-				<span style="height: 50px; width: 50px;"><img src="{{ user['profileURL'][0] }}" width="50"></span>
-			</td>
 			<td>
-				<h3><a href="/user/{{ user['id'] }}">{{ user['fullName'] }}</a></h3>
-				<p>{{ user['state'] }}</p>
+				<h3><a href="/transaction/{{ transaction['id'] }}">{{ transaction['transactionReference'] }}</a> 
+					{% if transaction['sender'] and transaction['recipient'] %}
+						between <a href="/user/{{ transaction['sender']['id'] }}">{{ transaction['sender']['fullName'] }}</a> and 
+						<a href="/user/{{ transaction['recipient']['id'] }}">{{ transaction['recipient']['fullName'] }}</a></h3>
+					{% end %}
+				<p>{{ transaction['costString'] }}
+					{% if transaction['agreementPhase'] %}
+						for phase {{ transaction['agreementPhase']['phaseNumber'] }} of
+						<a href="/agreement/{{ transaction['agreementPhase']['agreement']['id'] }}">{{ transaction['agreementPhase']['agreement']['name'] }}</a>
+					{% end %}
+				</p>
 			</td>
 		</tr>
 	</table>

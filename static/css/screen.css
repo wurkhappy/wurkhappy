@@ -335,8 +335,6 @@ div.prompt-box h3 {
   width: 735px;
 }
 
-
-
 /* NAVIGATION
 ================================================================================ */
 
@@ -791,45 +789,52 @@ h2.steps span {
 	text-align: center;
 }
 
-/* STRUCTURE
+/* SLIDES
 ================================================================================ */
 
-div.carosel img {
-	padding: 0 20px;
-	-webkit-transition: opacity 0.6s;
-	transition: opacity 0.6s;
+div.slideshow div.slides_container {
+	overflow-x: hidden;
+	overflow-y: hidden;
+	position: relative;
+	display: block;
+	clear: both;
+	background-attachment: initial;
+	background-origin: initial;
+	background-clip: initial;
+	background-color: initial;
+	background-position: 50% 50%;
+	background-repeat: no-repeat no-repeat;
 }
 
-div.carosel img.dim {
-	opacity: 0.3;
-}
-
-div.carosel a img {
-	opacity: 0.3;
-}
-
-div.carosel a:hover img {
-	opacity: 1;
-}
-
-div.carosel ul {
+div.slideshow ul {
 	list-style: none;
 }
 
-div.carosel li {
-	width: 720px;
+div.slideshow li {
 	display: block;
 	float: left;
-	position: absolute;
 }
 
-div.carosel li.offleft {
-	position-left: -720px;
+/*div.slideshow .pagination li {
+}
+*/
+
+div.slideshow .pagination li a {
+	-webkit-transition: opacity 0.5s;
+	opacity: 0.4;
 }
 
-div.carosel li.offright {
-	position-left: 720px;
+div.slideshow .pagination li.current a {
+	opacity: 1;
 }
+
+div.slideshow div.slides_container div p {
+	padding-bottom: 5px;
+	margin-bottom: 0;
+	padding-top: 5px;
+}
+
+
 /* Empty List Views [Client & Freelancer] - Marcus Edit
 ================================================================================ */
 
@@ -855,4 +860,3 @@ li.listImage {
 li.orderedList {
 	height: 35px;
 }
-

@@ -127,24 +127,87 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 			
 			logging.info(signatureIsValid)
 			
-			transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
-		
-			if transaction is None:
-				amtParser = re.compile('USD ([0-9]+(?:\.[0-9]{0,2})?)')
-				amountString = amtParser.match(args['transactionAmount']).groups()[0]
+			# transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
+			# 		
+			# if transaction is None:
+			# 	amtParser = re.compile('USD ([0-9]+(?:\.[0-9]{0,2})?)')
+			# 	amountString = amtParser.match(args['transactionAmount']).groups()[0]
+			# 
+			# 	transaction = Transaction(
+			# 		transactionReference=args['referenceId'],
+			# 		amount=int(float(amountString) * 100),
+			# 		dateInitiated=datetime.fromtimestamp(args['transactionDate'])
+			# 	)
+			# 		
+			# if args['status'] == 'PS':
+			# 	transaction['dateApproved'] = datetime.now()
+			# elif args['status'] in ['ME', 'PF', 'SE']:
+			# 	transaction['dateDeclined'] = datetime.now()
+			# 
+			# transaction.save()
 			
-				transaction = Transaction(
-					transactionReference=args['referenceId'],
-					amount=int(float(amountString) * 100),
-					dateInitiated=datetime.fromtimestamp(args['transactionDate'])
-				)
-		
-			if args['status'] == 'PS':
-				transaction['dateApproved'] = datetime.now()
-			elif args['status'] in ['ME', 'PF', 'SE']:
-				transaction['dateDeclined'] = datetime.now()
+			if not (signatureIsValid or self.application.configuration['tornado']['debug'] == True):
+				logging.error("Bad Amazon payments response payload\n%s", self.request.query)
 			
-			transaction.save()
+			# Always do this; I suspect the signature code is bad
+			# TODO: Fix signature code
+			
+			if True:
+				# '{0}.{1}'.format(phaseID, uniquingAgent)
+				phaseID, reference = args['referenceId'].split('.')
+			
+				phase = AgreementPhase.retrieveByID(phaseID)
+				agreement = Agreement.retrieveByID(phase['agreementID'])
+				
+				
+				transaction = Transaction.retrieveByTransactionReference(reference)
+
+				if not transaction:
+					transaction = Transaction(
+						transactionReference=reference,
+						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
+						senderID=agreement['clientID'],
+						recipientID=agreement['vendorID']
+					)
+				
+				if not transaction['amount'] and args['transactionAmount']:
+					currencyParser = fmt.Currency()
+					transaction['amount'] = currencyParser.filter(args['transactionAmount'].replace('USD','').strip())
+				
+				if not transaction['agreementPhaseID']:
+					transaction['agreementPhaseID'] = phase['id']
+				
+				if not (transaction['senderID'] and transaction['recipientID']):
+					transaction['senderID'] = agreement['clientID']
+					transaction['recipientID'] = agreement['vendorID']
+				
+				
+				if args['status'] == 'PS':
+					transaction['dateApproved'] = datetime.now()
+					transaction['amazonTransactionID'] = args['transactionId']
+					transaction['amazonPaymentMethod'] = args['paymentMethod']
+
+					logging.info('State before state change due to Amazon callback: %s', currentState)
+
+					# If the transaction was approved, update the agreement state
+					# (This should have some more granularity. Ugh.)
+					unsavedRecords = []
+
+					try:
+						currentState = currentState.performTransition('client', 'verify', unsavedRecords)
+					except StateTransitionError as e:
+						pass
+
+					logging.info('State after state change due to Amazon callback: %s', currentState)
+
+					for record in unsavedRecords:
+						record.save()
+				elif args['status'] in ['ME', 'PF', 'SE']:
+					transaction['dateDeclined'] = datetime.now()
+					logging.error("Transaction declined by Amazon\n%s", transaction)
+
+				transaction.save()
+			
 			
 			self.renderJSON(["OK"])
 		else:

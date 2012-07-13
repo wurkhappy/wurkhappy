@@ -73,7 +73,7 @@
 			{% if data['self'] == 'client' and data['state'] == 'EstimateState' %}
 				<div class="add notes toggle">
 					<p class="no-select">Add comments and feedback on the agreement here.</p>
-					<textarea name="summaryComments" class="hidden" rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
+					<textarea name="summaryComments" {% if not data['summaryComments'] %}class="hidden" {% end %}rows="5" cols="80" placeholder="Add comments and feedback on the agreement here. You can also comment on specific phases below.">{{ data['summaryComments'] }}</textarea>
 				</div>
 			{% elif data['state'] == 'DeclinedState' and data['summaryComments'] %}
 				<div class="notes">
@@ -102,7 +102,7 @@
 				{% if data['self'] == 'client' and (data['state'] == 'EstimateState' or (data['state'] == 'CompletedState' and 'isCurrent' in phase)) %}
 					<div class="add notes toggle">
 						<p class="no-select">Add comments and feedback on the agreement here.</p>
-						<textarea name="phaseComments" class="hidden" rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
+						<textarea name="phaseComments" {% if not phase.get('comments') %}class="hidden" {% end %}rows="5" cols="80" placeholder="Add comments and feedback for Phase {{ str(num) }} here.">{{ phase.get('comments') or '' }}</textarea>
 					</div>
 				{% elif 'comments' in phase and data['state'] in ['DeclinedState', 'ContestedState'] %}
 					<div class="notes">
@@ -128,7 +128,7 @@
 	{% module Footer() %}
 </div>
 
-	{% if data['self'] == 'client' and data['state'] == 'CompletedState' %}
+	{% if data.get('recipientEmail', None) %}
 	<div class="clear prompt-box" id="confirmation-div" style="display:none;">
 		<div class="column-three-fourth">
 			<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>
@@ -138,6 +138,14 @@
 			{% module PayWithAmazonButton(data['currentPhase']['phaseID']) %}
 		</div>
 	</div>
+	{% else %}
+		<div class="clear prompt-box" id="confirmation-div" style="display:none;">
+			<div class="column-three-fourth">
+				<h3>The recipient of this payment does not have a valid Amazon Payments account.</h3>
+				<p>We have reminded the recipient to complete the steps to configure an Amazon Payments account
+					and will notify you when the recipient is able to receive funds.</p>
+			</div>
+		</div>
 	{% end %}
 
 {% end %}

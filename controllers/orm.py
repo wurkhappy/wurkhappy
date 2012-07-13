@@ -73,7 +73,7 @@ class MappedObj(object):
 	@classmethod
 	def retrieveByID(clz, uid):
 		with Database() as (conn, cursor):
-			cursor.execute("SELECT * FROM %s WHERE id = %%s LIMIT 1" % clz.tableName, uid)
+			cursor.execute("SELECT * FROM {0} WHERE id = %s LIMIT 1".format(clz.tableName), uid)
 			result = cursor.fetchone()
 		
 		return clz.initWithDict(result)
@@ -139,9 +139,9 @@ class MappedObj(object):
 				self['id'] = cursor.lastrowid
 				
 				conn.commit()
-		self.refresh()
+		self._refresh()
 	
-	def refresh(self):
+	def _refresh(self):
 		with Database() as (conn, cursor):
 			refreshStatement = "SELECT * FROM %s WHERE id = %%s LIMIT 1" % self.tableName
 			cursor.execute(refreshStatement, self['id'])

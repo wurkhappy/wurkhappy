@@ -79,5 +79,25 @@ var buttonActions = {
 			
 			return evt.preventDefault();
 		}
+	},
+	
+	'action-reset-amazon-payments': {
+		default: function (self, evt) {
+			var popup = new Popup('#content');
+			
+			$.ajax({
+				url: '/user/' + slug['userID'] + '.json',
+				data: {'action': 'reset_amazon', '_xsrf': slug['_xsrf']},
+				dataType: 'json',
+				type: 'POST',
+				success: function (data, status, xhr) {
+					popup.setLabel('Reset Amazon Payments account info').open();
+					self.$elt.slideUp(300);
+				},
+				error: self.errorHandler
+			});
+			
+			return evt.preventDefault();
+		}
 	}
 };

@@ -59,7 +59,7 @@
 
 			<h2>Proposal</h2>
 			<fieldset>
-				<label for="" id="nameFormInput">Name</label>
+				<label for="">Name</label>
 				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
 				<label for="summary">Description of Services</label>
 				<textarea name="summary" rows="3" cols="100">{% if data['summary'] and len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
@@ -158,7 +158,7 @@
 			<p>Wurk Happy uses Amazon Payments to facilitate transactions between you and your clients. In order to receive
 				payments, please click the &ldquo;Accept Marketplace Fee&rdquo; button to the right in order to accept the
 				Amazon Terms and Conditions and create your Amazon Payments Business account.</p>
-			<p>You can read more about why we use Amazon Payments in our <a href="help/faq">Frequently Asked Questions</a>.</p>
+			<p>You can read more about why we use Amazon Payments <a href="/help/faqs/amazonpayments">here</a>.</p>
 		</div>
 		<div class="column-one-fourth">
 			{% module AcceptMarketplaceFeeButton(data['vendor']['id']) %}

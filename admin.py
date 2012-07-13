@@ -42,6 +42,8 @@ class Application(web.Application):
 			(r'/agreements/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]+)/?', agreements.AgreementListHandler),
 			
+			(r'/transactions/?', transactions.TransactionListHandler),
+			(r'/transaction/([0-9]+)/?', transactions.TransactionDetailHandler)
 		]
 
 		settings = {

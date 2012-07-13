@@ -9,6 +9,7 @@ from models.transaction import Transaction
 from controllers import fmt
 from controllers.orm import ORMJSONEncoder
 from controllers.beanstalk import Beanstalk
+from controllers.amazonaws import AmazonFPS
 
 from collections import defaultdict
 from datetime import datetime
@@ -145,7 +146,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		self.render("agreement/list.html", title=title, data=templateDict)
 
 
-class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
+class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 	buttonTable = {
 		'vendor': defaultdict(lambda: [], {
 			DraftState: [
@@ -181,9 +182,10 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		user = self.current_user
 		agreement = None
 
-		if not user:
+		token = self.get_argument("t", None)
+		
+		if token:
 			logging.warn(self.request.arguments)
-			token = self.get_argument("t", None)
 
 			agreement = agreementID and Agreement.retrieveByID(agreementID)
 
@@ -205,6 +207,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 			
 			user = User.retrieveByID(agreement['clientID'])
+			self.set_secure_cookie('user_id', str(user['id']))
 		
 		if not agreementID:
 			# Must have been routed from /agreement/new
@@ -291,13 +294,19 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				optional=[
 					('status', fmt.Enforce(str)),
 					('referenceId', fmt.Enforce(str)),
-					('transactionDate', fmt.PositiveInteger())
+					('transactionDate', fmt.PositiveInteger()),
+					('transactionAmount', fmt.Enforce(str)),
+					('transactionId', fmt.Enforce(str)),
+					('paymentMethod', fmt.Enforce(str))
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
 			logging.warn(e.__dict__)
 			self.set_status(e.status_code)
 			return
+		
+		# Before we handle the potential query args from Amazon, we need to
+		# build up the agreement's vendor and client info and current state.
 		
 		if agreement['vendorID'] == user['id']:
 			agreementType = 'Client'
@@ -316,6 +325,81 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		else:
 			self.set_status(403)
 			self.write("Forbidden")
+			return
+		
+		currentState = agreement.getCurrentState()
+		currentPhase = agreement.getCurrentPhase()
+
+		# Now we handle any potential query arguments.
+		
+		if args['status'] is not None:
+			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
+					self.request.protocol,
+					self.application.configuration['wurkhappy']['hostname'],
+					self.request.path
+				),
+				self.request.query,
+				self.application.configuration['amazonaws']
+			)
+
+			if not (signatureIsValid or self.application.configuration['tornado']['debug'] == True):
+				logging.error("Bad Amazon payments response payload\n%s", self.request.query)
+			else:
+				# '{0}.{1}'.format(phaseID, uniquingAgent)
+				phaseID, reference = args['referenceId'].split('.')
+				
+				if currentPhase['id'] != phaseID:
+					logging.error('Current phase does not match phase in Amazon callback.')
+				
+				transaction = Transaction.retrieveByTransactionReference(reference)
+
+				if not transaction:
+					transaction = Transaction(
+						transactionReference=reference,
+						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
+						senderID=agreement['clientID'],
+						recipientID=agreement['vendorID']
+					)
+
+				if not transaction['amount'] and args['transactionAmount']:
+					currencyParser = fmt.Currency()
+					transaction['amount'] = currencyParser.filter(args['transactionAmount'].replace('USD','').strip())
+
+				if not transaction['agreementPhaseID']:
+					transaction['agreementPhaseID'] = phaseID
+
+				if not (transaction['senderID'] and transaction['recipientID']):
+					transaction['senderID'] = agreement['clientID']
+					transaction['recipientID'] = agreement['vendorID']
+
+				if args['status'] == 'PS':
+					transaction['dateApproved'] = datetime.now()
+					transaction['amazonTransactionID'] = args['transactionId']
+					transaction['amazonPaymentMethod'] = args['paymentMethod']
+
+					logging.info('State before state change due to Amazon callback: %s', currentState)
+
+					# If the transaction was approved, update the agreement state
+					# (This should have some more granularity. Ugh.)
+					unsavedRecords = []
+
+					try:
+						currentState = currentState.performTransition('client', 'verify', unsavedRecords)
+					except StateTransitionError as e:
+						pass
+
+					logging.info('State after state change due to Amazon callback: %s', currentState)
+
+					for record in unsavedRecords:
+						record.save()
+				elif args['status'] in ['ME', 'PF', 'SE']:
+					transaction['dateDeclined'] = datetime.now()
+					logging.error("Transaction declined by Amazon\n%s", transaction)
+
+				transaction.save()
+			
+			# We do this here, but it would be prettier if we did this using a JavaScript pushState
+			self.redirect('{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.path))
 			return
 
 
@@ -401,41 +485,6 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 
 		# Add the agreement phase data to the template dict
 
-		currentState = agreement.getCurrentState()
-		currentPhase = agreement.getCurrentPhase()
-
-		
-		if args['status'] is not None:
-			transaction = Transaction.retrieveByTransactionReference(args['referenceId'])
-			
-			if not transaction:
-				transaction = Transaction(
-					transactionReference=args['referenceId'],
-					dateInitiated=datetime.fromtimestamp(args['transactionDate'])
-				)
-			
-			if not transaction['agreementPhaseID']:
-				transaction['agreementPhaseID'] = currentPhase['id']
-
-			if args['status'] == 'PS':
-				transaction['dateApproved'] = datetime.now()
-				
-				# If the transaction was approved, update the agreement state
-				# (This should have some more granularity. Ugh.)
-				unsavedRecords = []
-				
-				try:
-					currentState.performTransition('client', 'verify', unsavedRecords)
-				except StateTransitionError as e:
-					pass
-				
-				for record in unsavedRecords:
-					record.save()
-			elif args['status'] in ['ME', 'PF', 'SE']:
-				transaction['dateDeclined'] = datetime.now()
-
-			transaction.save()
-
 		templateDict["phases"] = []
 
 		for phase in phases:
@@ -466,6 +515,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 				"phaseNumber": currentPhase['phaseNumber'],
 				"description": currentPhase['description']
 			}
+
 		# Transactions are datetime properties of the agreement.
 
 		transactions = [{
@@ -524,11 +574,15 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase):
 		# 	]
 		# else:
 		templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
-
-		logging.info(templateDict['actions'])
-		logging.info(currentState.__class__.__name__)
-
+		
+		if templateDict['self'] == 'vendor' and len(phases) == 0:
+			templateDict['actions'] = []
+		
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
+		
+		# We use the presence of the recipient email key to selectively render the Amazon button UI module.
+		if templateDict['self'] == 'client' and isinstance(currentState, CompletedState):
+			templateDict['recipientEmail'] = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		
 		if agreement['vendorID'] == user['id'] and isinstance(currentState, (DraftState, DeclinedState)):
 			amzAcctConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed')
@@ -621,7 +675,7 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				return
 
 			if not client:
-				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
+				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 4))
 				client = User()
 				client['email'] = args['email']
 				client['invitedBy'] = user['id']

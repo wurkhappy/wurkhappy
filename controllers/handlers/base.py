@@ -56,7 +56,7 @@ class Authenticated(object):
 	def get_current_user(self):
 		# TODO: I think this is handled by TokenAuthenticated.
 		# Make sure it's not used anywhere before deleting!
-		self.token = self.get_argument("t", None)
+		# self.token = self.get_argument("t", None)
 		
 		userID = self.get_secure_cookie("user_id")
 		return userID and User.retrieveByID(userID)
@@ -78,12 +78,13 @@ class TokenAuthenticated(object):
 	string argument called `t`.'''
 	
 	def get_current_user(self):
-		userID = self.get_secure_cookie("user_id")
-		user = userID and User.retrieveByID(userID)
-		self.token = None
+		self.token = self.get_argument("t", None)
 		
-		if not user:
-			self.token = self.get_argument("t", None)
+		if self.token:
 			user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
+			self.set_secure_cookie("user_id", str(user['id']))
+		else:
+			userID = self.get_secure_cookie("user_id")
+			user = userID and User.retrieveByID(userID)
 		
 		return user

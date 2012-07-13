@@ -107,12 +107,12 @@ class Agreement(MappedObj):
 			while result:
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
-	
-	def getCostString(self):
+
+	def getCostString(self, prefix='$', default=''):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self['id'])
 			amount = cursor.fetchone()['SUM(amount)']
-			return "${:,.2f}".format(amount / 100) if amount else ""
+			return "{0}{1:,.2f}".format(prefix, amount / 100) if amount else default
 	
 	def getCurrentPhase(self):
 		with Database() as (conn, cursor):
