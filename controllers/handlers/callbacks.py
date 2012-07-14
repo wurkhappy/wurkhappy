@@ -2,6 +2,7 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserPrefs, ActiveUserState
+from models.agreement import Agreement, AgreementPhase
 from models.transaction import Transaction
 from controllers import fmt
 from controllers.amazonaws import AmazonFPS
