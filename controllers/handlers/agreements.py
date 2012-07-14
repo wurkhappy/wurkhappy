@@ -362,7 +362,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 				# '{0}.{1}'.format(phaseID, uniquingAgent)
 				phaseID, reference = args['referenceId'].split('.')
 				
-				if currentPhase['id'] != phaseID:
+				if currentPhase and currentPhase['id'] != phaseID:
 					logging.error('Current phase does not match phase in Amazon callback.')
 				
 				transaction = Transaction.retrieveByTransactionReference(reference)
