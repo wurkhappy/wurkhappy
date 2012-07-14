@@ -55,6 +55,8 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 					('referenceId', fmt.Enforce(str)),
 					('transactionAmount', fmt.Enforce(str)),
 					('transactionDate', fmt.Enforce(float)),
+					('transactionId', fmt.Enforce(str)),
+					('paymentMethod', fmt.Enforce(str)),
 					('status', fmt.Enforce(str)),
 				]
 			)
@@ -122,7 +124,7 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 					self.application.configuration['wurkhappy']['hostname'],
 					self.request.path
 				),
-				paramString,
+				self.request.body, # paramString,
 				self.application.configuration['amazonaws']
 			)
 			
@@ -159,7 +161,7 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 			
 				phase = AgreementPhase.retrieveByID(phaseID)
 				agreement = Agreement.retrieveByID(phase['agreementID'])
-				
+				currentState = agreement.getCurrentState()
 				
 				transaction = Transaction.retrieveByTransactionReference(reference)
 
