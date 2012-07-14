@@ -78,14 +78,17 @@
 	<table border="0" cellspacing="0" cellpadding="0">
 		<tr>
 			<td>
-				<h3><a href="/transaction/{{ transaction['id'] }}">{{ transaction['transactionReference'] }}</a> 
+				<h3><a href="/transaction/{{ transaction['id'] }}">{{ transaction['costString'] }} 
 					{% if transaction['sender'] and transaction['recipient'] %}
-						between <a href="/user/{{ transaction['sender']['id'] }}">{{ transaction['sender']['fullName'] }}</a> and 
-						<a href="/user/{{ transaction['recipient']['id'] }}">{{ transaction['recipient']['fullName'] }}</a></h3>
+						between {{ transaction['sender']['fullName'] }} and
+						{{ transaction['recipient']['fullName'] }}
+					{% else %}
+						(reference {{ transaction['transactionReference'] }})
 					{% end %}
-				<p>{{ transaction['costString'] }}
-					{% if transaction['agreementPhase'] %}
-						for phase {{ transaction['agreementPhase']['phaseNumber'] }} of
+					</a>
+				</h3>
+				<p>{% if transaction['agreementPhase'] %}
+						phase {{ transaction['agreementPhase']['phaseNumber'] + 1 }} of
 						<a href="/agreement/{{ transaction['agreementPhase']['agreement']['id'] }}">{{ transaction['agreementPhase']['agreement']['name'] }}</a>
 					{% end %}
 				</p>

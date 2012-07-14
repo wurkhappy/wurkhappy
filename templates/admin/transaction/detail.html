@@ -38,7 +38,7 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 {% block header %}
 	<div id="intro" class="clear">
 		<div class="column-three-fourth">
-			<h1>{{ data['transactionReference'] }}</h1>
+			<h1>Detail of Transaction {{ data['transactionReference'] }} for Phase {{ data['agreementPhase']['id'] }}</h1>
 		</div>
 		<div class="column-one-fourth">
 
