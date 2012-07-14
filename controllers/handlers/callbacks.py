@@ -146,7 +146,7 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 			# 
 			# transaction.save()
 			
-			if not (signatureIsValid or self.application.configuration['tornado']['debug'] == True):
+			if not (signatureIsValid or self.application.configuration['tornado'].get('debug') == True):
 				logging.error("Bad Amazon payments response payload\n%s", self.request.query)
 			
 			# Always do this; I suspect the signature code is bad

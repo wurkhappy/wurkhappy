@@ -356,7 +356,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 				self.application.configuration['amazonaws']
 			)
 
-			if not (signatureIsValid or self.application.configuration['tornado']['debug'] == True):
+			if not (signatureIsValid or self.application.configuration['tornado'].get('debug') == True):
 				logging.error("Bad Amazon payments response payload\n%s", self.request.query)
 			else:
 				# '{0}.{1}'.format(phaseID, uniquingAgent)
