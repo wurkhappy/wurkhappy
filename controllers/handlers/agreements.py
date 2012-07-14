@@ -184,6 +184,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 
 		token = self.get_argument("t", None)
 		
+		# TODO: FIGURE OUT HOW TO MAKE THIS TOKEN AUTHENTICATED
+		
 		if token:
 			logging.warn(self.request.arguments)
 
@@ -208,6 +210,18 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 			
 			user = User.retrieveByID(agreement['clientID'])
 			self.set_secure_cookie('user_id', str(user['id']))
+		
+		if not user:
+			url = self.get_login_url()
+			if "?" not in url:
+				if urlparse.urlsplit(url).scheme:
+					# if login url is absolute, make next absolute too
+					next_url = self.request.full_url()
+				else:
+					next_url = self.request.uri
+				url += "?" + urllib.urlencode(dict(next=next_url))
+			self.redirect(url)
+			return
 		
 		if not agreementID:
 			# Must have been routed from /agreement/new
