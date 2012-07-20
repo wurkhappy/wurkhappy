@@ -556,7 +556,7 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			# from the original image and look up the transform ID. We then
 			# apply the lambda with the appropriate PIL transforms to the image
 			
-			exif = imgs['o']._getexif() or {}
+			exif = getattr(imgs['o'], '_getexif', lambda: None)() or {}
 			
 			transforms = {
 				1: lambda x: (x),
