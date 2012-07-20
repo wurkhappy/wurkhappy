@@ -552,6 +552,12 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 				raise HTTPErrorBetter(400, "Failed to read image", 
 					json.dumps(error))
 			
+			# If we opened a GIF image, we use the convert method to create an
+			# RGB copy of the first frame. Then we work with that.
+			
+			if imgs['o'].format == 'GIF':
+				imgs['o'] = imgs['o'].convert('RGB')
+			
 			# To handle images that have EXIF transform data, we grab the tags
 			# from the original image and look up the transform ID. We then
 			# apply the lambda with the appropriate PIL transforms to the image
