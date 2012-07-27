@@ -98,9 +98,9 @@
 			{% if data['agreementCount'] == 0 %}
 				<h1>{{ data['agreementType'] }} Agreements</h1>
 			{% elif data['agreementCount'] == 1 %}
-				<h1><strong>1</strong> {{ data['agreementType'] }} Agreement ({{ data['aggregateCost'] }})</h1>
+				<h1><strong>1</strong> {{ data['agreementType'] }} Agreement {% if data['aggregateCost'] %}({{ data['aggregateCost'] }}){% end %}</h1>
 			{% else %}
-				<h1><strong>{{ data['agreementCount'] }}</strong> {{ data['agreementType'] }} Agreements ({{ data['aggregateCost'] }})</h1>
+				<h1><strong>{{ data['agreementCount'] }}</strong> {{ data['agreementType'] }} Agreements {% if data['aggregateCost'] %}({{ data['aggregateCost'] }}){% end %}</h1>
 			{% end %}
 
 		</div>

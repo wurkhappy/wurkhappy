@@ -40,15 +40,16 @@
 			neverSubmit: false,
 			selectionLimit: false,
 			showResultList: true,
-		  	start: function(){},
-		  	selectionClick: function(elem){},
-		  	selectionAdded: function(elem){},
-		  	selectionRemoved: function(elem){ elem.remove(); },
-		  	formatList: false, //callback function
-		  	beforeRetrieve: function(string){ return string; },
-		  	retrieveComplete: function(data){ return data; },
-		  	resultClick: function(data){},
-		  	resultsComplete: function(){}
+			start: function(){},
+			tabPressed: function(elem) {},
+			selectionClick: function(elem){},
+			selectionAdded: function(elem){},
+			selectionRemoved: function(elem){ elem.remove(); },
+			formatList: false, //callback function
+			beforeRetrieve: function(string){ return string; },
+			retrieveComplete: function(data){ return data; },
+			resultClick: function(data){},
+			resultsComplete: function(){}
 	  	};  
 	 	var opts = $.extend(defaults, options);	 	
 		
@@ -118,10 +119,6 @@
 				}
 				if(prefill_value != ""){
 					input.val("");
-					// Removed because this manual comma-separated values thing is bullshit. Bb
-					// var lastChar = prefill_value.substring(prefill_value.length-1);
-					// if(lastChar != ","){ prefill_value = prefill_value+","; }
-					// values_input.val(","+prefill_value);
 					$("li.as-selection-item", selections_holder).addClass("blur").removeClass("selected");
 				}
 				input.after(values_input);
@@ -201,10 +198,10 @@
 						//	}
 							break;
 						case 9: case 188: case 13:  // tab or comma or return [marcus added return -case 13]
-							tab_press = true;
+							tab_press = (e.keyCode == 9);
 							var i_input = input.val().replace(/(,)/g, "");
 							results_holder.hide(); // Added by marcus to fix shown results holder.
-							if(i_input != "" && values_input.val().split(",").indexOf(i_input) < 0 /*values_input.val().search(","+i_input+",") < 0*/ && i_input.length >= opts.minChars){	
+							if(i_input != "" && values_input.val().split(",").indexOf(i_input) < 0 && i_input.length >= opts.minChars){	
 								// Bb: 08 December 2011
 								// Only add an item if it appears to be a valid email.
 								// Add it to a hidden email field & don't add email addr
@@ -219,6 +216,9 @@
 									add_selected_item(n_data, "00"+(lis+1));
 								}
 								// End Bb
+							}
+							if (tab_press === true) {
+								opts.tabPressed.call(this, input);
 							}
 						case 13: // return
 							tab_press = false;
@@ -361,7 +361,6 @@
 				// End Bb
 				
 				function add_selected_item(data, num){
-					// values_input.val(values_input.val()+data[opts.selectedValuesProp]+",");
 					var valueString = values_input.val(), valuesArray = [];
 					if (valueString != '') {
 						valuesArray = values_input.val().split(",");

@@ -83,6 +83,14 @@ $(document).ready(function() {
 			
 			$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
 			$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
+			
+		},
+		tabPressed: function(elem) {
+			// I wish I knew why I have to use a timeout here, but at least it works.
+			
+			setTimeout(function() {
+				$('input[name=title]').focus();
+			}, 50);
 		}
 	});
 	
