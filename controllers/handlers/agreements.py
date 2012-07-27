@@ -1,7 +1,7 @@
 from __future__ import division
-import re
 
-from base import *
+import tornado.web as web
+from base import BaseHandler, JSONBaseHandler, Authenticated
 from models.user import *
 from models.agreement import *
 from models.request import Request
@@ -18,6 +18,7 @@ import urlparse
 import urllib
 import hashlib
 import logging
+import re
 
 
 
@@ -95,7 +96,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				"date": agr['dateCreated'].strftime('%B %d, %Y'),
 				"amount": agr.getCostString(),
 				"profileURL": usr and (usr['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'), # Default profile photo? Set during signup?
-				# "state": agr.getCurrentState(),
+				"state": agr.getCurrentState().__class__.__name__,
 			})
 
 		for agreement in agreements:
@@ -589,9 +590,6 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 		# else:
 		templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
 		
-		if templateDict['self'] == 'vendor' and len(phases) == 0:
-			templateDict['actions'] = []
-		
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
 		
 		# We use the presence of the recipient email key to selectively render the Amazon button UI module.
@@ -607,7 +605,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 				templateDict['amazonAccountConfirmed'] = True
 			else:
 				templateDict['amazonAccountConfirmed'] = False
-				templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
+				if len(templateDict['actions']) > 1:
+					templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
 			
 			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 		else:
@@ -702,17 +701,50 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 		agreement['clientID'] = client and client['id']
 		logging.warn(agreement)
-		agreement.save()
+		# agreement.save()
+		
+		summary = AgreementSummary(summary=args['summary'])
 
+		phases = []
+		for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
+			phase = AgreementPhase(
+				phaseNumber=num,
+				amount=cost,
+				description=descr,
+				estDateCompleted=date
+			)
+			# phase['agreementID'] = agreement['id']
+			# phase['phaseNumber'] = num
+			# phase['amount'] = cost
+			# phase['description'] = descr
+			# phase['estDateCompleted'] = date
+			phases.append(phase)
+
+		
 		if action == "send":
 			if not agreement['clientID']:
 				# TODO: Check this. I'm pretty sure it makes sense, but uh...
 				error = {
 					"domain": "application.conflict",
-					"display": "You need to choose a recipient in order to send this estimates. Please choose a client in the recipient field.",
+					"display": "You need to choose a recipient in order to send this agreement. Please choose a client in the recipient field.",
 					"debug": "'clientID' or 'email' parameter required"
 				}
-				self.set_status(409)
+				self.set_status(400)
+				self.renderJSON(error)
+				return
+
+			if len(phases) == 0:
+				error = {
+					"domain": "application.conflict",
+					"display": (
+						"You must include at least one phase in order to "
+						"send this agreement. Please provide a cost, "
+						"estimated date of completion, and description "
+						"for at least one phase of work."
+					),
+					"debug": "'cost', 'details', and 'date' parameters must not be empty"
+				}
+				self.set_status(400)
 				self.renderJSON(error)
 				return
 
@@ -745,23 +777,19 @@ class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 			
 			agreement['dateSent'] = datetime.now()
-			agreement.save()
+			# agreement.save()
 
-		summary = AgreementSummary()
+
+		agreement.save()
 		summary['agreementID'] = agreement['id']
-		summary['summary'] = args['summary']
-
 		summary.save()
-
-		for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
-			phase = AgreementPhase()
+		for phase in phases:
 			phase['agreementID'] = agreement['id']
-			phase['phaseNumber'] = num
-			phase['amount'] = cost
-			phase['description'] = descr
-			phase['estDateCompleted'] = date
 			phase.save()
+
 		logging.warn(agreement)
+		logging.warn(phases)
+		
 		self.set_status(201)
 		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement['id']) + '.json')
 		self.renderJSON(self.assembleDictionary(agreement))
@@ -819,7 +847,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 
 
-class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
+class AgreementActionJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 
 	@web.authenticated
 	def post(self, agreementID, action):
@@ -875,17 +903,16 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 						('email', fmt.Enforce(str)),
 						('clientID', fmt.PositiveInteger()),
 						('summary', fmt.Enforce(str)),
-						('cost', fmt.List(fmt.Currency(None))),
+						('cost', fmt.List(fmt.Currency([100, 1000000]))),
 						('details', fmt.List(fmt.Enforce(str))),
 						('estDateCompleted', fmt.List(fmt.Enforce(str))),
 						('date', fmt.List(fmt.Date()))
 					]
 				)
 			except fmt.HTTPErrorBetter as e:
-				logging.warn(e.__dict__)
-				self.set_status(e.status_code)
-				self.write(e.body_content)
-				return
+				self.error_description = e.body_content
+				self.error_description['display'] = "The request parameters were malformed"
+				raise web.HTTPError(400)
 
 			if isinstance(currentState, DraftState):
 				client = None
@@ -894,7 +921,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					client = User.retrieveByID(args['clientID'])
 
 					if not client:
-						error = {
+						self.error_description = {
 							"domain": "resource.not_found",
 							"display": (
 								"We couldn't find the client you specified. "
@@ -902,26 +929,22 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 							),
 							"debug": "the 'clientID' specified was not found"
 						}
-						self.set_status(400)
-						self.renderJSON(error)
-						return
+						raise web.HTTPError(400, "ClientID not found")
 
 					agreement['clientID'] = client['id']
 				elif args['email']:
 					client = User.retrieveByEmail(args['email'])
 
 					if client and client['id'] == user['id']:
-						error = {
+						self.error_description = {
 							"domain": "application.conflict",
 							"display": "You can't send estimates to yourself. Please choose a different client.",
 							"debug": "'clientID' parameter has forbidden value"
 						}
-						self.set_status(409)
-						self.renderJSON(error)
-						return
+						raise web.HTTPError(409, "Can't send estimates to self")
 
 					if not client:
-						profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
+						profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 4))
 						client = User()
 						client['email'] = args['email']
 						client['invitedBy'] = user['id']
@@ -935,7 +958,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				if action == "send":
 					if client is None:
 						# TODO: should this be handled in the doTransition method?
-						error = {
+						self.error_description = {
 							"domain": "application.consistency",
 							"display": (
 								"To send an estimate, you must specify a client. "
@@ -943,9 +966,7 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 							),
 							"debug": "'clientID' value required to send estimate"
 						}
-						self.set_status(400)
-						self.renderJSON(error)
-						return
+						raise web.HTTPError(400, '')
 
 			if (isinstance(currentState, DraftState) or
 					isinstance(currentState, EstimateState) or
@@ -956,19 +977,18 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 				summary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 				if not summary:
-					summary = AgreementSummary()
-					summary['agreementID'] = agreement['id']
+					summary = AgreementSummary(agreementID=agreement['id'])
 				
 				summary['summary'] = args['summary'] or summary['summary']
 
 				# TODO: Defer phase saves until state transition is complete
+				phaseCount = 0
+				
 				for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
 					phase = AgreementPhase.retrieveByAgreementIDAndPhaseNumber(agreement['id'], num)
 
 					if not phase:
-						phase = AgreementPhase()
-						phase['agreementID'] = agreement['id']
-						phase['phaseNumber'] = num
+						phase = AgreementPhase(agreementID=agreement['id'], phaseNumber=num)
 					
 					if cost:
 						phase['amount'] = cost
@@ -978,9 +998,24 @@ class AgreementActionJSONHandler(Authenticated, BaseHandler, AgreementBase):
 					
 					if date:
 						phase['estDateCompleted'] = date
-					phase.save()
+					
+					unsavedRecords.append(phase)
+					phaseCount += 1
 				
-				summary.save()
+				if phaseCount == 0:
+					self.error_description = {
+						"domain": "application.conflict",
+						"display": (
+							"You must include at least one phase in order to "
+							"send this agreement. Please provide a cost, "
+							"estimated date of completion, and description "
+							"for at least one phase of work."
+						),
+						"debug": "'cost', 'details', and 'date' parameters must not be empty"
+					}
+					raise web.HTTPError(400, 'Attempt to send empty agreement')
+				
+				unsavedRecords.append(summary)
 		
 		# Clients can accept or decline an estimate, in which case the comment
 		# fields in the agreement summary and agreement phase records get

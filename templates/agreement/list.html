@@ -148,7 +148,9 @@
 								{% if agreement['other_id'] is None %}
 									Unsent draft from {{ agreement['date'] }}</p>
 								{% else %}
-									{% if data['agreementType'] == 'Client' %}Sent to {% elif data['agreementType'] == 'Vendor' %}Received from {% end %}
+									{% if data['agreementType'] == 'Client' %}
+										{% if agreement['state'] == 'DraftState' %}Draft for{% else %}Sent to{% end %}
+									{% elif data['agreementType'] == 'Vendor' %}Received from {% end %}
 									<strong><a href="/user/{{ agreement['other_id'] }}">{{ agreement['other_name'] }}</a></strong>
 									on {{ agreement['date'] }}</p>
 								{% end %}

@@ -3,7 +3,9 @@ from models.user import User
 
 from controllers.orm import ORMJSONEncoder
 from hashlib import sha1
+import logging
 import json
+import sys
 
 
 
@@ -26,7 +28,7 @@ class BaseHandler(web.RequestHandler):
 	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
-		self.write(json.dumps(obj, cls=ORMJSONEncoder))
+		self.finish(json.dumps(obj, cls=ORMJSONEncoder))
 	
 	def write_error(self, statusCode, **kwargs):
 		self.render('error/404.html', title="Uh-oh &ndash; Wurk Happy", data=dict())
@@ -41,7 +43,22 @@ class JSONBaseHandler(web.RequestHandler):
 	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
-		self.write(json.dumps(obj, cls=ORMJSONEncoder))
+		self.finish(json.dumps(obj, cls=ORMJSONEncoder))
+
+	def write_error(self, status_code, **kwargs):
+		if hasattr(self, 'error_description'):
+			self.renderJSON(self.error_description)
+		else:
+			super(JSONBaseHandler, self).write_error(status_code, **kwargs)
+
+	def _handle_request_exception(self, e):
+		if isinstance(e, web.HTTPError):
+			super(JSONBaseHandler, self)._handle_request_exception(e)
+		else:
+			logging.error("Uncaught exception %s", self._request_summary(),
+				exc_info=True)
+			self.send_error(500, exc_info=sys.exc_info())
+			# TODO: Send pretty JSON error instead of default 500
 
 
 

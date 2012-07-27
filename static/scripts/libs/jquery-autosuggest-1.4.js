@@ -81,7 +81,8 @@
 				var org_li = $("#as-original-"+x);				
 				var results_holder = $('<div class="as-results" id="as-results-'+x+'"></div>').hide();
 				var results_ul =  $('<ul class="as-list"></ul>');
-				var values_input = $('<input type="hidden" class="as-values" name="as_values_'+x+'" id="as-values-'+x+'" />');
+				
+				var values_input = $('<input type="hidden" class="as-values" name="'+opts.inputName+'" id="as-values-'+x+'" />');
 				var prefill_value = "";
 				if(typeof opts.preFill == "string"){
 					var vals = opts.preFill.split(",");
@@ -112,14 +113,15 @@
 								add_selected_item(opts.preFill[i], "000"+i);	
 							}		
 						}
-						prefill_value = prefill_items.join(',');
+						prefill_value = prefill_items.join(",");
 					}
 				}
 				if(prefill_value != ""){
 					input.val("");
-					var lastChar = prefill_value.substring(prefill_value.length-1);
-					if(lastChar != ","){ prefill_value = prefill_value+","; }
-					values_input.val(","+prefill_value);
+					// Removed because this manual comma-separated values thing is bullshit. Bb
+					// var lastChar = prefill_value.substring(prefill_value.length-1);
+					// if(lastChar != ","){ prefill_value = prefill_value+","; }
+					// values_input.val(","+prefill_value);
 					$("li.as-selection-item", selections_holder).addClass("blur").removeClass("selected");
 				}
 				input.after(values_input);
@@ -171,15 +173,17 @@
 									e.preventDefault();
 							}
 							if(input.val() == ""){					
-								var last = values_input.val().split(",");
-								last = last[last.length - 2];
-								selections_holder.children().not(org_li.prev()).removeClass("selected");
-								if(org_li.prev().hasClass("selected")){
-									values_input.val(values_input.val().replace(","+last+",",","));
-									opts.selectionRemoved.call(this, org_li.prev());
-								} else {
-									opts.selectionClick.call(this, org_li.prev());
-									org_li.prev().addClass("selected");		
+								var valueList = values_input.val().split(",");
+								if (valueList.length > 0) {
+									selections_holder.children().not(org_li.prev()).removeClass("selected");
+									if(org_li.prev().hasClass("selected")){
+										valueList.pop();
+										values_input.val(valueList.join(","));
+										opts.selectionRemoved.call(this, org_li.prev());
+									} else {
+										opts.selectionClick.call(this, org_li.prev());
+										org_li.prev().addClass("selected");		
+									}
 								}
 							}
 							if(input.val().length == 1){
@@ -200,7 +204,7 @@
 							tab_press = true;
 							var i_input = input.val().replace(/(,)/g, "");
 							results_holder.hide(); // Added by marcus to fix shown results holder.
-							if(i_input != "" && values_input.val().search(","+i_input+",") < 0 && i_input.length >= opts.minChars){	
+							if(i_input != "" && values_input.val().split(",").indexOf(i_input) < 0 /*values_input.val().search(","+i_input+",") < 0*/ && i_input.length >= opts.minChars){	
 								// Bb: 08 December 2011
 								// Only add an item if it appears to be a valid email.
 								// Add it to a hidden email field & don't add email addr
@@ -213,7 +217,6 @@
 								if (appears_valid_email(i_input)) {
 									n_data[opts.selectedValuesProp] = "";
 									add_selected_item(n_data, "00"+(lis+1));
-									input.val("");
 								}
 								// End Bb
 							}
@@ -296,7 +299,7 @@
 						}
 						if(str){
 							if (!opts.matchCase){ str = str.toLowerCase(); }				
-							if(str.search(query) != -1 && values_input.val().search(","+data[num][opts.selectedValuesProp]+",") == -1){
+							if(str.search(query) != -1 && values_input.val().split(",").indexOf(data[num][opts.selectedValuesProp]) == -1) { //search(","+data[num][opts.selectedValuesProp]+",") == -1){
 								forward = true;
 							}	
 						}
@@ -358,14 +361,25 @@
 				// End Bb
 				
 				function add_selected_item(data, num){
-					values_input.val(values_input.val()+data[opts.selectedValuesProp]+",");
+					// values_input.val(values_input.val()+data[opts.selectedValuesProp]+",");
+					var valueString = values_input.val(), valuesArray = [];
+					if (valueString != '') {
+						valuesArray = values_input.val().split(",");
+					}
+					valuesArray.push(data[opts.selectedValuesProp]);
+					values_input.val(valuesArray.join(","));
 					var item = $('<li class="as-selection-item" id="as-selection-'+num+'"></li>').click(function(){
 							opts.selectionClick.call(this, $(this));
 							selections_holder.children().removeClass("selected");
 							$(this).addClass("selected");
 						}).mousedown(function(){ input_focus = false; });
 					var close = $('<a class="as-close">&times;</a>').click(function(){
-							values_input.val(values_input.val().replace(","+data[opts.selectedValuesProp]+",",","));
+							var valueList = values_input.val().split(","), index = valueList.indexOf(String(data[opts.selectedValuesProp]));
+							if (index >= 0) {
+								valueList = valueList.splice(index, index);
+								values_input.val(valueList.join(","));
+							}
+							input.val("");
 							opts.selectionRemoved.call(this, item, data);
 							//marcus added line here to show input box when close is clicked because of adjusted focus/hide in application.js
 							$('ul.as-selections li.as-original input').show();

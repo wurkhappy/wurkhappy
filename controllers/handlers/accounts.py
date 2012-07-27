@@ -5,8 +5,12 @@ from models.user import User, UserPrefs, UserDwolla, ActiveUserState
 from models.paymentmethod import PaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
+from controllers.amazonaws import AmazonS3, AmazonFPS
 
-from tornado.httpclient import HTTPClient, HTTPError
+from tornado.httpclient import HTTPClient
+from tornado.httpclient import HTTPError as HTTPClientError
+from tornado.web import HTTPError
+from elementtree import ElementTree as ET
 
 import json
 import logging
@@ -367,7 +371,7 @@ class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMi
 			
 			try:
 				exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
-			except HTTPError as e:
+			except HTTPClientError as e:
 				logging.error('Dwolla token exchange returned an error: %s', e)
 			else:
 				# We don't trust third parties, so, like, log the entire response
@@ -386,7 +390,7 @@ class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMi
 					
 					try:
 						accountResponse = httpClient.fetch(accountURL + '?' + queryString)
-					except HTTPError as e:
+					except HTTPClientError as e:
 						logging.error('Dwolla account lookup returned an error: %s', e)
 					else:
 						# We don't trust third parties, so, like, log the entire response
@@ -437,7 +441,7 @@ class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMi
 # AccountJSONHandler
 # -------------------------------------------------------------------
 # TODO: FIGURE OUT TOKENS!
-class AccountJSONHandler(TokenAuthenticated, BaseHandler):
+class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 	
 	@web.authenticated
 	def get(self):
@@ -471,6 +475,9 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			self.set_status(e.status_code)
 			self.write(e.body_content)
 			return
+		# except ApplicationError as e:
+		# 	self.error_description = e.detailed_message
+		# 	raise HTTPError(400, e.message)
 		
 		# TODO:
 		# The HTTPErrorBetter raised by fmt.Parser could be, uhh, better.
@@ -495,7 +502,7 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			except IntegrityError as e:
 				logging.warn(e.message)
 				
-				error = {
+				self.error_description = {
 					"domain": "application.consistency",
 					"display": (
 						"The email address you submitted is in use by another "
@@ -504,9 +511,10 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 					"debug": "'email' parameter is already in use"
 				}
 				
-				self.set_status(409)
-				self.renderJSON(error)
-				return
+				raise HTTPError(409, 'Database integrity error: the specified email address is already in use')
+				# self.set_status(409)
+				# self.renderJSON(error)
+				# return
 		
 		if args['firstName']:
 			user['firstName'] = args['firstName']
@@ -539,7 +547,7 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 			try:
 				imgs['o'] = Image.open(StringIO(fileDict['body']))
 			except IOError as e:
-				error = {
+				self.error_description = {
 					'domain': 'web.request',
 					'display': (
 						"I'm sorry, that image was either damaged or "
@@ -549,8 +557,7 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 					'debug': 'cannot identify image file'
 				}
 				
-				raise HTTPErrorBetter(400, "Failed to read image", 
-					json.dumps(error))
+				raise HTTPError(400, "Failed to read image")
 			
 			# If we opened a GIF image, we use the convert method to create an
 			# RGB copy of the first frame. Then we work with that.
@@ -598,6 +605,123 @@ class AccountJSONHandler(TokenAuthenticated, BaseHandler):
 		
 		user.save()
 		self.renderJSON(user.getPublicDict())
+
+
+
+# -------------------------------------------------------------------
+# Amazon Account Verification
+# -------------------------------------------------------------------
+
+class AmazonVerificationJSONHandler(Authenticated, JSONBaseHandler):
+	'''Initiate an Amazon FPS API call to get the account
+	verification status for the current user.'''
+	
+	@web.authenticated
+	def get(self):
+		user = self.current_user
+		
+		token = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
+		
+		if not token:
+			self.error_description = {
+				'domain': 'application.consistency',
+				'debug': 'missing token for user',
+				'display': (
+					"It looks like you either haven't configured an Amazon "
+					"Payments account or haven't accepted the Wurk Happy "
+					"marketplace fee. Please complete those steps before "
+					"verifying your account."
+				)
+			}
+			raise HTTPError(400, 'Missing Amazon token')
+			# self.set_status(400)
+			# self.renderJSON(error)
+			
+		baseURL = 'https://{0}/'.format(AmazonS3.settings['fps_host'])
+		queryArgs = {
+			'AWSAccessKeyId': AmazonS3.settings['key_id'],
+			'Action': 'GetRecipientVerificationStatus',
+			'RecipientTokenId': token['value'],
+			'SignatureMethod': 'HmacSHA256',
+			'SignatureVersion': '2',
+			'Timestamp': datetime.utcnow().isoformat() + 'Z',  # Remember to append the Z because WTF, Python!?
+			'Version': '2008-09-17'
+		}
+		
+		fps = AmazonFPS()
+		queryArgs['Signature'] = fps.generateSignature('GET', AmazonS3.settings['fps_host'], '', queryArgs)
+		
+		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
+		logging.info('Amazon FPS verification URL: %s', baseURL + '?' + queryString)
+		
+		httpClient = HTTPClient()
+		
+		# TODO: UGLY HACK EW EW EW EW
+		
+		try:
+			verificationResponse = httpClient.fetch(baseURL + '?' + queryString)
+		except HTTPClientError as e:
+			logging.error('Amazon FPS verification returned an error: %s', e)
+		else:
+			logging.info('Received %d from Amazon', verificationResponse.code)
+			logging.info(verificationResponse.body)
+			
+			if accountResponse.code == 200:
+				try:
+					xml = ET.XML(verificationResponse.body)
+				except SyntaxError as e:
+					logging.error('Amazon FPS verification response did not contain valid XML: %s', e)
+				else:
+					xmlns = '{http://fps.amazonaws.com/doc/2008-09-17/}'
+					message = xml.findtext('{0}GetRecipientVerificationStatusResult/{0}RecipientVerificationStatus/'.format(xmlns))
+					
+					if message in ['VerificationComplete', 'VerificationCompleteNoLimits']:
+						verified = UserPrefs(
+							userID=user['id'],
+							name='amazon_verification_complete',
+							value='True'
+						)
+						
+						verified.save()
+						
+						response = {
+							'user_id': user['id'],
+							'amazonVerificationComplete': True
+						}
+					elif message == 'VerificationPending':
+						response = {
+							'user_id': user['id'],
+							'amazonVerificationComplete': False
+						}
+					
+					self.renderJSON(response)
+			else:
+				error = {
+					'domain': 'external.error',
+					'debug': 'unexpected api response',
+					'display': (
+						"Something unexpectedly went wrong. Our engineers have been "
+						"notified and we are working to fix the problem. Please try "
+						"again later."
+					)
+				}
+				
+				self.set_status(500)
+				self.renderJSON(error)
+			return
+		
+		error = {
+			'domain': 'application.error',
+			'debug': 'trouble parsing XML',
+			'display': (
+				"Something unexpectedly went wrong. Our engineers have been "
+				"notified and we are working to fix the problem. Please try "
+				"again later."
+			)
+		}
+		
+		self.set_status(500)
+		self.renderJSON(error)
 
 
 

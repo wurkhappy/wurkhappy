@@ -59,7 +59,8 @@ class AmazonFPS(object):
 		canonicalData = OrderedDict()
 
 		for k in sorted(data.keys()):
-			canonicalData[urllib.quote(k, '~')] = urllib.quote(data[k], '~')
+			if k != 'Signature':
+				canonicalData[urllib.quote(k, '~')] = urllib.quote(data[k], '~')
 
 		canonicalString = '&'.join('{0}={1}'.format(k, v) for k, v in canonicalData.iteritems())
 		

@@ -51,6 +51,7 @@ class Application(web.Application):
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/profile/?', users.ProfileHandler),
 			(r'/user/me/account/?', accounts.AccountHandler),
+			(r'/user/me/account/amazon/verify.json', accounts.AmazonVerificationJSONHandler),
 			
 			# Password handler with instructions to request a reset email
 			# and update the password with the token from the email.

@@ -71,7 +71,7 @@ $(document).ready(function() {
 		// address to the internal data structure if that's what is typed, 
 		// and set the data object accordingly... We can handle the hidden 
 		// input based on the data, e.g.
-		// {"id": null, "name": "joe@example.org", "email": "joe@example.org"}
+		// {"id": null, "fullName": "joe@example.org", "email": "joe@example.org"}
 		
 		retrieveComplete: function(data) {
 			return data.contacts;
@@ -80,20 +80,10 @@ $(document).ready(function() {
 			// Figure out how to specify what the user ID attribute is named in the hidden field
 			// for the create agreement page it's "clientID", but it needs to be "vendorID" for
 			// the request agreement form
-			if (data['id'] === "") {
-				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="email" value="'+data.fullName+'" />');
-				$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
-				$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
-			} else {
-				$('.as-results').append('<input type="hidden" id="wh-'+elem.attr('id')+'" name="'+slug['autosuggestCapture']+'" value="'+data.id+'" />');
-				$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
-				$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
-				}
-		},
-		selectionRemoved: function(elem) {
-			elem.remove();
-			$('#wh-'+elem.attr('id')).remove();
-		},	
+			
+			$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
+			$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
+		}
 	});
 	
 	$(".js-replace-action").ajaxForm({
@@ -132,6 +122,12 @@ $(document).ready(function() {
 });
 
 
+
+var debug = {
+	form: function($form) {
+		console.log($form.serialize());
+	}
+};
 
 var Button = function(elt) {
 	var self = this;
