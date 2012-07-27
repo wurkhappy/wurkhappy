@@ -114,7 +114,6 @@ var buttonActions = {
 			}
 			
 			var capture = self.serialize('comments-form');
-			console.log(capture);
 			$.ajax({
 				url: '/agreement/' + slug['agreementID'] + '/decline.json',
 				data: capture,
@@ -172,7 +171,6 @@ var buttonActions = {
 			
 			var popup = new Popup('#content');
 			var bodyString = self.serialize('comments-form');
-			console.log(bodyString);
 			$.ajax({
 				url: '/agreement/' + slug['agreementID'] + '/dispute.json',
 				data: bodyString,
