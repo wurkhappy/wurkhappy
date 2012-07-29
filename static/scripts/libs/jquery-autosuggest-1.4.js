@@ -149,9 +149,18 @@
 					if($(this).val() == "" && values_input.val() == "" && prefill_value == ""){
 						$(this).val(opts.startText);
 					} else if(input_focus){
+						var n_data = {}, i_input = $(this).val().replace(/(,)/g, "");;
+						n_data[opts.selectedItemProp] = i_input;
+						n_data[opts.selectedValuesProp] = i_input;
+						var lis = $("li", selections_holder).length;
+						if (appears_valid_email(i_input)) {
+							n_data[opts.selectedValuesProp] = "";
+							add_selected_item(n_data, "00"+(lis+1));
+						}
+						
 						$("li.as-selection-item", selections_holder).addClass("blur").removeClass("selected");
 						results_holder.hide();
-					}				
+					}
 				}).keydown(function(e) {
 					// track last key pressed
 					lastKeyPressCode = e.keyCode;
@@ -191,11 +200,6 @@
 								if (timeout){ clearTimeout(timeout); }
 								timeout = setTimeout(function(){ keyChange(); }, opts.keyDelay);
 							}
-							//Code added by marcus to make it so hitting delete works when blur is selected
-							//var selectedItem = $("ul.as-selections li.as-selection-item.selected");
-						//	if (selectedItem){
-								
-						//	}
 							break;
 						case 9: case 188: case 13:  // tab or comma or return [marcus added return -case 13]
 							tab_press = (e.keyCode == 9);
@@ -221,6 +225,7 @@
 								opts.tabPressed.call(this, input);
 							}
 						case 13: // return
+							input.blur();
 							tab_press = false;
 							var active = $("li.active:first", results_holder);
 							if(active.length > 0){
