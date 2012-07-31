@@ -50,15 +50,24 @@ class BackgroundController (object):
 						continue
 					
 					if body:
-						handler = self.handlers[body['action']](self)
-						try:
-							handler.receive(body)
-							msg.delete()
-						except BaseException as e:
-							exc = traceback.format_exception(*sys.exc_info())
-							logDict['exception'] = exc
+						if 'action' not in body:
+							logDict['error'] = "Message body did not contain an action"
 							logging.error(json.dumps(logDict))
-							msg.bury()
+							msg.delete()
+						elif body['action'] not in self.handlers:
+							logDict['error'] = "No registered handler for message action"
+							logging.error(json.dumps(logDict))
+							msg.delete()
+						else:
+							handler = self.handlers[body['action']](self)
+							try:
+								handler.receive(body)
+								msg.delete()
+							except BaseException as e:
+								exc = traceback.format_exception(*sys.exc_info())
+								logDict['exception'] = exc
+								logging.error(json.dumps(logDict))
+								msg.bury()
 					else:
 						logDict['error'] = "Message did not contain a body"
 						logging.error(json.dumps(logDict))

@@ -86,7 +86,7 @@ class AmazonFPS(object):
 			'HttpParameters': httpParams, # '&'.join('{0}={1}'.format(key, val) for key, val in httpParams.iteritems()),
 			'SignatureVersion': '2',
 			'SignatureMethod': 'HmacSHA256',
-			'Timestamp': datetime.now().isoformat(),
+			'Timestamp': datetime.utcnow().isoformat() + 'Z', # Fuck you, Python!
 			'Version': '2008-09-17'
 		}
 		
