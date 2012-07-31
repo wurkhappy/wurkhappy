@@ -512,9 +512,6 @@ class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 				}
 				
 				raise HTTPError(409, 'Database integrity error: the specified email address is already in use')
-				# self.set_status(409)
-				# self.renderJSON(error)
-				# return
 		
 		if args['firstName']:
 			user['firstName'] = args['firstName']
