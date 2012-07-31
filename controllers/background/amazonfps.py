@@ -81,7 +81,6 @@ class QueueHandler(object):
 			else:
 				xmlns = '{http://fps.amazonaws.com/doc/2008-09-17/}'
 				success = xml.findtext('{0}GetRecipientVerificationStatusResult/{0}RecipientVerificationStatus/'.format(xmlns))
-				logging.info('{"response": "%s"}' % success)
 				return success
 		
 		return None
@@ -131,11 +130,15 @@ class VerificationHandler(QueueHandler):
 			raise Exception("Amazon API error")
 		
 		if status in ['VerificationComplete', 'VerificationCompleteNoLimits']:
-			amazonConfirmed = UserPrefs(
-				userID=user['id'],
-				name='amazon_verification_complete',
-				value='True'
-			)
+			amazonConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
+			
+			if not amazonConfirmed:
+				amazonConfirmed = UserPrefs(
+					userID=user['id'],
+					name='amazon_verification_complete',
+				)
+			
+			amazonConfirmed['value'] = 'True'
 			amazonConfirmed.save()
 		
 		logging.info(json.dumps({
@@ -144,6 +147,6 @@ class VerificationHandler(QueueHandler):
 			"amazonPaymentsAccount": {
 				"recipientEmail": amazonEmail['value'],
 				"tokenID": amazonToken['value'],
-				"status": status
+				"verificationComplete": status in ['VerificationComplete', 'VerificationCompleteNoLimits']
 			}
 		}))
