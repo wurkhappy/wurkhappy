@@ -85,7 +85,7 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 			<ul>
 				<li><strong>Transaction Reference:</strong> {{ data['transactionReference'] }}</li>
 				{% if data['agreementPhase'] %}
-					<li><strong>Agreement Phase:</strong> Phase {{ data['agreementPhase']['phaseNumber'] }} of
+					<li><strong>Agreement Phase:</strong> Phase {{ data['agreementPhase']['phaseNumber'] + 1 }} of
 						<a href="/agreement/{{ data['agreementPhase']['agreement']['id'] }}">{{ data['agreementPhase']['agreement']['name'] }}</a>
 					</li>
 				{% end %}
