@@ -100,16 +100,30 @@
 					
 					<h2>Frequently Asked Questions</h2>
 					
-					<h3>What does Wurk Happy charge?</h3>
+					<h3>What does it cost?</h3>
 					
-					<p>We charge <strong>1%</strong> per transaction on top of Amazon's transaction fees.</p>
+					<p>Amazon charges <strong>2.9%</strong> per transaction. We don't charge anything on top of that.</p>
 					
 					<h3>Why use Amazon Payments?</h3>
 					
-					<p>We like it.</p>
+					<p>We think it gives the most flexibility for .</p>
 				</div>
 				<div class="column-one-fourth">
 					{% module AcceptMarketplaceFeeButton(data['id']) %}
+				</div>
+			{% elif 'verificationStatus' not in data['amazonFPSAccount'] or data['amazonFPSAccount']['verificationStatus'] is not 'verified' %}
+				<div class="column-three-fourth">
+					<h2>Verify Your Amazon Marketplace Account</h2>
+					
+					<p>After signing up for Amazon Payments, you should receive an email from Amazon asking you to verify
+						your account. Typically this email asks you to connect a bank account and complete a tax questionnaire.
+						Please complete any of these steps on the Amazon Payments web site and click "Verify Account" when
+						you've finished.</p>
+				</div>
+				<div class="column-one-fourth">
+					<ul class="action-button">
+						<li><a href="#" rel="nofollow" id="amazon_verify" class="top js-button">Verify Account</a></li>
+					</ul>
 				</div>
 			{% else %}
 				<div class="column-three-fourth">
@@ -117,7 +131,7 @@
 					
 					<h1 style="color:green;font-size:50px;float:left">&#9745;</h1>
 					
-					<p>Your Amazon Marketplace Account has been successfully connected. You are ready to start receiving payments through Wurk Happy!</p>
+					<p>Your Amazon Marketplace Account has been successfully connected and verified with Amazon. You are ready to start receiving payments through Wurk Happy!</p>
 				</div>
 			{% end %}
 		</div>

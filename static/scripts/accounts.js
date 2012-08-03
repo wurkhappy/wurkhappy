@@ -109,25 +109,28 @@ var buttonActions = {
 	'amazon_verify': {
 		default: function (self, evt) {
 			
-			$.ajax({
-				url: '/activity',
-				data: {'id': userID}, // FIX THIS
-				dataType: 'json',
-				type: 'GET',
-				success: function (data, status, xhr) {
-					//...
-				}
-			});
+			var successFunction = function (data, status, xhr) {
+				var location = xhr.getResponseHeader('Location');
+				
+				$.ajax({
+					url: location,
+					dataType: 'json',
+					type: 'GET',
+					success: function (data, status, xhr) {
+						alert('plz collapse box kthx');
+					}
+				});
+			};
 			
 			$.ajax({
-				url: '/user/me/account/verify.json',
-				data: {/*...*/},
+				url: '/user/me/account/amazonVerificationQueue.json',
+				data: {'_xsrf': slug['_xsrf']},
 				dataType: 'json',
 				type: 'POST',
-				success: function (data, status, xhr) {
-					//...
-				}
+				success: successFunction
 			});
+			
+			return evt.preventDefault();
 		}
 	},
 	

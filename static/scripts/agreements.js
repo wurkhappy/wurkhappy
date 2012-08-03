@@ -313,5 +313,69 @@ var buttonActions = {
 			
 			return evt.preventDefault();
 		}
+	},
+	
+	'action-amazon-verify': {
+		default: function (self, evt) {
+			self.state = 'cancel';
+			
+			if (!self.hasOwnProperty('$button')) {
+				self.$button = $(evt.target);
+				self.name = self.$button.html();
+			}
+			
+			if (!self.hasOwnProperty('$popup')) {
+				self.$popup = $('#verify-div').clone();
+			}
+			
+			var popup = new Popup('#content');
+			
+			self.$button.addClass('cancel');
+			self.$button.html('Cancel');
+			
+			$('#content').prepend(self.$popup);
+			self.$popup.slideDown(300);
+			
+			return evt.preventDefault();
+		},
+		
+		cancel: function (self, evt) {
+			self.state = 'default';
+			
+			self.$popup.slideUp(300);
+			
+			self.$button.removeClass('cancel');
+			self.$button.html(self.name);
+			
+			return evt.preventDefault();
+		}
+	},
+	
+	'amazon_verify': {
+		default: function (self, evt) {
+			
+			var successFunction = function (data, status, xhr) {
+				var location = xhr.getResponseHeader('Location');
+				
+				$.ajax({
+					url: location,
+					dataType: 'json',
+					type: 'GET',
+					success: function (data, status, xhr) {
+						alert('plz collapse box kthx');
+					}
+				});
+			};
+			
+			$.ajax({
+				url: '/user/me/account/amazonVerificationQueue.json',
+				data: {'_xsrf': slug['_xsrf']},
+				dataType: 'json',
+				type: 'POST',
+				success: successFunction
+			});
+			
+			return evt.preventDefault();
+		}
 	}
 };

@@ -164,6 +164,21 @@
 			{% module AcceptMarketplaceFeeButton(data['vendor']['id']) %}
 		</div>
 	</div>
+	
+	<div class="clear prompt-box" id="verify-div" style="display:none;">
+		<div class="column-three-fourth">
+			<h3>Please complete the Amazon Payments verification process.</h3>
+			<p>After signing up for Amazon Payments, you should receive an email from Amazon asking you to verify
+				your account. Typically this email asks you to connect a bank account and complete a tax questionnaire.
+				Please complete any of these steps on the Amazon Payments web site and click "Verify Account" when
+				you've finished.</p>
+		</div>
+		<div class="column-one-fourth">
+			<ul class="action-button">
+				<li><a href="#" rel="nofollow" id="amazon_verify" class="top js-button">Verify Account</a></li>
+			</ul>
+		</div>
+	</div>
 	{% end %}
 
 {% end %}

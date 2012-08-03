@@ -195,14 +195,16 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 		else:
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
 			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')
+			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
 		
 		if tokenPref and refundPref:
-			verifiedPref = UserPrefs.retrieveByUserIDAndName(user['id', 'amazon_verification_complete')
+			verifiedPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
 			
 			userDict['amazonFPSAccount'] = {
 				'tokenID': tokenPref['value'],
 				'refundTokenID': refundPref['value'],
-				'accountStatus': 'verified' if verifiedPref and verifiedPref['value'] == 'True' else 'pending'
+				'recipientEmail': emailPref['value'],
+				'verificationStatus': 'verified' if verifiedPref and verifiedPref['value'] == 'True' else 'pending'
 			}
 		else:
 			userDict['amazonFPSAccount'] = None
@@ -605,7 +607,50 @@ class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 
 
 # -------------------------------------------------------------------
-# Amazon Account Verification
+# Retrieve Amazon Account Verification
+# -------------------------------------------------------------------
+
+class AmazonAccountJSONHandler(Authenticated, JSONBaseHandler):
+	'''Retrieve Amazon FPS account information for the current user.'''
+	
+	@web.authenticated
+	def get(self):
+		user = self.current_user
+		
+		token = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
+		refund = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')
+		email = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
+		verified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
+		
+		if token and refund and email:
+			response = {
+				'userID': user['id'],
+				'amazonFPSAccount': {
+					'tokenID': token['value'],
+					'refundTokenID': refund['value'],
+					'recipientEmail': email['value'],
+					'verificationStatus': 'verified' if verified and verified['value'] == 'True' else 'pending'
+				}
+			}
+			
+			self.renderJSON(response)
+		else:
+			self.error_description = {
+				'domain': 'application.resource.not_found',
+				'debug': 'no account record for user',
+				'display': (
+					"It looks like you haven't configured an Amazon Payments "
+					"account. Please complete those steps before trying to "
+					"view Amazon account info."
+				)
+			}
+			
+			raise HTTPError(404, 'No account for user')
+
+
+
+# -------------------------------------------------------------------
+# Push onto Amazon Account Verification Queue
 # -------------------------------------------------------------------
 
 class AmazonVerificationJSONHandler(Authenticated, JSONBaseHandler):
@@ -613,7 +658,7 @@ class AmazonVerificationJSONHandler(Authenticated, JSONBaseHandler):
 	verification status for the current user.'''
 	
 	@web.authenticated
-	def get(self):
+	def post(self):
 		user = self.current_user
 		
 		token = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
@@ -632,92 +677,21 @@ class AmazonVerificationJSONHandler(Authenticated, JSONBaseHandler):
 			raise HTTPError(400, 'Missing Amazon token')
 			# self.set_status(400)
 			# self.renderJSON(error)
+		
+		with Beanstalk() as bconn:
+			msg = {
+				'action': 'verifyUserAccount',
+				'userID': user['id']
+			}
 			
-		baseURL = 'https://{0}/'.format(AmazonS3.settings['fps_host'])
-		queryArgs = {
-			'AWSAccessKeyId': AmazonS3.settings['key_id'],
-			'Action': 'GetRecipientVerificationStatus',
-			'RecipientTokenId': token['value'],
-			'SignatureMethod': 'HmacSHA256',
-			'SignatureVersion': '2',
-			'Timestamp': datetime.utcnow().isoformat() + 'Z',  # Remember to append the Z because WTF, Python!?
-			'Version': '2008-09-17'
-		}
+			tube = self.application.configuration['amazond']['beanstalk_tube']
+			bconn.use(tube)
+			r = bconn.put(json.dumps(msg))
+			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
-		fps = AmazonFPS()
-		queryArgs['Signature'] = fps.generateSignature('GET', AmazonS3.settings['fps_host'], '', queryArgs)
-		
-		queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
-		logging.info('Amazon FPS verification URL: %s', baseURL + '?' + queryString)
-		
-		httpClient = HTTPClient()
-		
-		# TODO: UGLY HACK EW EW EW EW
-		
-		try:
-			verificationResponse = httpClient.fetch(baseURL + '?' + queryString)
-		except HTTPClientError as e:
-			logging.error('Amazon FPS verification returned an error: %s', e)
-		else:
-			logging.info('Received %d from Amazon', verificationResponse.code)
-			logging.info(verificationResponse.body)
-			
-			if accountResponse.code == 200:
-				try:
-					xml = ET.XML(verificationResponse.body)
-				except SyntaxError as e:
-					logging.error('Amazon FPS verification response did not contain valid XML: %s', e)
-				else:
-					xmlns = '{http://fps.amazonaws.com/doc/2008-09-17/}'
-					message = xml.findtext('{0}GetRecipientVerificationStatusResult/{0}RecipientVerificationStatus/'.format(xmlns))
-					
-					if message in ['VerificationComplete', 'VerificationCompleteNoLimits']:
-						verified = UserPrefs(
-							userID=user['id'],
-							name='amazon_verification_complete',
-							value='True'
-						)
-						
-						verified.save()
-						
-						response = {
-							'user_id': user['id'],
-							'amazonVerificationComplete': True
-						}
-					elif message == 'VerificationPending':
-						response = {
-							'user_id': user['id'],
-							'amazonVerificationComplete': False
-						}
-					
-					self.renderJSON(response)
-			else:
-				error = {
-					'domain': 'external.error',
-					'debug': 'unexpected api response',
-					'display': (
-						"Something unexpectedly went wrong. Our engineers have been "
-						"notified and we are working to fix the problem. Please try "
-						"again later."
-					)
-				}
-				
-				self.set_status(500)
-				self.renderJSON(error)
-			return
-		
-		error = {
-			'domain': 'application.error',
-			'debug': 'trouble parsing XML',
-			'display': (
-				"Something unexpectedly went wrong. Our engineers have been "
-				"notified and we are working to fix the problem. Please try "
-				"again later."
-			)
-		}
-		
-		self.set_status(500)
-		self.renderJSON(error)
+		self.set_status(201)
+		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], user['id']))
+		return
 
 
 

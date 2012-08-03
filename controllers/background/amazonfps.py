@@ -71,17 +71,26 @@ class QueueHandler(object):
 				'exception': str(e)
 			}))
 		else:
-			try:
-				xml = ET.XML(accountStatusResponse.body)
-			except SyntaxError as e:
-				logging.error(json.dumps({
-					'message': 'Amazon FPS signature validation response did not contain valid XML',
-					'exception': str(e)
-				}))
+			if accountStatusResponse.code == 200:
+				try:
+					xml = ET.XML(accountStatusResponse.body)
+				except SyntaxError as e:
+					logging.error(json.dumps({
+						'message': 'Amazon FPS signature validation response did not contain valid XML',
+						'exception': str(e)
+					}))
+				else:
+					xmlns = '{http://fps.amazonaws.com/doc/2008-09-17/}'
+					success = xml.findtext('{0}GetRecipientVerificationStatusResult/{0}RecipientVerificationStatus/'.format(xmlns))
+					return success
 			else:
-				xmlns = '{http://fps.amazonaws.com/doc/2008-09-17/}'
-				success = xml.findtext('{0}GetRecipientVerificationStatusResult/{0}RecipientVerificationStatus/'.format(xmlns))
-				return success
+				logging.error(json.dumps({
+					'message': 'Unexpected response from Amazon FPS',
+					'response': {
+						'status': accountStatusResponse.code,
+						'bdoy': accountStatusResponse.body
+					}
+				}))
 		
 		return None
 
