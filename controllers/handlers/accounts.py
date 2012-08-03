@@ -170,7 +170,6 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
 			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id') or UserPrefs(userID=user['id'], name='amazon_refund_token_id')
 			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email') or UserPrefs(userID=user['id'], name='amazon_recipient_email')
-			confirmedPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed') or UserPrefs(userID=user['id'], name='amazon_confirmed')
 
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
@@ -191,9 +190,6 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				emailPref['value'] = args['recipientEmail']
 				emailPref.save()
 
-				confirmedPref['value'] = "True"
-				confirmedPref.save()
-
 			self.redirect('{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.path))
 			return
 		else:
@@ -201,9 +197,12 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')
 		
 		if tokenPref and refundPref:
+			verifiedPref = UserPrefs.retrieveByUserIDAndName(user['id', 'amazon_verification_complete')
+			
 			userDict['amazonFPSAccount'] = {
 				'tokenID': tokenPref['value'],
-				'refundTokenID': refundPref['value']
+				'refundTokenID': refundPref['value'],
+				'accountStatus': 'verified' if verifiedPref and verifiedPref['value'] == 'True' else 'pending'
 			}
 		else:
 			userDict['amazonFPSAccount'] = None

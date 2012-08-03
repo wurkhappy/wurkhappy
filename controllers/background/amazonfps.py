@@ -140,6 +140,27 @@ class VerificationHandler(QueueHandler):
 			
 			amazonConfirmed['value'] = 'True'
 			amazonConfirmed.save()
+			
+			# Enqueue verification status onto the Nginx HTTP push module.
+			# This is a temporary hack, and should probably use a unique ID
+			# that's not the user's UID.
+			
+			httpClient = HTTPClient()
+			
+			try:
+				notificationResponse = httpClient.fetch('http://127.0.0.1:1138/?id={0}'.format(user['id']),
+					headers={'Content-Type': 'application/json'},
+					body=json.dumps({
+						'userID': user['id'],
+						'amazonVerificationComplete': True
+					})
+				)
+			except HTTPError as e:
+				logging.error(json.dumps({
+					'message': 'Publishing to Nginx HTTP push queue failed',
+					'exception': str(e)
+				}))
+			
 		
 		logging.info(json.dumps({
 			"message": "processed verification request",

@@ -106,6 +106,31 @@ var buttonActions = {
 		popup.setLabel('Your profile has been updated.').open();
 	},
 	
+	'amazon_verify': {
+		default: function (self, evt) {
+			
+			$.ajax({
+				url: '/activity',
+				data: {'id': userID}, // FIX THIS
+				dataType: 'json',
+				type: 'GET',
+				success: function (data, status, xhr) {
+					//...
+				}
+			});
+			
+			$.ajax({
+				url: '/user/me/account/verify.json',
+				data: {/*...*/},
+				dataType: 'json',
+				type: 'POST',
+				success: function (data, status, xhr) {
+					//...
+				}
+			});
+		}
+	},
+	
 	'dwolla_connect': {
 		default: function (self, evt) {
 			var width = window.outerWidth, height = window.outerHeight, x = 0, y = 0;

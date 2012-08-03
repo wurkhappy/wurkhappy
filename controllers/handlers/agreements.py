@@ -270,12 +270,16 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 			# Modify behavior to prompt for Amazon configuration if no
 			# confirmation is on file.
 			
-			amzAcctConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed')
+			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
+			amzAcctVerified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
 
-			if amzAcctConfirmed and amzAcctConfirmed['value'] == 'True':
-				empty['amazonAccountConfirmed'] = True
+			if amzAcctVerified and amzAcctVerified['value'] == 'True':
+				empty['amazonAccountStatus'] = 'verified'
+			elif amzAcctConnected and amzAcctConnected['value'] is not None:
+				empty['amazonAccountStatus'] = 'pending'
+				empty['actions'][1] = ('action-amazon-verify', 'Send Agreement')
 			else:
-				empty['amazonAccountConfirmed'] = False
+				empty['amazonAccountStatus'] = None
 				empty['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
 
 			self.render("agreement/edit.html", title=title, data=empty, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
@@ -597,14 +601,19 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 			templateDict['recipientEmail'] = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		
 		if agreement['vendorID'] == user['id'] and isinstance(currentState, (DraftState, DeclinedState)):
-			amzAcctConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_confirmed')
-			
 			templateDict['uri'] = self.request.uri
 			
-			if amzAcctConfirmed and amzAcctConfirmed['value'] == 'True':
-				templateDict['amazonAccountConfirmed'] = True
+			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
+			amzAcctVerified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
+
+			if amzAcctVerified and amzAcctVerified['value'] == 'True':
+				templateDict['amazonAccountStatus'] = 'verified'
+			elif amzAcctConnected and amzAcctConnected['value'] is not None:
+				templateDict['amazonAccountStatus'] = 'pending'
+				if len(templateDict['actions']) > 1:
+					templateDict['actions'][1] = ('action-amazon-verify', 'Send Agreement')
 			else:
-				templateDict['amazonAccountConfirmed'] = False
+				templateDict['amazonAccountStatus'] = None
 				if len(templateDict['actions']) > 1:
 					templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
 			
@@ -613,8 +622,8 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 			# Adding account info here because I'm a dumbass.
 			# TODO: figure out the right way to populate this info
 			# paymentMethod = user.getDefaultPaymentMethod()
-			userDwolla = UserDwolla.retrieveByUserID(user['id'])
-			templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.getPublicDict()
+			# userDwolla = UserDwolla.retrieveByUserID(user['id'])
+			# templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.getPublicDict()
 			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
 
 
