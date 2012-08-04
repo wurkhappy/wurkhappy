@@ -158,6 +158,7 @@ class VerificationHandler(QueueHandler):
 			
 			try:
 				notificationResponse = httpClient.fetch('http://127.0.0.1:1138/?id={0}'.format(user['id']),
+					method='POST',
 					headers={'Content-Type': 'application/json'},
 					body=json.dumps({
 						'userID': user['id'],
