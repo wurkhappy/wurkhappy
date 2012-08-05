@@ -117,7 +117,15 @@ var buttonActions = {
 					dataType: 'json',
 					type: 'GET',
 					success: function (data, status, xhr) {
-						alert('plz collapse box kthx');
+						$('#amazon-container').html(
+							'<div class="column-three-fourth">' +
+							'<h2>Amazon Marketplace Account</h2>' +
+							'<h1 style="color:green;font-size:50px;float:left">&#9745;</h1>' +
+							'<p>Your Amazon Marketplace Account has been successfully connected ' +
+							'and verified with Amazon. You are ready to start receiving payments ' +
+							'through Wurk Happy!</p>' +
+							'</div>'
+						);
 					}
 				});
 			};

@@ -362,7 +362,15 @@ var buttonActions = {
 					dataType: 'json',
 					type: 'GET',
 					success: function (data, status, xhr) {
-						alert('plz collapse box kthx');
+						if (!self.hasOwnProperty('$popup')) {
+							self.$popup = $('#success-div').clone();
+						}
+						
+						$('#content').prepend(self.$popup);
+						self.$popup.slideDown(300);
+						$('#verify-div').slideUp(300);
+						
+						return evt.preventDefault();
 					}
 				});
 			};
