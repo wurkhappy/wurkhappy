@@ -1066,7 +1066,10 @@ class AgreementActionJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 				phase.save()
 		
 		try:
-			currentState.performTransition(role, action, unsavedRecords)
+			currentState = currentState.performTransition(role, action, unsavedRecords)
+			
+			# The new state is not used below this point, but the old one is. This
+			# assignment is to make that clear until I clean this up [Bb]
 			
 			actionMap = {
 				'send': 'agreementSent',
@@ -1092,8 +1095,19 @@ class AgreementActionJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 					# user state transition. Override the 'agreementSent'
 					# action to say 'agreementInvite'.
 					
-					if isinstance(clientState, InvitedUserState):
-						# TODO: use a real value here
+					# Only override if the agreement was just sent for the
+					# first time.
+					
+					if isinstance(clientState, InvitedUserState) and isinstance(currentState, EstimateState):
+						# We use a fake value here to fool the state transition logic
+						# and generate the real confirmation code in the background
+						# process because we don't want the token to be exposed to
+						# logs, etc.
+						
+						# TODO: I think the transition could happen in the
+						# notification daemon since the new state is never
+						# referenced.
+						
 						data = {"confirmation": "foo"}
 						clientState.performTransition("send_verification", data)
 						msg['action'] = 'agreementInvite'
