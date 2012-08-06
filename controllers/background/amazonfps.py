@@ -157,7 +157,11 @@ class VerificationHandler(QueueHandler):
 			httpClient = HTTPClient()
 			
 			try:
-				notificationResponse = httpClient.fetch('http://127.0.0.1:1138/?id={0}'.format(user['id']),
+				notificationResponse = httpClient.fetch('http://{0}/?chan={1}&id={2}'.format(
+						self.config['amazond'].get('http_push_host', '127.0.0.1'),
+						self.config['amazond'].get('http_push_prefix', ''),
+						user['id']
+					),
 					method='POST',
 					headers={'Content-Type': 'application/json'},
 					body=json.dumps({
