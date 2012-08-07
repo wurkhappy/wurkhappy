@@ -17,6 +17,7 @@ from elementtree import ElementTree as ET
 class QueueHandler(object):
 	def __init__(self, application):
 		self.application = application
+		self.config = application.config
 	
 	def getAmazonAccountStatus(self, amazonToken):
 		"""

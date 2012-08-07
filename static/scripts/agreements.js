@@ -48,7 +48,7 @@ var buttonActions = {
 			});
 			
 			return evt.preventDefault();
-		}
+		}		
 	},
     
 	'action-resend': {
@@ -326,6 +326,7 @@ var buttonActions = {
 			
 			if (!self.hasOwnProperty('$popup')) {
 				self.$popup = $('#verify-div').clone();
+				var btn = new Button(self.$popup.find('.js-button'));
 			}
 			
 			var popup = new Popup('#content');
@@ -353,7 +354,6 @@ var buttonActions = {
 	
 	'amazon_verify': {
 		default: function (self, evt) {
-			
 			var successFunction = function (data, status, xhr) {
 				var location = xhr.getResponseHeader('Location');
 				
@@ -364,12 +364,24 @@ var buttonActions = {
 					success: function (data, status, xhr) {
 						if (!self.hasOwnProperty('$popup')) {
 							self.$popup = $('#success-div').clone();
+							self.$popup.find('.js-close-btn').click(function(evt) {                                       
+								self.$popup.slideUp(300);
+								return evt.preventDefault();                                                        
+        						});
 						}
 						
 						$('#content').prepend(self.$popup);
 						self.$popup.slideDown(300);
 						$('#verify-div').slideUp(300);
 						
+						var $cancelButton = $('#action-amazon-verify');
+						$cancelButton.slideUp(300);
+						
+						var $sendButton = $('<a href="#" id="action-send" class="top js-button">Send Agreement</a>');
+						var btn = new Button($sendButton);
+						
+						$cancelButton.parent().append($sendButton);
+
 						return evt.preventDefault();
 					}
 				});
