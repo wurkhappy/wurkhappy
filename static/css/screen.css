@@ -200,6 +200,12 @@ h3 {
 	background: url(/static/images/icons/add-16x16.png) no-repeat left;
 }
 
+#content h3.add-more {
+	margin: 20px 0 0 0;
+	padding: 0 0 0 20px;
+	background: url(/static/images/icons/add-16x16.png) no-repeat left;
+}
+
 #content form fieldset label,
 #content form fieldset p.faux-label {
 	display: block;
@@ -859,4 +865,11 @@ li.listImage {
 
 li.orderedList {
 	height: 35px;
+}
+
+/* Payment Schedule */
+.paymentphase {
+	border-top: 1px solid #E1E1E1;
+	margin-top: 5px;
+	margin-bottom: 2px;
 }
