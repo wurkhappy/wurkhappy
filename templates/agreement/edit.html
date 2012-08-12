@@ -59,9 +59,11 @@
 
 			<h2>Proposal</h2>
 			<fieldset>
-				<label for="">Name</label>
+				<label for="">Title</label>
 				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
-				<label for="summary">Description of Services</label>
+				<label for="summary">Proposed Services
+				<span>Examples: scope of work, work overview. Also known as what work will be done, when it will be done, who will do what, how work will be <br />  judged acceptable.</span>
+				</label>
 				<textarea name="summary" rows="3" cols="100">{% if data['summary'] and len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
 				{% if data['state'] == 'DeclinedState' and data['summaryComments'] %}
 					<div class="notes">
@@ -79,10 +81,12 @@
 						<div>
 							<label for="">Deposit</label>
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["amount"] }}{% end %}" size="100" />
-							<label for="">Estimated Date of Completion</label>
+							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][0]["estDateCompleted"] if len(data["phases"]) > 0 else None %}
 							{% module DatePicker('phase-one', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)</label>
+							<label for="">Description (what is this payment for?)
+							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>
+							</label>
 							<textarea name="details" rows="5" cols="100">{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["description"] }}{% end %}</textarea>
 							{% if data['state'] == 'DeclinedState' and len(data["phases"]) > 0 and 'comments' in data['phases'][0] %}
 								<div class="notes">
@@ -96,10 +100,12 @@
 						<div>
 							<label for="">Payment Amount</label>
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["amount"] }}{% end %}" size="100" />
-							<label for="">Estimated Date of Completion</label>
+							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][1]["estDateCompleted"] if len(data["phases"]) > 1 else None %}
 							{% module DatePicker('phase-two', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)</label>
+							<label for="">Description (what is this payment for?)
+							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>	
+							</label>
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["description"] }}{% end %}</textarea>
 							{% if data['state'] == 'DeclinedState' and len(data["phases"]) > 1 and 'comments' in data['phases'][1] %}
 								<div class="notes">
@@ -113,10 +119,12 @@
 						<div>
 							<label for="">Payment Amount</label>
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["amount"] }}{% end %}" size="100" />
-							<label for="">Estimated Date of Completion</label>
+							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][2]["estDateCompleted"] if len(data["phases"]) > 2 else None %}
 							{% module DatePicker('phase-three', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)</label>
+							<label for="">Description (what is this payment for?)
+							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>	
+							</label>
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["description"] }}{% end %}</textarea>
 							{% if data['state'] == 'DeclinedState' and len(data["phases"]) > 2 and 'comments' in data['phases'][2] %}
 								<div class="notes">
@@ -130,10 +138,12 @@
 						<div>
 							<label for="">Payment Amount</label>
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["amount"] }}{% end %}" size="100" />
-							<label for="">Estimated Date of Completion</label>
+							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][3]["estDateCompleted"] if len(data["phases"]) > 3 else None %}
 							{% module DatePicker('phase-four', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)</label>
+							<label for="">Description (what is this payment for?)
+							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>	
+							</label>
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["description"] }}{% end %}</textarea>
 							{% if data['state'] == 'DeclinedState' and len(data["phases"]) > 3 and 'comments' in data['phases'][3] %}
 								<div class="notes">
@@ -143,7 +153,7 @@
 						</div>
 					</li>
 				</ul>
-				<h3 style="padding-left: 0px; font-weight: 100;"><a href="#" id="add-phase-btn">+ Add a phase</a></h3>
+				<h3 style="padding-left: 0px; font-weight: 100;"><a href="#" id="add-phase-btn" class="add-more"><p class="add-more">Add a phase</p></a></h3>
 			</fieldset>
 		</form>
 	</div>
