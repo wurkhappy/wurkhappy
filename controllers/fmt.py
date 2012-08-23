@@ -180,7 +180,7 @@ class URL(Enforce):
 	def __init__(self, default=None):
 		Enforce.__init__(self, str, default)
 	
-	#TODO: unit test this
+	# TODO: unit test this
 	def test(self, value):
 		if not re.match(r'^(http(?:s)?://[a-zA-Z0-9\-]+(?:\.[a-zA-Z0-9\-]+)*\.[a-zA-Z]{2,6}(?:/?|(?:/[\w\-]+)*)(?:/?|/\w+\.[a-zA-Z]{2,4}(?:\?[\w]+\=[\w\-]+)?)?(?:\&[\w]+\=[\w\-]+)*)$', value):
 			raise Exception("value must be well-formed")

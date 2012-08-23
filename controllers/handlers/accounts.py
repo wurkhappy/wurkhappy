@@ -151,7 +151,6 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 		
 		userDict = {
 			'_xsrf': self.xsrf_token,
-			# 'error': dwollaError,
 			'id': user['id'],
 			'firstName': user['firstName'],
 			'lastName': user['lastName'],
@@ -302,8 +301,6 @@ class AccountCreationHandler(BaseHandler):
 				r = bconn.put(json.dumps(msg))
 				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 			
-			# self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-			
 			# TODO: In the future, the setup process will be slightly more
 			# robust. At that point we can redirect to the setup page without
 			# forcing email verification. Until then, we'll render a "hang
@@ -325,116 +322,6 @@ class AccountCreationHandler(BaseHandler):
 			
 			self.set_status(400)
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
-		
-
-# -------------------------------------------------------------------
-# Account Connection Handler (Currently for Dwolla)
-# -------------------------------------------------------------------
-
-class AccountConnectionHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
-	@web.authenticated
-	def get(self):
-		"""This is a Dwolla callback handler. We are looking for the 'code'
-		query string parameter to begin the token exchange process."""
-		
-		user = self.current_user
-		
-		try:
-			args = fmt.Parser(self.request.arguments,
-				optional=[
-					('code', fmt.Enforce(str))
-				]
-			)
-		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
-		
-		if args['code']:
-			# Do an HTTP request to get the token
-			# It's synchronous for now, but we'll do async later.
-			
-			baseURL = 'https://www.dwolla.com/oauth/v2/token'
-			queryArgs = {
-			 	'client_id': self.application.configuration['dwolla']['key'],
-				'client_secret': self.application.configuration['dwolla']['secret'],
-				'grant_type': 'authorization_code',
-				'redirect_uri': self.buildRedirectURL(self.token),
-				'code': args['code']
-			}
-			queryString = '&'.join('{0}={1}'.format(key, urllib.quote(val, '/')) for key, val in queryArgs.iteritems())
-			logging.info('Dwolla key exchange URL: %s', baseURL + '?' + queryString)
-			
-			httpClient = HTTPClient()
-			
-			# TODO: UGLY HACK EW EW EW EW
-			
-			try:
-				exchangeResponse = httpClient.fetch(baseURL + '?' + queryString)
-			except HTTPClientError as e:
-				logging.error('Dwolla token exchange returned an error: %s', e)
-			else:
-				# We don't trust third parties, so, like, log the entire response
-				logging.info('Received %d from Dwolla', exchangeResponse.code)
-				logging.info(exchangeResponse.body)
-				
-				if exchangeResponse.code == 200:
-					# Parse the response body and store the access token
-					responseDict = json.loads(exchangeResponse.body)
-					oauthToken = responseDict['access_token']
-					logging.info(oauthToken)
-					accountURL = 'https://www.dwolla.com/oauth/rest/users/'
-					queryString = 'oauth_token={0}'.format(urllib.quote(oauthToken, '/'))
-					
-					logging.info('Dwolla user info URL: %s', accountURL + '?' + queryString)
-					
-					try:
-						accountResponse = httpClient.fetch(accountURL + '?' + queryString)
-					except HTTPClientError as e:
-						logging.error('Dwolla account lookup returned an error: %s', e)
-					else:
-						# We don't trust third parties, so, like, log the entire response
-						logging.info('Received %d from Dwolla', accountResponse.code)
-						logging.info(accountResponse.body)
-						
-						if accountResponse.code == 200:
-							# Parse the second response body and update the DB
-							accountDict = json.loads(accountResponse.body)
-							
-							if accountDict['Success'] == True:
-								dwolla = UserDwolla()
-								dwolla['userID'] = user['id']
-								dwolla['userName'] = accountDict['Response']['Name']
-								dwolla['dwollaID'] = accountDict['Response']['Id']
-								dwolla['oauthToken'] = oauthToken
-								dwolla['status'] = 1
-								dwolla.save()
-							
-								logging.info(dwolla)
-							elif accountDict['Message'] == 'Invalid account status for user of this access token.':
-								# I think this is where Ramsey's account authorization failed.
-								dwolla = UserDwolla()
-								dwolla['userID'] = user['id']
-								dwolla['authToken'] = oauthToken
-								dwolla['status'] = 0
-								dwolla.save()
-								
-								logging.warn('User %d has not verified their Dwolla account', user['id'])
-								logging.info(dwolla)
-							else:
-								logging.error('Dwolla request failed. %s', accountDict)
-								dwollaError = 'Wurk Happy was unable to connect with your Dwolla account.'
-							
-						else:
-							logging.error('Dwolla account lookup returned an unexpected response. %s', accountResponse)
-			
-			# TODO: If there was an error and you know it, clap your hands!
-			
-		self.set_status(200)
-		self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-		self.write("""<html><body onload="window.close()"></body></html>""")
-		return
 
 
 
@@ -653,7 +540,7 @@ class AmazonAccountJSONHandler(Authenticated, JSONBaseHandler):
 # Push onto Amazon Account Verification Queue
 # -------------------------------------------------------------------
 
-class AmazonVerificationJSONHandler(Authenticated, JSONBaseHandler):
+class AmazonVerificationJSONHandler(CookieAuthenticated, JSONBaseHandler):
 	'''Initiate an Amazon FPS API call to get the account
 	verification status for the current user.'''
 	
@@ -675,8 +562,6 @@ class AmazonVerificationJSONHandler(Authenticated, JSONBaseHandler):
 				)
 			}
 			raise HTTPError(400, 'Missing Amazon token')
-			# self.set_status(400)
-			# self.renderJSON(error)
 		
 		with Beanstalk() as bconn:
 			msg = {
@@ -733,7 +618,7 @@ class PasswordHandler(BaseHandler):
 # Password Recovery JSON Handler
 # -------------------------------------------------------------------
 
-class PasswordRecoveryJSONHandler(BaseHandler):
+class PasswordRecoveryJSONHandler(JSONBaseHandler):
 	'''Responds to a POST request containing an email address, validates the
 	address is a registered user and enqueues the request the request for the
 	Notification Daemon.'''
@@ -747,10 +632,15 @@ class PasswordRecoveryJSONHandler(BaseHandler):
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
+			self.error_description = {
+				'domain': 'web.request',
+				'debug': e.message,
+				'display': (
+					"I'm sorry, that didn't look like a valid email address. "
+					"Could you please try that again?"
+				)
+			}
+			raise HTTPError(400, e.message)
 		
 		user = User.retrieveByEmail(args['email'])
 		
@@ -771,6 +661,7 @@ class PasswordRecoveryJSONHandler(BaseHandler):
 		# even if the user didn't exist.
 		
 		# TODO: In the future, we should do pretty agressive rate limiting
+		# TODO: Randomize wait time before responding
 		
 		self.renderJSON({'success': True})
 
@@ -780,8 +671,10 @@ class PasswordRecoveryJSONHandler(BaseHandler):
 # PasswordJSONHandler
 # -------------------------------------------------------------------
 
-class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
-
+class PasswordJSONHandler(TokenAuthenticated, JSONBaseHandler):
+	'''JSON handler to change a password given an existing password
+	or set an initial password given an invitation token.'''
+	
 	@web.authenticated
 	def post(self):
 		user = self.current_user
@@ -796,15 +689,17 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 				)
 			except Exception as e:
 				# TODO: WHAT THE HELL WAS I THINKING HERE?!
-				self.set_status(401)
-				self.renderJSON(error)
-				return
+				self.error_description = {
+					'domain': 'authentication',
+					'debug': 'invalid or missing password',
+					'display':'Please specify a password.'
+				}
+				raise HTTPError(400, 'Missing password parameter')
 			
 			user.setPasswordHash(args['password'])
 			user.save()
 			
-			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
-			# self.write(json.dumps({"success": True, "user": user.getPublicDict()}))
+			self.setAuthCookiesForUser(user, mode='cookie')
 			self.renderJSON({"user": user.getPublicDict()})
 			return
 		
@@ -818,17 +713,24 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.message)
-			self.set_status(e.status_code)
-			self.write(e.body_content)
-			return
+			self.error_description = {
+				'domain': 'authentication',
+				'debug': e.message,
+				'display': (
+					'In order to change your password, we require that you '
+					'enter your current password and that you enter your '
+					'desired password twice; once in the new password field, '
+					'and again in the confirmation field.'
+				)
+			}
+			raise HTTPError(400, e.message)
 		
 		if not (user and user.passwordIsValid(args['currentPassword'])):
 			# User wasn't found, or password is wrong, display error
-			#TODO: Exponential back-off when user enters incorrect password.
-			#TODO: Flag accounds if passwords change too often.
+			# TODO: Exponential back-off when user enters incorrect password.
+			# TODO: Flag accounds if passwords change too often.
 			
-			error = {
+			self.error_description = {
 				"domain": "authentication",
 				"display": (
 					"The password you entered is incorrect. Please check "
@@ -837,13 +739,11 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 				),
 				"debug": "incorrect authentication credentials"
 			}
-			
-			self.set_status(401)
-			self.renderJSON(error)
+			raise HTTPError(401, 'incorrect authentication credentials')
 		elif args['newPassword'] != args['confirmPassword']:
 			# Passwords don't match.
 			
-			error = {
+			self.error_description = {
 				"domain": "authentication.password",
 				"display": (
 					"The new password you chose does not match the "
@@ -852,9 +752,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 				),
 				"debug": "passwords don't match"
 			}
-			
-			self.set_status(400)
-			self.renderJSON(error)
+			raise HTTPError(400, "passwords don't match")
 		elif user.passwordIsValid(args['newPassword']):
 			# New password is the same as old password, and that's bad.
 			
@@ -862,7 +760,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 			# so we need to make sure that this cannot be called more than
 			# say, five times per day...
 			
-			error = {
+			self.error_description = {
 				"domain": "authentication.password",
 				"display": (
 					"Your new password cannot be the same as your current "
@@ -870,9 +768,7 @@ class PasswordJSONHandler(TokenAuthenticated, BaseHandler):
 				),
 				"debug": "attempt to re-use password"
 			}
-			
-			self.set_status(400)
-			self.renderJSON(error)
+			raise HTTPError(400, 'attempt to re-use password')
 		else:
 			user.setPasswordHash(args['newPassword'])
 			user.save()

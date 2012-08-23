@@ -61,7 +61,7 @@ class Application(web.Application):
 			
 			# JSON handlers to update account information
 			(r'/user/me/account\.json', accounts.AccountJSONHandler),
-			(r'/user/me/connections/?', accounts.AccountConnectionHandler),
+			# (r'/user/me/connections/?', accounts.AccountConnectionHandler),
 			(r'/user/me/password\.json', accounts.PasswordJSONHandler),
 			
 			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),

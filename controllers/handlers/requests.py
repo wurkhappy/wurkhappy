@@ -50,7 +50,7 @@ class RequestAgreementHandler(BaseHandler):
 		title = "New Vendor Agreement &ndash; Wurk Happy"
 		self.render("agreement/request.html", title=title, data=empty)
 
-class RequestAgreementJSONHandler(Authenticated, RequestBase):
+class RequestAgreementJSONHandler(CookieAuthenticated, RequestBase):
 	def post(self):
 		user = self.current_user
 
@@ -104,7 +104,7 @@ class RequestAgreementJSONHandler(Authenticated, RequestBase):
 				return
 
 			if not vendor:
-				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 5))
+				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 4))
 				vendor = User()
 				vendor['email'] = args['email']
 				vendor['invitedBy'] = user['id']

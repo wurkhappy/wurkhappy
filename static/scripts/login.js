@@ -26,7 +26,9 @@ var buttonActions = {
 					
 					$('#password-form input').val('');
 					
-					window.location.href = '/';
+					var redirectURL = xhr.getResponseHeader('Location') || '/';
+					
+					window.location.href = redirectURL;
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
 					var error = jQuery.parseJSON(jqXHR.responseText);

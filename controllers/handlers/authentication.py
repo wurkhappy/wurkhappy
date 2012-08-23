@@ -5,6 +5,8 @@ from models.user import User
 from controllers.email import *
 from datetime import datetime, timedelta
 import logging
+from urlparse import urlparse
+from urllib import unquote
 
 
 
@@ -23,7 +25,7 @@ class LoginHandler(BaseHandler):
 # JSON Login Handler
 # -------------------------------------------------------------------
 
-class LoginJSONHandler(BaseHandler):
+class LoginJSONHandler(Authenticated, JSONBaseHandler):
 	'''Login handler for AJAX-style JSON requests. Responds to POST requests
 	with the same verification behavior as the LoginHandler. Sets a secure
 	cookie and returns the current user's public dict if successful.'''
@@ -38,10 +40,7 @@ class LoginJSONHandler(BaseHandler):
 				]
 			)
 		except fmt.HTTPErrorBetter as e:
-			logging.warn(e.__dict__)
-			logging.warn(e.message)
-			
-			error = {
+			self.error_description = {
 				"domain": "authentication",
 				"display": (
 					"I'm sorry, that didn't look like a proper email "
@@ -49,16 +48,13 @@ class LoginJSONHandler(BaseHandler):
 				),
 				"debug": "'email' parameter must be well-formed"
 			}
-			
-			self.set_status(400)
-			self.renderJSON(error)
-			return
+			raise HTTPError(400, 'Missing or malformed login parameters')
 		
 		user = User.retrieveByEmail(args['email'])
 		
 		if not user or not user.passwordIsValid(args['password']):
 			# User wasn't found, or password is wrong, render login with error
-			error = {
+			self.error_description = {
 				"domain": "authentication",
 				"display": (
 					"I'm sorry, the email and password combination you "
@@ -68,9 +64,7 @@ class LoginJSONHandler(BaseHandler):
 				),
 				"debug": "incorrect email or password"
 			}
-			
-			self.set_status(401)
-			self.renderJSON(error)
+			raise(401, 'incorrect email or password')
 		
 		# TODO: We should figure out how to enforce that all users who log in
 		# are active users without preventing new users from providing their
@@ -93,10 +87,18 @@ class LoginJSONHandler(BaseHandler):
 		# 	self.set_status(401)
 		# 	self.renderJSON(error)
 		else:
+			queryString = urlparse(self.request.headers.get('Referer', '')).query
+			next = {pair.split('=')[0]: pair.split('=')[1] for pair in queryString.split('&')}.get('next', '/')
+			
 			success = {
 				"user": user.getPublicDict()
 			}
-			self.set_secure_cookie("user_id", str(user['id']), httponly=True)
+			self.set_header('Location', '{0}://{1}{2}'.format(
+				self.request.protocol,
+				self.application.configuration['wurkhappy']['hostname'],
+				unquote(next)
+			))
+			self.setAuthCookiesForUser(user, mode='cookie')
 			self.renderJSON(success)
 
 
@@ -109,12 +111,6 @@ class LogoutHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self):
 		self.clear_cookie("user_id")
+		self.clear_cookie('auth')
+		self.clear_cookie('auth_timestamp')
 		self.redirect('/login')
-
-	# I'm not sure why the POST method was stubbed out to return 404.
-	# I've commented it out and if it breaks anything, I'll add it back.
-	
-	# @web.authenticated
-	# def post(self):
-	# 	self.set_status(404)
-	# 	self.write("Not found")

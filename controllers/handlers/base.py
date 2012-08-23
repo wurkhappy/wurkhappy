@@ -6,7 +6,7 @@ from hashlib import sha1
 import logging
 import json
 import sys
-
+from datetime import datetime
 
 
 class BaseHandler(web.RequestHandler):
@@ -21,10 +21,8 @@ class BaseHandler(web.RequestHandler):
 		)
 	
 	def authenticated(self, method):
-		pass
-	
-	def superuser(self, method):
-		pass
+		raise NotImplementedError('Incorrect import order. ' +
+			'The authentication mixin should be first.')
 	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
@@ -63,25 +61,62 @@ class JSONBaseHandler(web.RequestHandler):
 
 
 # -------------------------------------------------------------------
-# Cookie authentication mix-in
+# General authentication mix-in
 # -------------------------------------------------------------------
 
 class Authenticated(object):
-	'''Authentication mix-in for Wurk Happy. Identifies users by querying for
-	a secure cookie and looking up the resulting ID in the database.'''
+	'''Authentication mix-in for Wurk Happy. Identifies users by
+	querying for a secure cookie and looking up the resulting ID in
+	the database.'''
+	
+	def setAuthCookiesForUser(self, user, mode='cookie'):
+		'''Set appropriate authentication cookies for the specified
+		user.'''
+		
+		self.set_secure_cookie('user_id', str(user['id']), httponly=True)
+		self.set_secure_cookie('auth', mode, httponly=True)
+		# TODO: this is a hacky way to remove microsecond precision in the timestamp. Not that we use it at the moment.
+		self.set_secure_cookie('auth_timestamp', datetime.utcnow().isoformat().split('.')[0] + 'Z', expires_days=1)
 	
 	def get_current_user(self):
-		# TODO: I think this is handled by TokenAuthenticated.
-		# Make sure it's not used anywhere before deleting!
-		# self.token = self.get_argument("t", None)
+		'''Return the currently authenticated user, identified by
+		cookie. Sets authMethod property of the user object. Allows
+		users whose cookies were set by a previous authentication
+		via email token.'''
 		
-		userID = self.get_secure_cookie("user_id")
-		return userID and User.retrieveByID(userID)
-	
-	def superuser(self, method, *args, **kwargs):
-		def wrapped(method):
-			return method(*args, **kwargs)
-		return wrapped
+		userID = self.get_secure_cookie('user_id')
+		user = userID and User.retrieveByID(userID)
+		if user:
+			user.authMethod = self.get_secure_cookie('auth')
+		return user
+
+
+
+# -------------------------------------------------------------------
+# Cookie authentication mix-in
+# -------------------------------------------------------------------
+
+class CookieAuthenticated(Authenticated):
+	'''Authentication mix-in for Wurk Happy. Identifies users by
+	querying for a secure cookie and looking up the resulting ID in
+	the database.'''
+
+	def get_current_user(self):
+		'''Return the currently authenticated user, identified by
+		cookie. Sets authMethod property of the user object. Returns
+		None if user is authenticated via email token.'''
+
+		userID = self.get_secure_cookie('user_id')
+		user = userID and User.retrieveByID(userID)
+		authMethod = self.get_secure_cookie('auth')
+		
+		if authMethod == 'token':
+			return None
+		
+		if user:
+			user.authMethod = authMethod
+		
+		return user
 
 
 
@@ -89,19 +124,56 @@ class Authenticated(object):
 # Token (and cookie) authentication mix-in
 # -------------------------------------------------------------------
 
-class TokenAuthenticated(object):
+class TokenAuthenticated(Authenticated):
 	'''Alternative authentication mix-in for classes that accept users
-	identified by log-in tokens. The token is usually specified as a query-
+	identified by log-in tokens. The token is specified as a query-
 	string argument called `t`.'''
 	
 	def get_current_user(self):
-		self.token = self.get_argument("t", None)
+		'''Return the currently authenticated user, either identified
+		by token argument or by user ID cookie. Sets appropriate
+		cookies as a side effect.'''
+		
+		# Authentication Flowchart                                   
+		# 
+		#        ( A )                     A. read token & cookie    
+		#          |                                                 
+		#        < B > --- no ---+         B. is token set?          
+		#          |             |                                   
+		#         yes          ( C )       C. retrieve user by ID    
+		#          |                                                 
+		#        < D > --- no ---+         D. is token valid?        
+		#          |             |                                   
+		#         yes          ( E )       E. delete cookies; error  
+		#          |                                                 
+		#        < F > --- no ---+         F. does token match?      
+		#          |             |                                   
+		#         yes          ( G )       G. issue new cookies      
+		#          |                                                 
+		#        ( H )                     H. use existing cookies   
+		# 
+		
+		self.token = self.get_argument('t', None)
+		userID = self.get_secure_cookie('user_id')
+		authMethod = self.get_secure_cookie('auth', 'token')
 		
 		if self.token:
-			user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
-			self.set_secure_cookie("user_id", str(user['id']))
+			user = User.retrieveByFingerprint(sha1(self.token).hexdigest())
+			
+			if user and user.tokenIsValid(self.token):
+				if user['id'] != userID:
+					self.setAuthCookiesForUser(user, mode='token')
+					user.authMethod = 'token'
+				else:
+					user.authMethod = authMethod
+			else:
+				self.delete_cookie('user_id')
+				self.delete_cookie('auth')
+				user = None
+		elif userID:
+			user = User.retrieveByID(userID)
+			user.authMethod = authMethod
 		else:
-			userID = self.get_secure_cookie("user_id")
-			user = userID and User.retrieveByID(userID)
+			user = None
 		
 		return user

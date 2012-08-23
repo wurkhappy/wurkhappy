@@ -1,7 +1,13 @@
 from __future__ import division
 
 import tornado.web as web
-from base import BaseHandler, JSONBaseHandler, Authenticated
+from base import (
+	BaseHandler,
+	JSONBaseHandler,
+	Authenticated,
+	CookieAuthenticated, 
+	TokenAuthenticated
+)
 from models.user import *
 from models.agreement import *
 from models.request import Request
@@ -210,7 +216,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 				return
 			
 			user = User.retrieveByID(agreement['clientID'])
-			self.set_secure_cookie('user_id', str(user['id']))
+			self.setAuthCookiesForUser(user, mode='token')
 		
 		if not user:
 			url = self.get_login_url()
@@ -628,7 +634,7 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 
 
 
-class NewAgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
+class NewAgreementJSONHandler(CookieAuthenticated, BaseHandler, AgreementBase):
 	@web.authenticated
 	def post(self, action):
 		user = self.current_user
@@ -856,7 +862,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 
 
-class AgreementActionJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
+class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBase):
 
 	@web.authenticated
 	def post(self, agreementID, action):
