@@ -1,5 +1,11 @@
 
 var buttonActions = {
+	'password-submit': {
+		default: function (self, evt) {
+			$('#password-form').submit();
+			return evt.preventDefault();
+		}
+	},
 	
 	profile_set: function (data, status, xhr) {
 		$('#profile-button').click();

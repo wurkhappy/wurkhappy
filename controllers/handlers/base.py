@@ -75,8 +75,9 @@ class Authenticated(object):
 		
 		self.set_secure_cookie('user_id', str(user['id']), httponly=True)
 		self.set_secure_cookie('auth', mode, httponly=True)
-		# TODO: this is a hacky way to remove microsecond precision in the timestamp. Not that we use it at the moment.
-		self.set_secure_cookie('auth_timestamp', datetime.utcnow().isoformat().split('.')[0] + 'Z', expires_days=1)
+		if mode == 'cookie':
+			# TODO: this is a hacky way to remove microsecond precision in the timestamp. Not that we use it at the moment.
+			self.set_secure_cookie('auth_timestamp', datetime.utcnow().isoformat().split('.')[0] + 'Z', expires_days=1)
 	
 	def get_current_user(self):
 		'''Return the currently authenticated user, identified by

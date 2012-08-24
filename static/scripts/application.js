@@ -145,9 +145,48 @@ var Button = function(elt) {
 	
 	this.actions = buttonActions[this.$elt.attr('id')];
 	
-	this.$elt.click(function(evt) {
+	var wrapped, clickFn = function(evt) {
 		return self.actions[self.state](self, evt);
-	});
+	};
+	
+	if (this.$elt.hasClass('cookie-authenticated')) {
+		wrapped = function(evt) {
+			if (getCookie("auth_timestamp")) {
+				return clickFn(evt);
+			} else {
+				if (!self.hasOwnProperty('$pwPopup')) {
+					self.$pwPopup = $('#password-div').clone();
+					var btn = new Button(self.$pwPopup.find('.js-button'));
+				}
+				
+				self.$pwPopup.find('#password-form').submit(function(submitEvt, elem) {
+					var capture = self.serialize('password-form');
+					
+					$.ajax({
+						url: '/login.json',
+						data: capture,
+						dataType: 'json',
+						type: 'POST',
+						success: function (data, status, xhr) {
+							self.$pwPopup.slideUp(300);
+							clickFn(evt);
+						},
+						error: self.errorHandler
+					});
+					
+					return submitEvt.preventDefault();
+				});
+				
+				$('#content').prepend(self.$pwPopup);
+				self.$pwPopup.slideDown(300);
+				return evt.preventDefault();
+			}
+		};
+	} else {
+		wrapped = clickFn;
+	}
+	
+	this.$elt.click(wrapped);
 };
 
 Button.prototype.collapseButtons = function () {

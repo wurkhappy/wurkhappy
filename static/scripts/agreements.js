@@ -1,6 +1,13 @@
 
 var buttonActions = {
 	
+	'password-submit': {
+		default: function (self, evt) {
+			$('#password-form').submit();
+			return evt.preventDefault();
+		}
+	},
+	
 	'action-save': {
 		default: function (self, evt) {
 			// validate..
@@ -84,7 +91,7 @@ var buttonActions = {
 			}
 			
 			var capture = self.serialize('comments-form');
-			
+		
 			$.ajax({
 				url: '/agreement/' + slug['agreementID'] + '/accept.json',
 				data: capture,

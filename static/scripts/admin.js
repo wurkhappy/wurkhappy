@@ -1,4 +1,10 @@
 var buttonActions = {
+	'password-submit': {
+		default: function (self, evt) {
+			$('#password-form').submit();
+			return evt.preventDefault();
+		}
+	},
 	
 	'action-send-invitation': {
 		default: function (self, evt) {

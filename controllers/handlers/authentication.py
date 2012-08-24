@@ -33,9 +33,11 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 	def post(self):
 		try:
 			args = fmt.Parser(self.request.arguments,
-				optional=[],
-				required=[
+				optional=[
 					('email', fmt.Email()),
+					('user_id', fmt.PositiveInteger())
+				],
+				required=[
 					('password', fmt.Enforce(str))
 				]
 			)
@@ -50,7 +52,10 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 			}
 			raise HTTPError(400, 'Missing or malformed login parameters')
 		
-		user = User.retrieveByEmail(args['email'])
+		if args['email']:
+			user = User.retrieveByEmail(args['email'])
+		else:
+			user = User.retrieveByID(args['user_id'])
 		
 		if not user or not user.passwordIsValid(args['password']):
 			# User wasn't found, or password is wrong, render login with error
@@ -88,16 +93,19 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 		# 	self.renderJSON(error)
 		else:
 			queryString = urlparse(self.request.headers.get('Referer', '')).query
-			next = {pair.split('=')[0]: pair.split('=')[1] for pair in queryString.split('&')}.get('next', '/')
 			
 			success = {
 				"user": user.getPublicDict()
 			}
-			self.set_header('Location', '{0}://{1}{2}'.format(
-				self.request.protocol,
-				self.application.configuration['wurkhappy']['hostname'],
-				unquote(next)
-			))
+			
+			if queryString:
+				next = {pair.split('=')[0]: pair.split('=')[1] for pair in queryString.split('&')}.get('next', '/')
+				self.set_header('Location', '{0}://{1}{2}'.format(
+					self.request.protocol,
+					self.application.configuration['wurkhappy']['hostname'],
+					unquote(next)
+				))
+			
 			self.setAuthCookiesForUser(user, mode='cookie')
 			self.renderJSON(success)
 
