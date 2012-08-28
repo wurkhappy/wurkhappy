@@ -187,6 +187,23 @@
 		</div>
 	</div>
 	{% end %}
+	
+	<div class="clear prompt-box" id="password-div" style="display:none;">
+		<div class="column-three-fourth">
+			<h3>We need to make sure it&rsquo;s really you.</h3>
+			<hr />
+			<p>Please enter your password to <span id="action-name">continue</span>.</p>
+			<form action="/login.json" method="POST" accept-charset="utf-8" id="password-form">
+				<input type="password" name="password" />
+				<input type="hidden" name="user_id" value="{{ data[data['self']]['id'] }}" />
+			</form>
+		</div>
+		<div class="column-one-fourth">
+			<ul class="action-button">
+				<li><a href="#" id="password-submit" class="top js-button">Sign In</a></li>
+			</ul>
+		</div>
+	</div>
 
 {% end %}
 
@@ -230,7 +247,7 @@
 
 			<ul class="action-button">
 			{% for (id, label) in data['actions'] %}
-				<li><a href="#" id="{{ id }}" class="top js-button">{{ label }}</a></li>
+				<li><a href="#" id="{{ id }}" class="top js-button cookie-authenticated">{{ label }}</a></li>
 			{% end %}
 			</ul>
 

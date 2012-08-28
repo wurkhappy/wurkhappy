@@ -1,4 +1,5 @@
 from base import *
+from tornado.web import HTTPError
 from controllers.verification import Verification
 from controllers import fmt
 from models.user import User
@@ -69,7 +70,7 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 				),
 				"debug": "incorrect email or password"
 			}
-			raise(401, 'incorrect email or password')
+			raise HTTPError(401, 'incorrect email or password')
 		
 		# TODO: We should figure out how to enforce that all users who log in
 		# are active users without preventing new users from providing their

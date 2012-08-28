@@ -102,7 +102,7 @@ var buttonActions = {
 	
 	// Success action loaded from application.js
 	'profile-edit_form': function(responseText, statusText, xhr, $elt) {
-		document.location.href = '/';
+		document.location.href = slug['redirectURL'] || '/';
 	},
 
 	'dwolla_connect': {

@@ -70,6 +70,11 @@ class User(MappedObj):
 			return clz.initWithDict(result)
 	
 	@classmethod
+	def retrieveByToken(clz, token):
+		token = UserToken.retrieveByToken(token)
+		return token and clz.retrieveByID(token['userID'])
+	
+	@classmethod
 	def retrieveByAccessToken(clz, token):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT * FROM {0} WHERE accessToken = %s LIMIT 1".format(clz.tableName), token)
@@ -114,7 +119,6 @@ class User(MappedObj):
 	
 	def setProfileImage(self, data, ext, headers=None):
 		# TODO: Move this method to a more appropriate class. (Some sort of aux class or something?)
-		# hashString = Base58(Base16(sha1(uuid.uuid4().bytes).hexdigest())).string
 		
 		digest = sha1(uuid.uuid4().bytes).digest()
 		hashString = Data(digest).stringWithEncoding(Base58)
@@ -126,8 +130,7 @@ class User(MappedObj):
 			k.set_contents_from_string(data, headers)
 			k.make_public()
 		
-		# self['profileOrigURL'] = 'https://media.wurkhappy.com.s3.amazonaws.com/{0}'.format(name)
-		self['profileOrigURL'] = 'http://media.wurkhappy.com/%s' % name
+		self['profileOrigURL'] = 'https://media.wurkhappy.com.s3.amazonaws.com/{0}'.format(name)
 		self.save()
 	
 	
@@ -309,6 +312,42 @@ class UserDwolla(MappedObj):
 
 
 # -------------------------------------------------------------------
+# User Tokens
+# -------------------------------------------------------------------
+
+class UserToken(MappedObj):
+	# TODO: Make these expire after a few days.
+	
+	tableName = 'userToken'
+	columns = {
+		'id': None,
+		'userID': None, # Multiple key
+		'hash':  None,
+		'fingerprint': None, # Unique key
+		'expires': None
+	}
+	
+	@classmethod
+	def retrieveByToken(clz, token):
+		fingerprint = sha1(token).hexdigest()
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT * FROM {0} WHERE fingerprint = %s".format(clz.tableName), fingerprint)
+			instance = clz.initWithDict(cursor.fetchone())
+			if instance.tokenIsValid(token):
+				return instance
+			else:
+				return None
+	
+	def tokenIsValid(self, token):
+		return self['hash'] == bcrypt.hashpw(str(token), self['hash'])
+	
+	def setTokenHash(self, token):
+		self['fingerprint'] = sha1(token).hexdigest()
+		self['hash'] = bcrypt.hashpw(str(token), bcrypt.gensalt())
+
+
+
+# -------------------------------------------------------------------
 # State Transition Error (move to models.errors?)
 # -------------------------------------------------------------------
 
@@ -361,7 +400,11 @@ class BetaUserState(UserState):
 			if 'confirmation' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.setConfirmationHash(data['confirmation'])
+			userToken = UserToken(userID=self.user['id'])
+			userToken.setTokenHash(token)
+			userToken.save()
+			
+			# self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
 
@@ -379,7 +422,11 @@ class InvitedUserState(UserState):
 			if 'confirmation' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.setConfirmationHash(data['confirmation'])
+			userToken = UserToken(userID=self.user['id'])
+			userToken.setTokenHash(token)
+			userToken.save()
+			
+			# self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
 
@@ -397,7 +444,11 @@ class NewUserState(UserState):
 			if 'confirmation' not in data:
 				raise StateTransitionError("missing required fields")
 			
-			self.user.setConfirmationHash(data['confirmation'])
+			userToken = UserToken(userID=self.user['id'])
+			userToken.setTokenHash(token)
+			userToken.save()
+			
+			# self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
 

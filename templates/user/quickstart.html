@@ -6,7 +6,7 @@
 {% block main %}
 
 
-{% set slug = { "_xsrf": data['_xsrf'], "authorizeURL": data['dwolla']['authorizeURL'] } %}
+{% set slug = { "_xsrf": data['_xsrf'], "authorizeURL": data['dwolla']['authorizeURL'], "redirectURL": data.get('redirectURL', '/') } %}
 
 {% module Slug(slug) %}
 
@@ -93,7 +93,7 @@
 {% block navigation %}
 <div id="navigation" class="clear">
 	<div class="column-one-half">
-		<p class="logo"><a href="/">Wurk Happy</a></p>
+		<p class="logo"><a href="#">Wurk Happy</a></p>
 	</div>
 </div>
 {% end %}

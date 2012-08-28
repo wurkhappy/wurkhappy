@@ -6,6 +6,7 @@ from hashlib import sha1
 import logging
 import json
 import sys
+import functools
 from datetime import datetime
 
 
@@ -38,6 +39,32 @@ class BaseHandler(web.RequestHandler):
 # -------------------------------------------------------------------
 
 class JSONBaseHandler(web.RequestHandler):
+	
+	@staticmethod
+	def authenticated(method):
+		"""Decorate methods with this to require that the user be logged in."""
+		@functools.wraps(method)
+		def wrapper(self, *args, **kwargs):
+			if not self.current_user:
+				if self.request.method in ("GET", "HEAD"):
+					url = self.get_login_url()
+					if "?" not in url:
+						if urlparse.urlsplit(url).scheme:
+							# if login url is absolute, make next absolute too
+							next_url = self.request.full_url()
+						else:
+							next_url = self.request.uri
+						url += "?" + urllib.urlencode(dict(next=next_url))
+					self.redirect(url)
+					return
+				self.error_description = {
+					'domain': 'authentication',
+					'display': 'It is forbidden!',
+					'debug': 'the requested action is forbidden'
+				}
+				raise web.HTTPError(403)
+			return method(self, *args, **kwargs)
+		return wrapper
 	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
@@ -159,17 +186,17 @@ class TokenAuthenticated(Authenticated):
 		authMethod = self.get_secure_cookie('auth', 'token')
 		
 		if self.token:
-			user = User.retrieveByFingerprint(sha1(self.token).hexdigest())
+			user = User.retrieveByToken(self.token)
 			
-			if user and user.tokenIsValid(self.token):
+			if user:
 				if user['id'] != userID:
 					self.setAuthCookiesForUser(user, mode='token')
 					user.authMethod = 'token'
 				else:
 					user.authMethod = authMethod
 			else:
-				self.delete_cookie('user_id')
-				self.delete_cookie('auth')
+				self.clear_cookie('user_id')
+				self.clear_cookie('auth')
 				user = None
 		elif userID:
 			user = User.retrieveByID(userID)

@@ -74,7 +74,12 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 		
 		self.token = self.get_argument("t", None)
 		
-		return self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
+		user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
+		
+		if user and user.confirmationIsValid(self.token):
+			return user
+		else:
+			return None
 	
 	def get(self):
 		user = self.current_user
@@ -486,7 +491,7 @@ class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 					k.set_contents_from_string(imgData.getvalue(), headers)
 					k.make_public()
 					
-					user[params[t][0]] = 'http://media.wurkhappy.com/' + nameFormat % t
+					user[params[t][0]] = 'https://media.wurkhappy.com.s3.amazonaws.com/' + nameFormat % t
 		
 		user.save()
 		self.renderJSON(user.getPublicDict())
@@ -675,7 +680,7 @@ class PasswordJSONHandler(TokenAuthenticated, JSONBaseHandler):
 	'''JSON handler to change a password given an existing password
 	or set an initial password given an invitation token.'''
 	
-	@web.authenticated
+	@JSONBaseHandler.authenticated
 	def post(self):
 		user = self.current_user
 		token = self.token
@@ -772,6 +777,7 @@ class PasswordJSONHandler(TokenAuthenticated, JSONBaseHandler):
 		else:
 			user.setPasswordHash(args['newPassword'])
 			user.save()
+			self.setAuthCookiesForUser(user, mode='cookie')
 			self.renderJSON({"success": True, "user": user.getPublicDict()})
 
 

@@ -153,7 +153,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 		self.render("agreement/list.html", title=title, data=templateDict)
 
 
-class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
+class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS):
 	buttonTable = {
 		'vendor': defaultdict(lambda: [], {
 			DraftState: [
@@ -185,50 +185,39 @@ class AgreementHandler(Authenticated, BaseHandler, AgreementBase, AmazonFPS):
 	
 	# @web.authenticated
 	# TODO: SECURITY AUDIT
+	@web.authenticated
 	def get(self, agreementID=None):
 		user = self.current_user
 		agreement = None
-
-		token = self.get_argument("t", None)
 		
-		# TODO: FIGURE OUT HOW TO MAKE THIS TOKEN AUTHENTICATED
-		
-		if token:
+		if self.token:
 			logging.warn(self.request.arguments)
-
-			agreement = agreementID and Agreement.retrieveByID(agreementID)
-
-			# fingerprint = hashlib.md5(str(token)).hexdigest() # EWWWWW!
-			# logging.warn(fingerprint)
-			# agreement = token and Agreement.retrieveByFingerprint(fingerprint)
-
-			if not (agreement and agreement.tokenIsValid(token)):
-				# This is what the @tornado.web.authenticated decorator does
-				url = self.get_login_url()
-				if "?" not in url:
-					if urlparse.urlsplit(url).scheme:
-						# if login url is absolute, make next absolute too
-						next_url = self.request.full_url()
-					else:
-						next_url = self.request.uri
-					url += "?" + urllib.urlencode(dict(next=next_url))
-				self.redirect(url)
-				return
 			
-			user = User.retrieveByID(agreement['clientID'])
-			self.setAuthCookiesForUser(user, mode='token')
-		
-		if not user:
-			url = self.get_login_url()
-			if "?" not in url:
-				if urlparse.urlsplit(url).scheme:
-					# if login url is absolute, make next absolute too
-					next_url = self.request.full_url()
-				else:
-					next_url = self.request.uri
-				url += "?" + urllib.urlencode(dict(next=next_url))
-			self.redirect(url)
-			return
+			if user['password'] is None:
+				
+				userDict = {
+					'_xsrf': self.xsrf_token,
+					'token': self.token,
+					'id': user['id'],
+					'firstName': user['firstName'],
+					'lastName': user['lastName'],
+					'fullName': user.getFullName(),
+					'email': user['email'],
+					'telephone': user['telephone'] or '',
+					'profileURL': [
+						user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
+						user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+					],
+					'password': False,
+					'dwolla': {
+						'dwollaID': None,
+						'authorizeURL': ''
+					},
+					'redirectURL': '{0}://{1}{2}'.format(self.request.protocol, self.request.host, self.request.uri)
+				}
+				
+				self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
+				return
 		
 		if not agreementID:
 			# Must have been routed from /agreement/new
@@ -835,7 +824,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
-	@web.authenticated
+	@JSONBaseHandler.authenticated
 	def get(self, agreementID):
 		user = self.current_user
 
@@ -864,7 +853,7 @@ class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBase):
 
-	@web.authenticated
+	@JSONBaseHandler.authenticated
 	def post(self, agreementID, action):
 		'''POST handler for /agreement/([0-9]+)/(save|send|accept|decline|mark_complete|verify|dispute)\.json'''
 		

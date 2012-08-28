@@ -96,10 +96,11 @@ class AgreementInviteHandler(QueueHandler):
 		if agreement['tokenFingerprint']:
 			raise Exception("We already did this agreement")
 		
-		verify = Verification()
+		token = Verification.generateHashDigest()
 		
-		agreement['tokenFingerprint'] = hashlib.md5(verify.hashDigest).hexdigest()
-		agreement.setTokenHash(verify.hashDigest)
+		userToken = UserToken(userID=client['id'])
+		userToken.setTokenHash(token)
+		userToken.save()
 		
 		vendor = User.retrieveByID(agreement['vendorID'])
 		
@@ -111,7 +112,7 @@ class AgreementInviteHandler(QueueHandler):
 		}
 		
 		data['agreement']['phases'] = list(AgreementPhase.iteratorWithAgreementID(agreement['id']))
-		data['agreement']['token'] = verify.hashDigest
+		data['agreement']['token'] = token
 		
 		t = self.loader.load('agreement_new_user.html')
 		htmlString = t.generate(data=data)
@@ -610,8 +611,9 @@ class UserInviteHandler(QueueHandler):
 		digest = Verification.generateHashDigest()
 		host = self.application.config['wurkhappy']['hostname']
 		
-		user.setConfirmationHash(digest)
-		user.save()
+		userToken = UserToken(userID=user['id'])
+		userToken.setTokenHash(digest)
+		userToken.save()
 		
 		data = {
 			'hostname': host,
@@ -674,9 +676,13 @@ class UserResetPasswordHandler(QueueHandler):
 		digest = Verification.generateHashDigest()
 		host = self.application.config['wurkhappy']['hostname']
 		
-		user.setConfirmationHash(digest)
-		user['password'] = None
-		user.save()
+		userToken = UserToken(userID=client['id'])
+		userToken.setTokenHash(digest)
+		userToken.save()
+		
+		# user.setConfirmationHash(digest)
+		# user['password'] = None
+		# user.save()
 		
 		data = {
 			'hostname': host,

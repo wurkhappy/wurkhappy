@@ -10,6 +10,7 @@ from controllers import fmt
 from random import randint
 
 
+
 class RequestBase(BaseHandler):
 	def assembleDictionary(self, request):
 		requestDict = request.getPublicDict()
@@ -25,8 +26,13 @@ class RequestBase(BaseHandler):
 
 		return requestDict
 
-class RequestAgreementHandler(BaseHandler):
+
+
+class RequestAgreementHandler(Authenticated, BaseHandler):
+	@web.authenticated
 	def get(self):
+		user = self.current_user
+		
 		empty = {
 			"_xsrf": self.xsrf_token,
 			"id": None,
@@ -34,7 +40,7 @@ class RequestAgreementHandler(BaseHandler):
 			"date": "",
 			"amount": "",
 			"summary": "",
-			"client": None,
+			"client": user.getPublicDict(),
 			"vendor": None,
 			"actions": [ {
 				"id": "request-send",
@@ -50,7 +56,10 @@ class RequestAgreementHandler(BaseHandler):
 		title = "New Vendor Agreement &ndash; Wurk Happy"
 		self.render("agreement/request.html", title=title, data=empty)
 
-class RequestAgreementJSONHandler(CookieAuthenticated, RequestBase):
+
+
+class RequestAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, RequestBase):
+	@JSONBaseHandler.authenticated
 	def post(self):
 		user = self.current_user
 
