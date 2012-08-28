@@ -55,8 +55,19 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 		
 		if args['email']:
 			user = User.retrieveByEmail(args['email'])
-		else:
+		elif args['user_id']:
 			user = User.retrieveByID(args['user_id'])
+		else:
+			self.error_description = {
+				'domain': 'authentication',
+				'display': (
+					"Either an email address or a user_id is required "
+					"to log in. Please try again with the required "
+					"information."
+				),
+				'debug': "missing required 'email' or 'user_id' parameter"
+			}
+			raise HTTPError(400, 'Missing login parameters')
 		
 		if not user or not user.passwordIsValid(args['password']):
 			# User wasn't found, or password is wrong, render login with error

@@ -76,6 +76,22 @@ class JSONBaseHandler(web.RequestHandler):
 		else:
 			super(JSONBaseHandler, self).write_error(status_code, **kwargs)
 
+	def send_error(self, status_code=500, **kwargs):
+		# Because we're running 2.0 on production. Upgrade to > 2.1 please!
+		if self._headers_written:
+			logging.error('cannot send error response after headers written')
+			if not self._finished:
+				self.finish()
+			return
+		self.clear()
+		self.set_status(status_code)
+		try:
+			self.write_error(status_code, **kwargs)
+		except Exception:
+			logging.error("Uncaught exception in write_error", exc_info=True)
+		if not self._finished:
+			self.finish()
+	
 	def _handle_request_exception(self, e):
 		if isinstance(e, web.HTTPError):
 			super(JSONBaseHandler, self)._handle_request_exception(e)
