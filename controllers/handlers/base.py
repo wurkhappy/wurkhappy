@@ -205,7 +205,7 @@ class TokenAuthenticated(Authenticated):
 			user = User.retrieveByToken(self.token)
 			
 			if user:
-				if user['id'] != userID:
+				if user['id'] != (userID and int(userID)):
 					self.setAuthCookiesForUser(user, mode='token')
 					user.authMethod = 'token'
 				else:
@@ -221,3 +221,4 @@ class TokenAuthenticated(Authenticated):
 			user = None
 		
 		return user
+

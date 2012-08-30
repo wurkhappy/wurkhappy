@@ -41,6 +41,7 @@ class User(MappedObj):
 		'profileSmallURL': None,
 		'profileLargeURL': None,
 		'dateCreated': None,
+		'dateInvited': None,
 		'dateVerified': None,
 		'dateLocked': None,
 	}
@@ -204,16 +205,15 @@ class User(MappedObj):
 		dateCreated = self['dateCreated']
 		email = self['email']
 		invitedBy = self['invitedBy']
-		confirmation = self['confirmation']
-		fingerprint = self['fingerprint']
 		password = self['password']
+		dateInvited = self['dateInvited']
 		dateVerified = self['dateVerified']
 		dateLocked = self['dateLocked']
 		
 		states = [
 			(InvalidUserState, dateLocked),
 			(ActiveUserState, password and dateVerified and email),
-			(PendingUserState, confirmation and fingerprint and email and dateCreated),
+			(PendingUserState, dateInvited and email and dateCreated),
 			(NewUserState, dateCreated and email and password),
 			(InvitedUserState, dateCreated and email and invitedBy),
 			(BetaUserState, dateCreated and email),
@@ -338,6 +338,13 @@ class UserToken(MappedObj):
 			else:
 				return None
 	
+	@classmethod
+	def countWithUserID(clz, userID):
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT COUNT(*) FROM {0} WHERE userID = %s".format(clz.tableName), userID)
+			count = cursor.fetchone()
+			return count['COUNT(*)']
+	
 	def tokenIsValid(self, token):
 		return self['hash'] == bcrypt.hashpw(str(token), self['hash'])
 	
@@ -397,13 +404,14 @@ class BetaUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmation' not in data:
-				raise StateTransitionError("missing required fields")
+			# if 'confirmation' not in data:
+			# 	raise StateTransitionError("missing required fields")
+			# 
+			# userToken = UserToken(userID=self.user['id'])
+			# userToken.setTokenHash(data['confirmation'])
+			# userToken.save()
 			
-			userToken = UserToken(userID=self.user['id'])
-			userToken.setTokenHash(token)
-			userToken.save()
-			
+			self.user['dateInvited'] = datetime.now()
 			# self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
@@ -419,13 +427,14 @@ class InvitedUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmation' not in data:
-				raise StateTransitionError("missing required fields")
+# 			if 'confirmation' not in data:
+# 				raise StateTransitionError("missing required fields")
+# 			
+# 			userToken = UserToken(userID=self.user['id'])
+# 			userToken.setTokenHash(data['confirmation'])
+# 			userToken.save()
 			
-			userToken = UserToken(userID=self.user['id'])
-			userToken.setTokenHash(token)
-			userToken.save()
-			
+			self.user['dateInvited'] = datetime.now()
 			# self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()
@@ -441,13 +450,14 @@ class NewUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			if 'confirmation' not in data:
-				raise StateTransitionError("missing required fields")
+# 			if 'confirmation' not in data:
+# 				raise StateTransitionError("missing required fields")
+# 			
+# 			userToken = UserToken(userID=self.user['id'])
+# 			userToken.setTokenHash(data['confirmation'])
+# 			userToken.save()
 			
-			userToken = UserToken(userID=self.user['id'])
-			userToken.setTokenHash(token)
-			userToken.save()
-			
+			self.user['dateInvited'] = datetime.now()
 			# self.user.setConfirmationHash(data['confirmation'])
 		else:
 			raise StateTransitionError()

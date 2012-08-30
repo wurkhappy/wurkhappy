@@ -1,4 +1,4 @@
-from models.user import User, UserState, ActiveUserState, NewUserState, InvitedUserState, BetaUserState
+from models.user import User, UserState, UserToken, ActiveUserState, NewUserState, InvitedUserState, BetaUserState
 from models.agreement import Agreement, AgreementPhase
 from models.request import Request
 from models.transaction import Transaction

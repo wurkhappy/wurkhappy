@@ -213,7 +213,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 						'dwollaID': None,
 						'authorizeURL': ''
 					},
-					'redirectURL': '{0}://{1}{2}'.format(self.request.protocol, self.request.host, self.request.uri)
+					'redirectURL': '{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.uri)
 				}
 				
 				self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
@@ -623,7 +623,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 
 
 
-class NewAgreementJSONHandler(CookieAuthenticated, BaseHandler, AgreementBase):
+class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBase):
 	@web.authenticated
 	def post(self, action):
 		user = self.current_user
@@ -753,46 +753,52 @@ class NewAgreementJSONHandler(CookieAuthenticated, BaseHandler, AgreementBase):
 				return
 
 			clientState = client.getCurrentState()
-			logging.info(clientState)
-			if isinstance(clientState, InvitedUserState):
-				# TODO: Generate confirmation code to be sent in email
-				# data = {'confirmation': client.generateCode()} # or something...
-				data = {"confirmation": "foo"}
-				clientState.performTransition("send_verification", data)
-				
-				msg = json.dumps(dict(
-					userID=client['id'],
-					agreementID=agreement['id'],
-					action='agreementInvite'
-				))
-			elif isinstance(clientState, ActiveUserState):
-				msg = json.dumps(dict(
-					userID=client['id'],
-					agreementID=agreement['id'],
-					action='agreementSent'
-				))
-			else:
-				msg = json.dumps(dict())
 			
-			with Beanstalk() as bconn:
-				tube = self.application.configuration['notifications']['beanstalk_tube']
-				bconn.use(tube)
-				r = bconn.put(msg)
-				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
+			if isinstance(clientState, InvitedUserState):
+				clientState.performTransition("send_verification", {})
+				
+				msg = dict(
+					userID=client['id'],
+					action='agreementInvite'
+				)
+			elif isinstance(clientState, ActiveUserState):
+				msg = dict(
+					userID=client['id'],
+					action='agreementSent'
+				)
+			else:
+				msg = dict()
+			
+			# with Beanstalk() as bconn:
+			# 	tube = self.application.configuration['notifications']['beanstalk_tube']
+			# 	bconn.use(tube)
+			# 	r = bconn.put(msg)
+			# 	logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 			
 			agreement['dateSent'] = datetime.now()
 			# agreement.save()
 
 
 		agreement.save()
+		
 		summary['agreementID'] = agreement['id']
 		summary.save()
+		
 		for phase in phases:
 			phase['agreementID'] = agreement['id']
 			phase.save()
 
 		logging.warn(agreement)
 		logging.warn(phases)
+		
+		if action == "send" and 'action' in msg:
+			msg['agreementID'] = agreement['id']
+			
+			with Beanstalk() as bconn:
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(json.dumps(msg))
+				logging.info('Beanstalk: {0}#{1} {2}'.format(tube, r, msg))
 		
 		self.set_status(201)
 		self.set_header('Location', 'http://' + self.request.host + '/agreement/' + str(agreement['id']) + '.json')
