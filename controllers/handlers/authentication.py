@@ -1,6 +1,8 @@
 from base import *
 from tornado.web import HTTPError
 from controllers.verification import Verification
+from controllers.application import WurkHappy
+
 from controllers import fmt
 from models.user import User
 from controllers.email import *
@@ -114,7 +116,7 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 				next = {pair.split('=')[0]: pair.split('=')[1] for pair in queryString.split('&')}.get('next', '/')
 				self.set_header('Location', '{0}://{1}{2}'.format(
 					self.request.protocol,
-					self.application.configuration['wurkhappy']['hostname'],
+					WurkHappy.getSettingWithTag('hostname'),
 					unquote(next)
 				))
 			

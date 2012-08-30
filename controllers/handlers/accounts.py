@@ -6,6 +6,7 @@ from models.paymentmethod import PaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
 from controllers.amazonaws import AmazonS3, AmazonFPS
+from controllers.application import WurkHappy
 
 from tornado.httpclient import HTTPClient
 from tornado.httpclient import HTTPError as HTTPClientError
@@ -44,7 +45,7 @@ class DwollaRedirectMixin(object):
 	def buildRedirectURL(self, token=None):
 		return '{0}://{1}/user/me/connections{2}'.format(
 			self.request.protocol,
-			self.application.configuration['wurkhappy']['hostname'],
+			WurkHappy.getSettingWithTag('hostname'),
 			'?t={0}'.format(token) if token else ''
 		)
 
@@ -177,7 +178,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
-					self.application.configuration['wurkhappy']['hostname'],
+					WurkHappy.getSettingWithTag('hostname'),
 					self.request.path
 				),
 				self.request.query,
@@ -194,7 +195,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				emailPref['value'] = args['recipientEmail']
 				emailPref.save()
 
-			self.redirect('{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.path))
+			self.redirect('{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path))
 			return
 		else:
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
@@ -580,7 +581,7 @@ class AmazonVerificationJSONHandler(CookieAuthenticated, JSONBaseHandler):
 			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
 		self.set_status(201)
-		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], user['id']))
+		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), user['id']))
 		return
 
 

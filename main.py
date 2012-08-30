@@ -16,7 +16,7 @@ from controllers.email import Email
 from controllers.orm import Database
 from controllers.amazonaws import AmazonS3
 from controllers.beanstalk import Beanstalk
-
+from controllers.application import WurkHappy
 import os
 import os.path
 import logging
@@ -120,6 +120,7 @@ class Application(web.Application):
 		Beanstalk.configure(config['beanstalk'])
 		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
+		WurkHappy.configure(dict(config['wurkhappy'].items() + config['tornado'].items()))
 
 
 # -------------------------------------------------------------------

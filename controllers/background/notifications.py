@@ -676,7 +676,7 @@ class UserResetPasswordHandler(QueueHandler):
 		digest = Verification.generateHashDigest()
 		host = self.application.config['wurkhappy']['hostname']
 		
-		userToken = UserToken(userID=client['id'])
+		userToken = UserToken(userID=user['id'])
 		userToken.setTokenHash(digest)
 		userToken.save()
 		

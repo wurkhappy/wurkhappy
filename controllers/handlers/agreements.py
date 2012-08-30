@@ -16,6 +16,7 @@ from controllers import fmt
 from controllers.orm import ORMJSONEncoder
 from controllers.beanstalk import Beanstalk
 from controllers.amazonaws import AmazonFPS
+from controllers.application import WurkHappy
 
 from collections import defaultdict
 from datetime import datetime
@@ -213,7 +214,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 						'dwollaID': None,
 						'authorizeURL': ''
 					},
-					'redirectURL': '{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.uri)
+					'redirectURL': '{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.uri)
 				}
 				
 				self.render('user/quickstart.html', title='Welcome to Wurk Happy', data=userDict)
@@ -349,7 +350,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		if args['status'] is not None:
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
-					self.application.configuration['wurkhappy']['hostname'],
+					WurkHappy.getSettingWithTag('hostname'),
 					self.request.path
 				),
 				self.request.query,
@@ -370,10 +371,12 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				if not transaction:
 					transaction = Transaction(
 						transactionReference=reference,
-						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
 						senderID=agreement['clientID'],
 						recipientID=agreement['vendorID']
 					)
+					
+					if args['transactionDate']:
+						transaction['dateInitiated'] = datetime.fromtimestamp(args['transactionDate'])
 
 				if not transaction['amount'] and args['transactionAmount']:
 					currencyParser = fmt.Currency()
@@ -413,7 +416,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				transaction.save()
 			
 			# We do this here, but it would be prettier if we did this using a JavaScript pushState
-			self.redirect('{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.path))
+			self.redirect('{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path))
 			return
 
 
