@@ -81,16 +81,15 @@ $(document).ready(function() {
 			// for the create agreement page it's "clientID", but it needs to be "vendorID" for
 			// the request agreement form
 			
-			$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
+			$('input[name=title]').focus(); //added by marcus to fix next box focus
 			$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
-			
 		},
 		tabPressed: function(elem) {
 			// I wish I knew why I have to use a timeout here, but at least it works.
 			
-			setTimeout(function() {
-				$('input[name=title]').focus();
-			}, 50);
+			// setTimeout(function() {
+			// 	$('input[name=title]').focus();
+			// }, 50);
 		}
 	});
 	

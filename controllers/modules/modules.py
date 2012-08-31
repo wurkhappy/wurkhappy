@@ -14,13 +14,43 @@ class Slug(UIModule):
 		self.slugDict = slugDict
 		return ''
 
+
+
 class Navigation(UIModule):
 	def render(self, data):
 		return self.render_string("modules/navigation.html", data=data)
 
+
+
 class Footer(UIModule):
 	def render(self):
 		return self.render_string("modules/footer.html")
+
+
+
+class DateWidget(UIModule):
+	'''Presents a jQueryUI date picker widget backed by a hidden
+	field with an ISO 8601 date required for AJAX requests.'''
+	
+	def render(self, name=None, datestamp='now', yearRange=range(2011, 2025)):
+		if datestamp == 'now':
+			datestamp = datetime.now()
+		
+		if name == None:
+			name = '{0}-iso'.format('date')
+		
+		defaultISO = datestamp.strftime('%Y-%m-%d') if datestamp else ''
+		defaultString = datestamp.strftime('%B %d, %Y') if datestamp else ''
+		
+		return self.render_string('modules/datewidget.html',
+			datestamp=datestamp,
+			yearRange=yearRange,
+			defaultISO=defaultISO,
+			defaultString=defaultString,
+			dateFieldName=name
+		)
+
+
 
 class DatePicker(UIModule):
 	""" Presents an HTML date picker with ISO 8601 hidden field

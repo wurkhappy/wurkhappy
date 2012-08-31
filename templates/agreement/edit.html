@@ -83,7 +83,7 @@
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][0]["estDateCompleted"] if len(data["phases"]) > 0 else None %}
-							{% module DatePicker('phase-one', name='date', datestamp=datestamp) %}
+							{% module DateWidget('date', datestamp) %}
 							<label for="">Description (What aspect of the job is this payment for?)
 							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>
 							</label>
@@ -102,8 +102,8 @@
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][1]["estDateCompleted"] if len(data["phases"]) > 1 else None %}
-							{% module DatePicker('phase-two', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)
+							{% module DateWidget('date', datestamp) %}
+							<label for="">Description (What aspect of the job is this payment for?)
 							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>	
 							</label>
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["description"] }}{% end %}</textarea>
@@ -121,8 +121,8 @@
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][2]["estDateCompleted"] if len(data["phases"]) > 2 else None %}
-							{% module DatePicker('phase-three', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)
+							{% module DateWidget('date', datestamp) %}
+							<label for="">Description (What aspect of the job is this payment for?)
 							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>	
 							</label>
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["description"] }}{% end %}</textarea>
@@ -140,8 +140,8 @@
 							<input type="text" name="cost" value="{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
 							{% set datestamp = data["phases"][3]["estDateCompleted"] if len(data["phases"]) > 3 else None %}
-							{% module DatePicker('phase-four', name='date', datestamp=datestamp) %}
-							<label for="">Description (what is this payment for?)
+							{% module DateWidget('date', datestamp) %}
+							<label for="">Description (What aspect of the job is this payment for?)
 							<span>Examples: initial deposit, certain deliverables, final payment, hours worked, etc.</span>	
 							</label>
 							<textarea name="details" rows="5" cols="100" value="" >{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["description"] }}{% end %}</textarea>
@@ -229,7 +229,6 @@
 
 {% block scripts-custom %}
 	<script src="{{ static_url("scripts/libs/jquery-autosuggest-1.4.js") }}" type="text/javascript"></script>
-	<script src="{{ static_url("scripts/libs/jquery-ui-1.8.16.accordion.js") }}" type="text/javascript"></script>
 	<script src="{{ static_url("scripts/accordion.js") }}" type="text/javascript"></script>
 	<script src="{{ static_url("scripts/application.js") }}" type="text/javascript"></script>
 	<script src="{{ static_url("scripts/agreements.js") }}" type="text/javascript"></script>

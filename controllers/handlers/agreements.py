@@ -923,7 +923,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					]
 				)
 			except fmt.HTTPErrorBetter as e:
-				self.error_description = e.body_content
+				self.error_description = json.loads(e.body_content)
 				self.error_description['display'] = "The request parameters were malformed"
 				raise web.HTTPError(400)
 
@@ -1015,7 +1015,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					unsavedRecords.append(phase)
 					phaseCount += 1
 				
-				if phaseCount == 0:
+				if action == "send" and phaseCount == 0:
 					self.error_description = {
 						"domain": "application.conflict",
 						"display": (
