@@ -17,6 +17,25 @@
 		<script type="text/javascript" src="https://use.typekit.com/wwb5mzu.js"></script>
 		<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 		<script type="text/javascript">var actions=[];</script>
+
+		<script type="text/javascript">
+
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-24101674-2']);
+			_gaq.push(['_setDomainName', 'beta.wurkhappy.com']);
+			_gaq.push(['_trackPageview']);
+
+			(function() {
+				var ga = document.createElement('script');
+				ga.type = 'text/javascript';
+				ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0];
+				s.parentNode.insertBefore(ga, s);
+			})();
+		</script>
+
+
 		{% block styles-custom %}
 		{% end %}
 	</head>
@@ -34,6 +53,12 @@
 		<script src="{{ static_url("scripts/landing.js") }}"></script>
 		<!-- end concatenated and minified scripts-->
 		
+		<script type="text/javascript">
+			$(window).unload(function() {
+				_gaq.push(['_trackEvent', 'Unload']);
+			});
+		</script>
+
 		{% block scripts-custom %}
 		{% end %}
 	</body>
