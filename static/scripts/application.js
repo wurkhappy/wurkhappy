@@ -56,6 +56,26 @@ $(document).ready(function() {
 		return false;
 	});
 	
+	// Revert to jQuery placeholders if Modernizr doesn't detect HTML5 features
+
+	if (!Modernizr.input.placeholder) {
+		$("input").each(function() {
+			if ($(this).val()=="" && $(this).attr("placeholder")!="") {
+				$(this).val($(this).attr("placeholder"));
+				$(this).focus(function() {
+					if ($(this).val()==$(this).attr("placeholder")) {
+						$(this).val("");
+					}
+				});
+				$(this).blur(function() {
+					if ($(this).val()=="") {
+						$(this).val($(this).attr("placeholder"));
+					}
+				});
+			}
+		});
+	}
+
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
 		selectedItemProp: "fullName",
 		selectedValuesProp: "id",

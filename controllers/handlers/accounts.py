@@ -104,8 +104,12 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 				'email': user['email'],
 				'telephone': user['telephone'] or '',
 				'profileURL': [
-					user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
-					user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+					user['profileSmallURL'] or
+						'{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'),
+								'images/profile1_s.jpg'),
+					user['profileLargeURL'] or
+						'{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'),
+								'images/profile1_s.jpg'),
 				],
 				'password': True if user['password'] else False,
 				'dwolla': {
@@ -164,8 +168,8 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 			'email': user['email'],
 			'telephone': user['telephone'] or '',
 			'profileURL': [
-				user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
-				user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+				user['profileSmallURL'] or '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile1_s.jpg'),
+				user['profileLargeURL'] or '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile1_s.jpg')
 			],
 			'self': 'account',
 			'amazonFPSAccount': UserPrefs.retrieveByUserIDAndName(user['id'], 'amazonFPSAccountToken')
@@ -293,7 +297,8 @@ class AccountCreationHandler(BaseHandler):
 			# TODO: This should be better. Static value in config file...
 			# user.profileSmallURL = self.application.configuration['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
 			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
-			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
+			user['profileSmallURL'] = '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile%d_s.jpg' %
+					(user['id'] % 5))
 			user.save()
 
 			with Beanstalk() as bconn:
@@ -492,7 +497,8 @@ class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 					k.set_contents_from_string(imgData.getvalue(), headers)
 					k.make_public()
 					
-					user[params[t][0]] = 'https://media.wurkhappy.com.s3.amazonaws.com/' + nameFormat % t
+					user[params[t][0]] = '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), nameFormat % t)
+					# https://media.wurkhappy.com.s3.amazonaws.com/' + nameFormat % t
 		
 		user.save()
 		self.renderJSON(user.getPublicDict())
