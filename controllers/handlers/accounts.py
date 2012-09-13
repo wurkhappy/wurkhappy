@@ -75,12 +75,7 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 		
 		self.token = self.get_argument("t", None)
 		
-		user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
-		
-		if user and user.confirmationIsValid(self.token):
-			return user
-		else:
-			return None
+		return self.token and User.retrieveByToken(self.token)
 	
 	def get(self):
 		user = self.current_user
