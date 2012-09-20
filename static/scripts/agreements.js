@@ -5,7 +5,9 @@ $(document).ready(function() {
 		altFormat: 'yy-mm-dd',
 		buttonImage: '/static/images/icons/calendar-256x256.png',
 		showOn: 'both',
-		constrainInput: true
+		constrainInput: true,
+		minDate: 0,
+		maxDate: new Date(2015, 1 - 1, 1)
 	});
 	
 	$('.datewidget').each(function(idx, elt) {

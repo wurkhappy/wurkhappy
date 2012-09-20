@@ -148,6 +148,43 @@
 		</div>
 	{% end %}
 
+	{% if not data.get('amazonAccountConfirmed', False) %}
+	<div class="clear prompt-box" id="configure-div" style="display:none;">
+		<div class="column-three-fourth">
+			<h3>Please configure your Amazon Payments account to receive payments.</h3>
+			<p>Wurk Happy uses Amazon Payments to facilitate transactions between you and your clients. In order to receive
+				payments, please click the &ldquo;Accept Marketplace Fee&rdquo; button to the right in order to accept the
+				Amazon Terms and Conditions and create your Amazon Payments Business account.</p>
+			<p>You can read more about why we use Amazon Payments <a href="/help/faqs/amazonpayments">here</a>.</p>
+		</div>
+		<div class="column-one-fourth">
+			{% module AcceptMarketplaceFeeButton(data['vendor']['id']) %}
+		</div>
+	</div>
+	
+	<div class="clear prompt-box" id="verify-div" style="display:none;">
+		<div class="column-three-fourth">
+			<h3>Please complete the Amazon Payments verification process.</h3>
+			<p>After signing up for Amazon Payments, you should receive an email from Amazon asking you to verify
+				your account. Typically this email asks you to connect a bank account and complete a tax questionnaire.
+				Please complete any of these steps on the Amazon Payments web site and click "Verify Account" when
+				you've finished.</p>
+		</div>
+		<div class="column-one-fourth">
+			<ul class="action-button">
+				<li><a href="#" rel="nofollow" id="amazon_verify" class="top js-button">Verify Account</a></li>
+			</ul>
+		</div>
+	</div>
+	
+	<div class="clear prompt-box" id="success-div" style="display:none;">
+		<div class="column-three-fourth">
+			<h3><span style="font-size: 30px; margin-right: 10px;"><a href="#" class="js-close-btn" style="color:#EEE; text-shadow: 1px 1px #333">&#x2297;</a></span>Amazon Marketplace Account</h3>
+			<p>Your Amazon Marketplace Account has been successfully connected and verified with Amazon. You are ready to start receiving payments through Wurk Happy!</p>
+		</div>
+	</div>
+	{% end %}
+
 	<div class="clear prompt-box" id="password-div" style="display:none;">
 		<div class="column-three-fourth">
 			<h3>We need to make sure it&rsquo;s really you.</h3>

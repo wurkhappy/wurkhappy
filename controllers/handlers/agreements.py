@@ -476,7 +476,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 			"date": agreement['dateCreated'].strftime('%B %d, %Y'),
 			"amount": agreement.getCostString(),
 		}
-
+		
 		summary = AgreementSummary.retrieveByAgreementID(agreement['id'])
 
 		if summary:
@@ -590,7 +590,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		# 		('action-connect', 'Connect an Account')
 		# 	]
 		# else:
-		templateDict['actions'] = self.buttonTable[templateDict['self']][currentState.__class__]
+		templateDict['actions'] = list(self.buttonTable[templateDict['self']][currentState.__class__])
 		
 		title = "%s Agreement: %s &ndash; Wurk Happy" % (agreementType, agreement['name'])
 		
@@ -598,7 +598,10 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		if templateDict['self'] == 'client' and isinstance(currentState, CompletedState):
 			templateDict['recipientEmail'] = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		
-		if agreement['vendorID'] == user['id'] and isinstance(currentState, (DraftState, DeclinedState)):
+		# Modify behavior to prompt for Amazon configuration if no
+		# confirmation is on file.
+		
+		if agreement['vendorID'] == user['id']:
 			templateDict['uri'] = self.request.uri
 			
 			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
@@ -608,14 +611,26 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				templateDict['amazonAccountStatus'] = 'verified'
 			elif amzAcctConnected and amzAcctConnected['value'] is not None:
 				templateDict['amazonAccountStatus'] = 'pending'
-				if len(templateDict['actions']) > 1:
-					templateDict['actions'][1] = ('action-amazon-verify', 'Send Agreement')
+				if isinstance(currentState, (DraftState, DeclinedState)):
+					if len(templateDict['actions']) > 1:
+						templateDict['actions'][1] = ('action-amazon-verify', 'Send Agreement')
+				elif isinstance(currentState, (InProgressState, ContestedState)):
+					if len(templateDict['actions']) >= 1:
+						templateDict['actions'][0] = ('action-amazon-verify', 'Mark Phase Complete')
 			else:
 				templateDict['amazonAccountStatus'] = None
-				if len(templateDict['actions']) > 1:
-					templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
+				if isinstance(currentState, (DraftState, DeclinedState)):
+					if len(templateDict['actions']) > 1:
+						templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
+				elif isinstance(currentState, (InProgressState, ContestedState)):
+					if len(templateDict['actions']) >= 1:
+						templateDict['actions'][0] = ('action-amazon-prompt', 'Mark Phase Complete')
 			
-			self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
+			if isinstance(currentState, (DraftState, DeclinedState)):
+				self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
+			else:
+				self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x,
+							cls=ORMJSONEncoder))
 		else:
 			# Adding account info here because I'm a dumbass.
 			# TODO: figure out the right way to populate this info
@@ -695,7 +710,7 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 				return
 
 			if not client:
-				profileURL = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 4))
+				profileURL = "https://s3.amazonaws.com/media.wurkhappy.com/images/profile%d_s.jpg" % (randint(0, 4))
 				client = User()
 				client['email'] = args['email']
 				client['invitedBy'] = user['id']
@@ -757,7 +772,8 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 
 			clientState = client.getCurrentState()
 			
-			if isinstance(clientState, InvitedUserState):
+			if isinstance(clientState, (
+					PendingUserState, NewUserState, InvitedUserState, BetaUserState)):
 				clientState.performTransition("send_verification", {})
 				
 				msg = dict(
@@ -1102,18 +1118,14 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					# Only override if the agreement was just sent for the
 					# first time.
 					
-					if isinstance(clientState, InvitedUserState) and isinstance(currentState, EstimateState):
-						# We use a fake value here to fool the state transition logic
-						# and generate the real confirmation code in the background
-						# process because we don't want the token to be exposed to
-						# logs, etc.
-						
+					if isinstance(clientState, (
+								PendingUserState, NewUserState, InvitedUserState, BetaUserState
+							)) and isinstance(currentState, (EstimateState, DraftState)):
 						# TODO: I think the transition could happen in the
 						# notification daemon since the new state is never
 						# referenced.
 						
-						data = {"confirmation": "foo"}
-						clientState.performTransition("send_verification", data)
+						clientState.performTransition("send_verification", {})
 						msg['action'] = 'agreementInvite'
 				else:
 					recipient = User.retrieveByID(agreement['vendorID'])
