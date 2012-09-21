@@ -11,7 +11,11 @@ from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
 
-from controllers.handlers import *
+from controllers.handlers import (
+	accounts, agreements, authentication, callbacks,
+	feedback, help, legal, notifications, payments, requests,
+	root, tests, users
+)
 from controllers.email import Email
 from controllers.orm import Database
 from controllers.amazonaws import AmazonS3
@@ -47,6 +51,8 @@ class Application(web.Application):
 			# (r'/legal/dwolla/?', legal.DwollaHandler),
 			
 			(r'/help/faq/?', help.FAQHandler),
+			
+			(r'/feedback\.json', feedback.FeedbackJSONHandler),
 			
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/profile/?', users.ProfileHandler),

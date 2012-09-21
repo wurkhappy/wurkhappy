@@ -1086,6 +1086,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 				phase.save()
 		
 		try:
+			formerState = currentState
 			currentState = currentState.performTransition(role, action, unsavedRecords)
 			
 			# The new state is not used below this point, but the old one is. This
@@ -1120,7 +1121,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					
 					if isinstance(clientState, (
 								PendingUserState, NewUserState, InvitedUserState, BetaUserState
-							)) and isinstance(currentState, (EstimateState, DraftState)):
+							)) and isinstance(formerState, (DraftState, EstimateState)):
 						# TODO: I think the transition could happen in the
 						# notification daemon since the new state is never
 						# referenced.

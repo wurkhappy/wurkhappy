@@ -13,6 +13,7 @@ import logging
 import hashlib
 
 import smtplib
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -47,18 +48,22 @@ class QueueHandler(object):
 		"""
 		
 		with Email() as (server):
-			# Create message container - the correct MIME type is multipart/alternative.
-			msg = MIMEMultipart('alternative')
+			if 'multipart' in message:
+				# Create message container - the correct MIME type is multipart/alternative.
+				msg = MIMEMultipart('alternative')
+
+				# Record the MIME types of each part - (usually text/plain and text/html)
+				for (content, mimeType) in message['multipart']:
+					# Attach parts into message container.
+					# According to RFC 2046, the last part of a multipart message,
+					# in this case the HTML message, is best and preferred.
+					msg.attach(MIMEText(content, mimeType))
+			else:
+				msg = MIMEText(message['content'])
+			
 			msg['Subject'] = message['subject']
 			msg['From'] = message['from'][0]
 			msg['To'] = message['to'][0]
-			
-			# Record the MIME types of each part - (usually text/plain and text/html)
-			for (content, mimeType) in message['multipart']:
-				# Attach parts into message container.
-				# According to RFC 2046, the last part of a multipart message,
-				# in this case the HTML message, is best and preferred.
-				msg.attach(MIMEText(content, mimeType))
 			
 			server.sendmail(message['from'][1], message['to'][1], msg.as_string())
 		
@@ -726,3 +731,66 @@ The Wurk Happy Team
 			'recipientID': user['id'],
 			'recipientEmail': user['email']
 		}))
+
+
+
+class UserFeedbackHandler(QueueHandler):
+	def receive(self, body):
+		
+		recipient = body['recipient']
+		sender = body['user'] if 'user' in body else None
+
+		subject = "User Feedback for Wurk Happy"
+
+		textFormat = 'New user feedback submitted on {timestamp}'
+		
+		if 'user' in body:
+			textFormat += '''
+From:
+{user[fullName]} ({user[email]})
+https://beta.wurkhappy.com/user/{user[id]}
+
+'''
+
+		if 'feedback' in body:
+			textFormat += '''
+
+Comments:
+
+{feedback[comments]}
+'''
+		elif 'support' in body:
+			textFormat += '''
+
+Attempted task:
+
+{support[attemptedTask]}
+
+
+
+Expected result:
+
+{support[expectedResult]}
+
+
+
+Actual result:
+
+{support[actualResult]}
+'''
+		
+		timeString = datetime.now().strftime('%B %d, %Y at %H:%M UTC').replace(' 0', ' ')
+
+		textString = textFormat.format(
+				timestamp=timeString,
+				feedback=body.get('feedback', None),
+				support=body.get('support', None),
+				user=sender
+		)
+		
+		self.sendEmail({
+			'from': ('Wurk Happy', 'contact@wurkhappy.com'),
+			'to': (recipient['name'], recipient['email']),
+			'subject': subject,
+			'content': textString
+		})
