@@ -45,6 +45,42 @@
 		{% block main %}
 		{% end %}
 		
+		<div id="contact-view" style="position:absolute; width: 300px; background-color: #FFF; text-align: left;">
+			<form id="contact">
+				<div id="mode-toggle">
+					<input type="radio" name="feedback-mode" id="contact-help" selected /><label for="contact-help">Get Help</label>
+					<input type="radio" name="feedback-mode" id="contact-feedback" /><label for="contact-feedback">Give Feedback</label>
+				</div>
+
+				<div id="help-view">
+					<label for="attemptedTask">What were you trying to do?</label>
+					<textarea name="attemptedTask" class="limited-length" data-max-length="400"></textarea>
+					<br />
+					<label for="expectedResult">What did you expect would happen?</label>
+					<textarea name="expectedResult" class="limited-length" data-max-length="400"></textarea>
+					<br />
+					<label for="actualResult">What actually happened?</label>
+					<textarea name="actualResult" class="limited-length" data-max-length="400"></textarea>
+					<br />
+					<input type="checkbox" name="discloseUser" checked />
+					<label for="discloseUser">Send user information</label><br />
+					<p>Your name and user ID help us solve your problem quickly and allow us to follow
+					up personally if we need more information.</p>
+				</div>
+				<div id="feedback-view" style="display: none;">
+					<label for="comments">What&rsquo;s on your mind?</label>
+					<p>Do you have a suggestion? Is there something we can do to make the Wurk Happy
+					experience better? We love hearing from you.</p>
+					<textarea name="comments" class="limited-length" data-max-length="800"></textarea>
+					<br />
+					<label for="discloseUser">Send user information</label><br />
+					<p>Including your name and email address allows us to respond personally to your
+					comments.</p>
+				</div>
+				<button id="contact-close">Close</button>
+				<button id="contact-submit">Submit</button>
+			</form>
+		</div>
 		<!-- Javascript at the bottom for fast page loading -->
 		<!-- Eventually we need to minify this and host it on a CDN -->
 		<script src="{{ static_url("scripts/libs/jquery-1.7.2.min.js") }}" type="text/javascript"></script>
@@ -52,7 +88,7 @@
 		<script src="{{ static_url("scripts/libs/jquery-ui-1.8.23.custom.min.js") }}" type="text/javascript"></script>
 		
 		<!-- scripts concatenated and minified via ant build script-->
-		<script src="{{ static_url("scripts/landing.js") }}"></script>
+		<script src="{{ static_url("scripts/application.js") }}"></script>
 		<!-- end concatenated and minified scripts-->
 		
 		<script type="text/javascript">

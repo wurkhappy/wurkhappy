@@ -56,6 +56,27 @@ $(document).ready(function() {
 		return false;
 	});
 	
+	// Limit input length for 'limited-length' fields
+	
+	$('.limited-length').each(function (idx, elt) {
+		var $elt = $(elt),	
+			maxLength = Number($elt.attr('data-max-length'), 10),
+			$charCount = $('<p><span class="countdown">' + (maxLength - $elt.val().length) + '</span> characters remaining</p>');
+		
+		$charCount.children('span').attr('id', $elt.attr('name'));
+		$elt.after($charCount);
+		var changeFn = function(evt) {
+			var currentLength = maxLength - $elt.val().length;
+			$elt.siblings().find('span.countdown[id=' + $elt.attr('name') + ']').html(currentLength);
+		};
+
+		$elt.bind('keyup cut paste', changeFn);
+	});
+
+	$('#mode-toggle').buttonset();
+	$('#contact-close').button();
+	$('#contact-submit').button();
+
 	// Revert to jQuery placeholders if Modernizr doesn't detect HTML5 features
 
 	if (!Modernizr.input.placeholder) {

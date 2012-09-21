@@ -1,8 +1,15 @@
+#                       _      _                             
+# __      ___    _ _ __| | __ | |__   __ _ _ __  _ __  _   _ 
+# \ \ /\ / / |  | | '__| |/ / | '_ \ / _` | '_ \| '_ \| | | |
+#  \ V  V /| \__/ | |  |   <  | | | | (_| | |_) | |_) | |_| |
+#   \_/\_/  \____/|_|  |_|\_\ |_| |_|\__,_| .__/| .__/ \__, |
+#                                         |_|   |_|    |___/ 
+# 
 # WurkHappy Web Application Template
 # Version 0.5
 #
 # Written by Brendan Berg
-# Copyright WurkHappy, 2011 - 2012
+# Copyright Wurk Happy, 2011 - 2012
 
 import yaml
 
