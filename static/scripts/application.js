@@ -61,22 +61,64 @@ $(document).ready(function() {
 	$('.limited-length').each(function (idx, elt) {
 		var $elt = $(elt),	
 			maxLength = Number($elt.attr('data-max-length'), 10),
-			$charCount = $('<p><span class="countdown">' + (maxLength - $elt.val().length) + '</span> characters remaining</p>');
+			$charCount = $(
+				'<p class="small" style="font-size:11px;color:#999;margin-bottom:0;text-align:right;"><span class="countdown">' +
+				(maxLength - $elt.val().length) + 
+				'</span> <span class="text">characters remaining</span></p>'
+			);
 		
-		$charCount.children('span').attr('id', $elt.attr('name'));
+		$charCount.attr('id', $elt.attr('name'));
 		$elt.after($charCount);
 		var changeFn = function(evt) {
 			var currentLength = maxLength - $elt.val().length;
-			$elt.siblings().find('span.countdown[id=' + $elt.attr('name') + ']').html(currentLength);
+			$count = $elt.siblings('#' + $elt.attr('name'));
+			
+			if (currentLength <= 10) {
+				$count.css('color', 'red');
+			} else {
+				$count.css('color', '');
+			}
+
+			if (currentLength >= 0) {
+				$count.find('span.countdown').html(currentLength);
+				$count.find('span.text').html('characters remaining');
+			} else {
+				$count.find('span.countdown').html(- currentLength);
+				$count.find('span.text').html('characters over');
+			}
 		};
 
 		$elt.bind('keyup cut paste', changeFn);
 	});
 
 	$('#mode-toggle').buttonset();
-	$('#contact-close').button();
-	$('#contact-submit').button();
+	$('#mode-toggle input[name=feedback-mode]').change(function(evt) {
+		var selected = $(evt.target).attr('id');
+		if (selected === 'contact-help') {
+			$('#help-view').slideDown(200);
+			$('#feedback-view').slideUp(200);
+		} else if (selected === 'contact-feedback') {
+			$('#feedback-view').slideDown(200);
+			$('#help-view').slideUp(200);
+		}
+	});
 
+	$('#contact-close').button();
+	$('#contact-close').click(function(evt) {
+		$('#contact-view').fadeOut(300);
+		return evt.preventDefault();
+	});
+
+	$('#contact-submit').button();
+	$('#contact-submit').click(function(evt) {
+		return evt.preventDefault();
+	});
+
+	$('#feedback-button').button();
+	$('#feedback-button').click(function(evt) {
+		$('#contact-view').fadeToggle(300);
+		return evt.preventDefault();
+	});
 	// Revert to jQuery placeholders if Modernizr doesn't detect HTML5 features
 
 	if (!Modernizr.input.placeholder) {

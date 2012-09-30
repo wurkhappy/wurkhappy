@@ -44,37 +44,43 @@
 	<body>
 		{% block main %}
 		{% end %}
+
+		<button id="feedback-button" style="position: fixed; bottom: 5px; right: 5px;">Contact Us</button>
 		
-		<div id="contact-view" style="position:absolute; width: 300px; background-color: #FFF; text-align: left;">
+		<div id="contact-view" style="position: fixed; bottom: 50px; right: 5px; display: none; border: 1px solid #DDD; width: 300px; padding: 20px; background-color: #FFF; text-align: left;">
 			<form id="contact">
 				<div id="mode-toggle">
-					<input type="radio" name="feedback-mode" id="contact-help" selected /><label for="contact-help">Get Help</label>
+					<input type="radio" name="feedback-mode" id="contact-help" checked /><label for="contact-help">Get Help</label>
 					<input type="radio" name="feedback-mode" id="contact-feedback" /><label for="contact-feedback">Give Feedback</label>
 				</div>
 
 				<div id="help-view">
 					<label for="attemptedTask">What were you trying to do?</label>
-					<textarea name="attemptedTask" class="limited-length" data-max-length="400"></textarea>
-					<br />
+					<textarea name="attemptedTask" class="limited-length" data-max-length="400" style="width: 100%; height:100px"></textarea>
+					
 					<label for="expectedResult">What did you expect would happen?</label>
-					<textarea name="expectedResult" class="limited-length" data-max-length="400"></textarea>
-					<br />
+					<textarea name="expectedResult" class="limited-length" data-max-length="400" style="width: 100%; height:100px"></textarea>
+					
 					<label for="actualResult">What actually happened?</label>
-					<textarea name="actualResult" class="limited-length" data-max-length="400"></textarea>
-					<br />
+					<textarea name="actualResult" class="limited-length" data-max-length="400" style="width: 100%; height:100px"></textarea>
+					
 					<input type="checkbox" name="discloseUser" checked />
 					<label for="discloseUser">Send user information</label><br />
-					<p>Your name and user ID help us solve your problem quickly and allow us to follow
+					<p style="font-size: 13px; line-height: 1.3em;">
+					Your name and user ID help us solve your problem quickly and allow us to follow
 					up personally if we need more information.</p>
 				</div>
 				<div id="feedback-view" style="display: none;">
 					<label for="comments">What&rsquo;s on your mind?</label>
-					<p>Do you have a suggestion? Is there something we can do to make the Wurk Happy
+					<p style="margin: 0; padding: 0; font-size: 13px; line-height: 1.3em;">
+					Do you have a suggestion? Is there something we can do to make the Wurk Happy
 					experience better? We love hearing from you.</p>
-					<textarea name="comments" class="limited-length" data-max-length="800"></textarea>
+					<textarea name="comments" class="limited-length" data-max-length="800" style="width: 100%; height:100px"></textarea>
 					<br />
+					<input type="checkbox" name="discloseUser" checked />
 					<label for="discloseUser">Send user information</label><br />
-					<p>Including your name and email address allows us to respond personally to your
+					<p style="font-size: 13px; line-height: 1.3em;">
+					Including your name and email address allows us to respond personally to your
 					comments.</p>
 				</div>
 				<button id="contact-close">Close</button>
