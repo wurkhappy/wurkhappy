@@ -11,8 +11,11 @@ import tornado.web as web
 
 from controllers.handlers import landing
 # from controllers.email import *
-from controllers.orm import *
+from controllers.orm import Database
+from controllers.beanstalk import Beanstalk
 
+import yaml
+import logging
 import os
 
 
@@ -43,7 +46,7 @@ class Application(web.Application):
 			"login_url": "/login",
 			"template_path": "templates",
 			"static_path": "static",
-			"debug": config['debug']
+			"debug": config['tornado'].get('debug', False)
 		}
 		
 		web.Application.__init__(self, handlers, **settings)
@@ -56,6 +59,7 @@ class Application(web.Application):
 			"db": config['database']['db']
 		}, None)
 		
+		Beanstalk.configure(config['beanstalk'])
 		# Email.configure(config['smtp'])
 
 
@@ -64,11 +68,6 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	try:
-		import json
-	except:
-		import simplejson as json
-	
 	options.define("config", default="config.json", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)
@@ -79,10 +78,15 @@ if __name__ == "__main__":
 	if workingDir:
 		os.chdir(workingDir)
 	
-	conf = json.load(open(options.options.config, 'r'))
-	conf['debug'] = options.options.debug
-	server = HTTPServer(Application(conf))
+	conf = yaml.load(open(options.options.config, 'r'))
+
+	if options.options.debug:
+		conf['tornado']['debug'] = options.options.debug
 	
+	xheaders = conf['tornado'].get('xheaders', False)
+
+	server = HTTPServer(Application(conf), xheaders=xheaders)
+
 	port = options.options.port
 	address = options.options.address
 	
@@ -91,6 +95,8 @@ if __name__ == "__main__":
 	
 	if not address:
 		address = conf['tornado']['address']
+	
+	logging.info('Starting up on %s:%s', address, port)
 
 	server.listen(port, address)
 	IOLoop.instance().start()

@@ -1,4 +1,7 @@
-from models.user import User, UserState, UserToken, ActiveUserState, NewUserState, InvitedUserState, BetaUserState
+from models.user import (
+	User, UserState, UserToken, UserPrefs, ActiveUserState,
+	NewUserState, InvitedUserState, BetaUserState
+)
 from models.agreement import Agreement, AgreementPhase
 from models.request import Request
 from models.transaction import Transaction
@@ -794,3 +797,60 @@ Actual result:
 			'subject': subject,
 			'content': textString
 		})
+
+
+
+class WelcomeInviteHandler(QueueHandler):
+	def receive(self, body):
+		
+		recipient = User.retrieveByID(body['userID'])
+		welcomeNoteSent = UserPrefs.retrieveByUserIDAndName(recipient['id'], 'welcome_note_sent')
+		
+		if welcomeNoteSent:
+			return
+
+		subject = "Thanks for your interest in Wurk Happy"
+
+		# add formatting here
+		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
+		}
+		
+		t = self.loader.load('welcome_invite.html')
+		htmlString = t.generate(data=data)
+		
+		textString = '''Hello from Wurk Happy!
+
+I'm Marcus, and I'm one of the founders of Wurk Happy. Thanks for your interest in our private beta!
+
+Our platform simplifies agreement negotiation, billing, and payment	for freelancers and their clients. I have first-hand experience with the challenges freelancers face in order to do	their jobs, and we are working hard to create a painless experience for freelancers and their clients to conduct business.
+
+As I said, we are currently in private beta, but you're now on our waiting list and we'll contact you when we're ready for
+you to join.
+
+If you have any questions or comments, you can reach me at marcus@wurkhappy.com
+
+Thanks again,
+Marcus
+
+'''
+
+		self.sendEmail({
+			'from': ('The Wurk Happy team', 'contact@wurkhappy.com'),
+			'to': (recipient.getFullName(), recipient['email']),
+			'subject': subject,
+			'multipart': [
+				(textString, 'text'),
+				(htmlString, 'html')
+			]
+		})
+
+		welcomeNoteSent = UserPrefs(
+			userID=recipient['id'],
+			name='welcome_note_sent',
+			value='True'
+		)
+
+		welcomeNoteSent.save()
+
+

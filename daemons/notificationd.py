@@ -50,7 +50,9 @@ class MailController (BackgroundController):
 			
 			'userInvite': notifications.UserInviteHandler,
 			'userResetPassword': notifications.UserResetPasswordHandler,
-			'userFeedback': notifications.UserFeedbackHandler
+			'userFeedback': notifications.UserFeedbackHandler,
+			
+			'welcomeInvite': notifications.WelcomeInviteHandler
 		}
 		
 		super(MailController, self).__init__(tubeName, handlers, config)

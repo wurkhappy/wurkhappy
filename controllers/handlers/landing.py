@@ -1,10 +1,12 @@
 from base import BaseHandler
 from models.user import User, UserPrefs
 from controllers import fmt
+from controllers.beanstalk import Beanstalk
 # from controllers.verification import Verification
 
 from datetime import datetime
 import logging
+import json
 import re
 
 class RootHandler(BaseHandler):
@@ -57,6 +59,17 @@ class SignupHandler(BaseHandler):
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
 			user.save()
+			
+			with Beanstalk() as bconn:
+				msg = {
+					"userID": user['id'],
+					"action": "welcomeInvite"
+				}
+				
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(json.dumps(msg))
+				logging.info('Beanstalk: {0}#{1} {2}'.format(tube, r, msg))
 		
 		self.render('landing/thankyou.html',
 			title="Wurk Happy &ndash; Our platform gets you paid faster.")
@@ -132,6 +145,17 @@ class SignupJSONHandler(BaseHandler):
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
 			user.save()
+			
+			with Beanstalk() as bconn:
+				msg = {
+					"userID": user['id'],
+					"action": "welcomeInvite"
+				}
+				
+				tube = self.application.configuration['notifications']['beanstalk_tube']
+				bconn.use(tube)
+				r = bconn.put(json.dumps(msg))
+				logging.info('Beanstalk: {0}#{1} {2}'.format(tube, r, msg))
 		
 		self.renderJSON({"success": True})
 	
