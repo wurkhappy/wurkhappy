@@ -61,11 +61,21 @@ $(document).ready(function() {
 	$('.limited-length').each(function (idx, elt) {
 		var $elt = $(elt),	
 			maxLength = Number($elt.attr('data-max-length'), 10),
-			$charCount = $(
-				'<p class="small" style="font-size:11px;color:#999;margin-bottom:0;text-align:right;"><span class="countdown">' +
-				(maxLength - $elt.val().length) + 
-				'</span> <span class="text">characters remaining</span></p>'
-			);
+			minLength = Number($elt.attr('data-min-length'), 10) || 0,
+			$charCount;
+
+			if ($elt.val().length < minLength) {
+				$charCount = $(
+					'<p class="small" style="font-size:11px;color:orange;margin-bottom:0;text-align:right;"><span class="countdown">Please type at least ' +
+					minLength + '</span> <span class="text">characters</span></p>'
+				);
+			} else {
+				$charCount = $(
+					'<p class="small" style="font-size:11px;color:#999;margin-bottom:0;text-align:right;"><span class="countdown">' +
+					(maxLength - $elt.val().length) + 
+					'</span> <span class="text">characters remaining</span></p>'
+				);
+			}
 		
 		$charCount.attr('id', $elt.attr('name'));
 		$elt.after($charCount);
@@ -75,11 +85,16 @@ $(document).ready(function() {
 			
 			if (currentLength <= 10) {
 				$count.css('color', 'red');
+			} else if ($elt.val().length <= minLength) {
+				$count.css('color', 'orange');
 			} else {
 				$count.css('color', '');
 			}
 
-			if (currentLength >= 0) {
+			if ($elt.val().length <= minLength) {
+				$count.find('span.countdown').html('Please type at least ' + minLength);
+				$count.find('span.text').html('characters');
+			} else if (currentLength >= 0) {
 				$count.find('span.countdown').html(currentLength);
 				$count.find('span.text').html('characters remaining');
 			} else {
@@ -111,6 +126,74 @@ $(document).ready(function() {
 
 	$('#contact-submit').button();
 	$('#contact-submit').click(function(evt) {
+		var eltLengthInRange = function($elt) {
+			var minLength = Number($elt.attr('data-min-length'), 10) || 0,
+				maxLength = Number($elt.attr('data-max-length'), 10) || Infinity,
+				length = $elt.val().length;
+			return length <= maxLength && length >= minLength;
+		},
+			data = {'_xsrf': getCookie('_xsrf')};
+
+		if ($('#contact-help').prop('checked') === true) {
+			var $attemptedTask = $('textarea[name=attemptedTask]'),
+				$expectedResult = $('textarea[name=expectedResult]'),
+				$actualResult = $('textarea[name=actualResult]'),
+				formIsValid = true;
+			
+			if (!eltLengthInRange($attemptedTask)) {
+				formIsValid = false;
+				$attemptedTask.css('border', '1px solid red');
+			}
+
+			if (!eltLengthInRange($expectedResult)) {
+				formIsValid = false;
+				$expectedResult.css('border', '1px solid red');
+			}
+
+			if (!eltLengthInRange($actualResult)) {
+				formIsValid = false;
+				$actualResult.css('border', '1px solid red');
+			}
+
+			if (!formIsValid) {
+				return evt.preventDefault();
+			}
+
+			data['attemptedTask'] = $attemptedTask.val();
+			data['expectedResult'] = $expectedResult.val();
+			data['actualResult'] = $actualResult.val();
+			data['discloseUser'] = $('#help-disclose-user').checked;
+		} else {
+			var $comments = $('textarea[name=comments]');
+
+			if (!eltLengthInRange($comments)) {
+				$comments.css('border', '1px solid red');
+				return evt.preventDefault();
+			}
+
+			data['comments'] = $comments.val();
+			data['discloseUser'] = $('#feedback-disclose-user').checked;
+		}
+
+		$.ajax({
+			url: '/feedback.json',
+			type: 'POST',
+			dataType: 'json',
+			data: data,
+			success: function(data, status, xhr) {
+				$('#contact-close').click();
+				$('textarea[name=attemptedTask]').val('');
+				$('textarea[name=expectedResult]').val('');
+				$('textarea[name=actualResult]').val('');
+				$('textarea[name=comments]').val('');
+				alert('Thank you for your feedback');
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				var error = jQuery.parseJSON(jqXHR.responseText);
+				alert(error ? error.display : 'Could not process feedback.');
+			}
+		});
+
 		return evt.preventDefault();
 	});
 

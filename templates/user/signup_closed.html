@@ -1,0 +1,81 @@
+{% extends "../base.html" %}
+
+{% block main %}
+
+<div class="container">
+	{% block navigation %}
+	{% end %}
+
+	{% block header %}
+	{% end %}
+
+	<div id="content" class="clear">
+		<div class="column-three-fourth">
+			<h1>We&rsquo;re sorry, but we had to put on the brakes.</h1>
+			
+			<p>There&rsquo;s been an unprecedented interest in Wurk Happy lately, and we
+				want to maintain the highest quality experience for our current users.
+				Unfortunately this means we need to temporarily pause sign-ups until tomorrow
+				morning. Please check back later to sign up.</p>
+			
+			<h1>Do you have an invite code?</h1>
+			
+			<p>If you have an invitation code, you may sign up by providing it in the sign-up
+				form below.</p>
+
+			<form action="/account/create" method="POST" accept-charset="utf-8">
+				{% raw xsrf_form_html() %}
+				<fieldset>
+					<label for="email">Email Address</label>
+					<input type="email" name="email" value="" size="60" />
+					<label for="email">Password</label>
+					<input type="password" name="password" value="" size="60" />
+					<label for="inviteCode">Invitation Code</label>
+					<input type="text" name="inviteCode" size="40" />
+				</fieldset>
+				<fieldset class="submit-buttons">
+					<input type="submit" value="Get Started" />
+				</fieldset>
+			</form>
+		</div>
+	</div>
+
+	{% module Footer() %}
+</div>
+{% end %}
+
+
+
+
+### Component blocks included from above
+
+{% block navigation %}
+	<div id="navigation" class="clear">
+		<div class="column-one-half">
+			<p class="logo"><a href="/">Wurk Happy</a></p>
+		</div>
+		<div class="column-one-half">
+			<ul id="admin" class="clear">
+				<li><a href="/account/create"><strong>New to Wurk Happy?</strong> Join Today!</a></li>
+			</ul>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block header %}
+	<div id="intro" class="clear">
+		<div class="column-three-fourth">
+			<h1>{{ title }}</h1>
+		</div>
+	</div>
+{% end %}
+
+
+
+{% block scripts-custom %}
+<script src="{{ static_url('scripts/libs/jquery-autosuggest-1.4.js') }}" type="text/javascript"></script>
+<script src="{{ static_url('scripts/login.js') }}" type="text/javascript" ></script>
+{% end %}
+

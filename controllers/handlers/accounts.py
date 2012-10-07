@@ -33,7 +33,7 @@ from StringIO import StringIO
 # Required for generating remote resource ID strings (S3 keys)
 import uuid
 from hashlib import sha1
-from controllers.data import Data, Base58
+from controllers.data import Data, Base58, Phonetic
 
 # Required for uploading images to S3
 from controllers.amazonaws import AmazonS3, AmazonFPS
@@ -236,12 +236,19 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 class AccountCreationHandler(BaseHandler):
 	
 	def get(self):
-		self.render("user/signup.html", title="Sign Up", error=None)
+		signupCount = User.countRecentSignups()
+
+		if signupCount > 50 or self.get_argument('closed'):
+			self.render("user/signup_closed.html", title="Sign Up", error=None)
+		else:
+			self.render("user/signup.html", title="Sign Up", error=None)
 	
 	def post(self):
 		try:
 			args = fmt.Parser(self.request.arguments,
-				optional=[],
+				optional=[
+					('inviteCode', fmt.String())
+				],
 				required=[
 					('email', fmt.Email()),
 					('password', fmt.Enforce(str))
@@ -278,6 +285,18 @@ class AccountCreationHandler(BaseHandler):
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
 			return
 		
+		signupCount = User.countRecentSignups()
+		inviteCode = None
+
+		if signupCount > 50 or self.get_argument('closed'):
+			if args['inviteCode'] is None:
+				self.render("users/signup_closed.html", title="Sign Up", error=None)
+			
+			try:
+				inviteCode = int(hex(Data(args['inviteCode'], Phonetic)), 16)
+			except ValueError, e:
+				self.render("user/signup_closed.html", title="Sign Up", error=None)
+		
 		# Check whether user exists already
 		user = User.retrieveByEmail(args['email'])
 		
@@ -286,6 +305,7 @@ class AccountCreationHandler(BaseHandler):
 			user = User()
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
+			user['inviteCode'] = inviteCode
 			user.setPasswordHash(args['password'])
 			user.save()
 			

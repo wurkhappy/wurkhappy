@@ -14,6 +14,10 @@ from hashlib import sha1
 from boto.s3.key import Key
 import logging
 
+# For date-related queries, esp. w/ timezone support
+from datetime import datetime
+import pytz
+
 
 
 # -------------------------------------------------------------------
@@ -28,7 +32,7 @@ class User(MappedObj):
 		'confirmation': None,
 		'fingerprint': None,
 		'invitedBy': None,
-		# 'confirmed': None, # TODO: Delete field from schema
+		'inviteCode': None,
 		# 'subscriberStatus': 0, # TODO: Delete field from schema
 		'firstName': None,
 		'lastName': None,
@@ -50,6 +54,21 @@ class User(MappedObj):
 	def count(clz):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT COUNT(*) FROM {0}".format(clz.tableName))
+			result = cursor.fetchone()
+		
+		return result['COUNT(*)']
+	
+	@classmethod
+	def countRecentSignups(clz):
+		tz = pytz.timezone("US/Eastern")
+		midnight = tz.localize(
+			datetime.now(tz).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None),
+			is_dst=None
+		)
+		utc_dt = midnight.astimezone(pytz.utc)
+      
+		with Database() as (conn, cursor):
+			cursor.execute("SELECT COUNT(*) FROM {0} WHERE dateCreated > %s".format(clz.tableName), midnight)
 			result = cursor.fetchone()
 		
 		return result['COUNT(*)']

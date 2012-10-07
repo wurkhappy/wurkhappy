@@ -68,6 +68,8 @@ class JSONBaseHandler(web.RequestHandler):
 	
 	def renderJSON(self, obj):
 		self.set_header('Content-Type', 'application/json')
+		# TODO: The following should only be set for POST requests, but this is easier for now.
+		self.set_header('Cache-Control', 'no-cache')
 		self.finish(json.dumps(obj, cls=ORMJSONEncoder))
 
 	def write_error(self, status_code, **kwargs):

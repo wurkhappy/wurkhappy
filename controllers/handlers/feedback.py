@@ -48,11 +48,11 @@ class FeedbackJSONHandler(Authenticated, JSONBaseHandler):
 		if args['discloseUser']:
 			message['user'] = user.getPublicDict()
 
-		if 'comments' in args:
+		if args['comments']:
 			message['feedback'] = {
 				'comments': args['comments']
 			}
-		elif all(k in args for k in ['attemptedTask', 'expectedResult', 'actualResult']):
+		elif all(args[k] for k in ['attemptedTask', 'expectedResult', 'actualResult']):
 			# We need all three parameters, and I can't think of a prettier way to test that.
 
 			message['support'] = {
