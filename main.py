@@ -1,8 +1,15 @@
+#                       _      _                             
+# __      ___    _ _ __| | __ | |__   __ _ _ __  _ __  _   _ 
+# \ \ /\ / / |  | | '__| |/ / | '_ \ / _` | '_ \| '_ \| | | |
+#  \ V  V /| \__/ | |  |   <  | | | | (_| | |_) | |_) | |_| |
+#   \_/\_/  \____/|_|  |_|\_\ |_| |_|\__,_| .__/| .__/ \__, |
+#                                         |_|   |_|    |___/ 
+# 
 # WurkHappy Web Application Template
 # Version 0.5
 #
 # Written by Brendan Berg
-# Copyright WurkHappy, 2011 - 2012
+# Copyright Wurk Happy, 2011 - 2012
 
 import yaml
 
@@ -11,12 +18,16 @@ from tornado.ioloop import IOLoop
 import tornado.options as options
 import tornado.web as web
 
-from controllers.handlers import *
+from controllers.handlers import (
+	accounts, agreements, authentication, callbacks,
+	feedback, help, legal, notifications, payments, requests,
+	root, tests, users
+)
 from controllers.email import Email
 from controllers.orm import Database
 from controllers.amazonaws import AmazonS3
 from controllers.beanstalk import Beanstalk
-
+from controllers.application import WurkHappy
 import os
 import os.path
 import logging
@@ -47,6 +58,8 @@ class Application(web.Application):
 			# (r'/legal/dwolla/?', legal.DwollaHandler),
 			
 			(r'/help/faq/?', help.FAQHandler),
+			
+			(r'/feedback\.json', feedback.FeedbackJSONHandler),
 			
 			(r'/user/([0-9]*)/?', users.ProfileHandler),
 			(r'/user/me/profile/?', users.ProfileHandler),
@@ -120,6 +133,7 @@ class Application(web.Application):
 		Beanstalk.configure(config['beanstalk'])
 		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
+		WurkHappy.configure(dict(config['wurkhappy'].items() + config['tornado'].items()))
 
 
 # -------------------------------------------------------------------

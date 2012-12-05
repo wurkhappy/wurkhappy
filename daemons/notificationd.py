@@ -49,7 +49,10 @@ class MailController (BackgroundController):
 			'sendAgreementRequest': notifications.SendAgreementRequestHandler,
 			
 			'userInvite': notifications.UserInviteHandler,
-			'userResetPassword': notifications.UserResetPasswordHandler
+			'userResetPassword': notifications.UserResetPasswordHandler,
+			'userFeedback': notifications.UserFeedbackHandler,
+			
+			'welcomeInvite': notifications.WelcomeInviteHandler
 		}
 		
 		super(MailController, self).__init__(tubeName, handlers, config)

@@ -50,11 +50,12 @@
 			retrieveComplete: function(data){ return data; },
 			resultClick: function(data){},
 			resultsComplete: function(){}
-	  	};  
-	 	var opts = $.extend(defaults, options);	 	
+		};
+		var opts = $.extend(defaults, options);
 		
 		var d_type = "object";
 		var d_count = 0;
+		
 		if(typeof data == "string") {
 			d_type = "string";
 			var req_string = data;
@@ -62,9 +63,10 @@
 			var org_data = data;
 			for (k in data) if (data.hasOwnProperty(k)) d_count++;
 		}
-		if((d_type == "object" && d_count > 0) || d_type == "string"){
+		
+		if ((d_type == "object" && d_count > 0) || d_type == "string") {
 			return this.each(function(x){
-				if(!opts.asHtmlID){
+				if (!opts.asHtmlID) {
 					x = x+""+Math.floor(Math.random()*100); //this ensures there will be unique IDs on the page if autoSuggest() is called multiple times
 					var x_id = "as-input-"+x;
 				} else {
@@ -149,10 +151,12 @@
 					if($(this).val() == "" && values_input.val() == "" && prefill_value == ""){
 						$(this).val(opts.startText);
 					} else if(input_focus){
+						input_focus = false;
 						var n_data = {}, i_input = $(this).val().replace(/(,)/g, "");;
 						n_data[opts.selectedItemProp] = i_input;
 						n_data[opts.selectedValuesProp] = i_input;
 						var lis = $("li", selections_holder).length;
+						
 						if (appears_valid_email(i_input)) {
 							n_data[opts.selectedValuesProp] = "";
 							add_selected_item(n_data, "00"+(lis+1));
@@ -194,7 +198,7 @@
 							}
 							if(input.val().length == 1){
 								results_holder.hide();
-								 prev = "";
+								prev = "";
 							}
 							if($(":visible",results_holder).length > 0){
 								if (timeout){ clearTimeout(timeout); }
@@ -215,18 +219,15 @@
 								n_data[opts.selectedItemProp] = i_input;
 								n_data[opts.selectedValuesProp] = i_input;
 								var lis = $("li", selections_holder).length;
-								if (appears_valid_email(i_input)) {
-									n_data[opts.selectedValuesProp] = "";
-									add_selected_item(n_data, "00"+(lis+1));
-								}
+								
+								input.blur();
 								// End Bb
 							}
+							
 							if (tab_press === true) {
 								opts.tabPressed.call(this, input);
 							}
-						case 13: // return
-							input.blur();
-							tab_press = false;
+							
 							var active = $("li.active:first", results_holder);
 							if(active.length > 0){
 								active.click();
@@ -252,7 +253,7 @@
 				
 				function keyChange() {
 					// ignore if the following keys are pressed: [del] [shift] [capslock]
-					if( lastKeyPressCode == 46 || (lastKeyPressCode > 8 && lastKeyPressCode < 32) ){ return results_holder.hide(); }
+					if( lastKeyPressCode == 46 || lastKeyPressCode == 8 || (lastKeyPressCode > 9 && lastKeyPressCode < 32) ){ return results_holder.hide(); }
 					var string = input.val().replace(/[\\]+|[\/]+/g,"");
 					if (string == prev) return;
 					prev = string;
@@ -312,7 +313,7 @@
 							var formatted = $('<li class="as-result-item" id="as-result-item-'+num+'"></li>').click(function(){
 									var raw_data = $(this).data("data");
 									var number = raw_data.num;
-									if($("#as-selection-"+number, selections_holder).length <= 0 && !tab_press){
+									if($("#as-selection-"+number, selections_holder).length <= 0/* && !tab_press*/){
 										var data = raw_data.attributes;
 										input.val("").focus();
 										prev = "";
@@ -388,8 +389,10 @@
 							//marcus added line here to show input box when close is clicked because of adjusted focus/hide in application.js
 							$('ul.as-selections li.as-original input').show();
 							//$('ul.as-selections li.as-original').css('opacity', '1');
-							input_focus = true;
-							input.focus();
+							
+							// Was this part of the problem ? why are we focusing here? Bb
+							input_focus = false;
+							// input.focus();
 							return false;
 						});
 						

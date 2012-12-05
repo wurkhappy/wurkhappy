@@ -1,4 +1,24 @@
 
+$(document).ready(function() {
+	$('.datewidget').datepicker({
+		dateFormat: 'MM d, yy',
+		altFormat: 'yy-mm-dd',
+		buttonImage: '/static/images/icons/calendar-256x256.png',
+		showOn: 'both',
+		constrainInput: true,
+		minDate: 0,
+		maxDate: new Date(2015, 1 - 1, 1)
+	});
+	
+	$('.datewidget').each(function(idx, elt) {
+		var id = $(elt).attr('id');
+		$(elt).datepicker('option', 'altField', '#' + id + ' + .iso-date');
+		var $button = $(elt).next();
+		$button.css('float', 'left').css('margin-top', '0').find('img').css('width', '25px').css('height', '25px');
+		$button.insertBefore($(elt));
+	});
+});
+
 var buttonActions = {
 	
 	'password-submit': {

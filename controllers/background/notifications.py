@@ -1,4 +1,7 @@
-from models.user import User, UserState, UserToken, ActiveUserState, NewUserState, InvitedUserState, BetaUserState
+from models.user import (
+	User, UserState, UserToken, UserPrefs, ActiveUserState,
+	NewUserState, InvitedUserState, BetaUserState
+)
 from models.agreement import Agreement, AgreementPhase
 from models.request import Request
 from models.transaction import Transaction
@@ -13,6 +16,7 @@ import logging
 import hashlib
 
 import smtplib
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -47,18 +51,22 @@ class QueueHandler(object):
 		"""
 		
 		with Email() as (server):
-			# Create message container - the correct MIME type is multipart/alternative.
-			msg = MIMEMultipart('alternative')
+			if 'multipart' in message:
+				# Create message container - the correct MIME type is multipart/alternative.
+				msg = MIMEMultipart('alternative')
+
+				# Record the MIME types of each part - (usually text/plain and text/html)
+				for (content, mimeType) in message['multipart']:
+					# Attach parts into message container.
+					# According to RFC 2046, the last part of a multipart message,
+					# in this case the HTML message, is best and preferred.
+					msg.attach(MIMEText(content, mimeType))
+			else:
+				msg = MIMEText(message['content'])
+			
 			msg['Subject'] = message['subject']
 			msg['From'] = message['from'][0]
 			msg['To'] = message['to'][0]
-			
-			# Record the MIME types of each part - (usually text/plain and text/html)
-			for (content, mimeType) in message['multipart']:
-				# Attach parts into message container.
-				# According to RFC 2046, the last part of a multipart message,
-				# in this case the HTML message, is best and preferred.
-				msg.attach(MIMEText(content, mimeType))
 			
 			server.sendmail(message['from'][1], message['to'][1], msg.as_string())
 		
@@ -676,7 +684,7 @@ class UserResetPasswordHandler(QueueHandler):
 		digest = Verification.generateHashDigest()
 		host = self.application.config['wurkhappy']['hostname']
 		
-		userToken = UserToken(userID=client['id'])
+		userToken = UserToken(userID=user['id'])
 		userToken.setTokenHash(digest)
 		userToken.save()
 		
@@ -726,3 +734,123 @@ The Wurk Happy Team
 			'recipientID': user['id'],
 			'recipientEmail': user['email']
 		}))
+
+
+
+class UserFeedbackHandler(QueueHandler):
+	def receive(self, body):
+		
+		recipient = body['recipient']
+		sender = body['user'] if 'user' in body else None
+
+		subject = "User Feedback for Wurk Happy"
+
+		textFormat = 'New user feedback submitted on {timestamp}'
+		
+		if 'user' in body:
+			textFormat += '''
+From:
+{user[fullName]} ({user[email]})
+https://beta.wurkhappy.com/user/{user[id]}
+
+'''
+
+		if 'feedback' in body:
+			textFormat += '''
+
+Comments:
+
+{feedback[comments]}
+'''
+		elif 'support' in body:
+			textFormat += '''
+
+Attempted task:
+
+{support[attemptedTask]}
+
+
+
+Expected result:
+
+{support[expectedResult]}
+
+
+
+Actual result:
+
+{support[actualResult]}
+'''
+		
+		timeString = datetime.now().strftime('%B %d, %Y at %H:%M UTC').replace(' 0', ' ')
+
+		textString = textFormat.format(
+				timestamp=timeString,
+				feedback=body.get('feedback', None),
+				support=body.get('support', None),
+				user=sender
+		)
+		
+		self.sendEmail({
+			'from': ('Wurk Happy', 'contact@wurkhappy.com'),
+			'to': (recipient['name'], recipient['email']),
+			'subject': subject,
+			'content': textString
+		})
+
+
+
+class WelcomeInviteHandler(QueueHandler):
+	def receive(self, body):
+		
+		recipient = User.retrieveByID(body['userID'])
+		welcomeNoteSent = UserPrefs.retrieveByUserIDAndName(recipient['id'], 'welcome_note_sent')
+		
+		if welcomeNoteSent:
+			return
+
+		subject = "Thanks for your interest in Wurk Happy"
+
+		# add formatting here
+		data = {
+			'hostname': self.application.config['wurkhappy']['hostname'],
+		}
+		
+		t = self.loader.load('welcome_invite.html')
+		htmlString = t.generate(data=data)
+		
+		textString = '''Hello from Wurk Happy!
+
+I'm Marcus, and I'm one of the founders of Wurk Happy. Thanks for your interest in our private beta!
+
+Our platform simplifies agreement negotiation, billing, and payment	for freelancers and their clients. I have first-hand experience with the challenges freelancers face in order to do	their jobs, and we are working hard to create a painless experience for freelancers and their clients to conduct business.
+
+As I said, we are currently in private beta, but you're now on our waiting list and we'll contact you when we're ready for
+you to join.
+
+If you have any questions or comments, you can reach me at marcus@wurkhappy.com
+
+Thanks again,
+Marcus
+
+'''
+
+		self.sendEmail({
+			'from': ('The Wurk Happy team', 'contact@wurkhappy.com'),
+			'to': (recipient.getFullName(), recipient['email']),
+			'subject': subject,
+			'multipart': [
+				(textString, 'text'),
+				(htmlString, 'html')
+			]
+		})
+
+		welcomeNoteSent = UserPrefs(
+			userID=recipient['id'],
+			name='welcome_note_sent',
+			value='True'
+		)
+
+		welcomeNoteSent.save()
+
+

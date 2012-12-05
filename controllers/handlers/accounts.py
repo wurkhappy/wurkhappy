@@ -6,6 +6,7 @@ from models.paymentmethod import PaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
 from controllers.amazonaws import AmazonS3, AmazonFPS
+from controllers.application import WurkHappy
 
 from tornado.httpclient import HTTPClient
 from tornado.httpclient import HTTPError as HTTPClientError
@@ -32,7 +33,7 @@ from StringIO import StringIO
 # Required for generating remote resource ID strings (S3 keys)
 import uuid
 from hashlib import sha1
-from controllers.data import Data, Base58
+from controllers.data import Data, Base58, Phonetic
 
 # Required for uploading images to S3
 from controllers.amazonaws import AmazonS3, AmazonFPS
@@ -44,7 +45,7 @@ class DwollaRedirectMixin(object):
 	def buildRedirectURL(self, token=None):
 		return '{0}://{1}/user/me/connections{2}'.format(
 			self.request.protocol,
-			self.application.configuration['wurkhappy']['hostname'],
+			WurkHappy.getSettingWithTag('hostname'),
 			'?t={0}'.format(token) if token else ''
 		)
 
@@ -74,12 +75,7 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 		
 		self.token = self.get_argument("t", None)
 		
-		user = self.token and User.retrieveByFingerprint(sha1(self.token).hexdigest())
-		
-		if user and user.confirmationIsValid(self.token):
-			return user
-		else:
-			return None
+		return self.token and User.retrieveByToken(self.token)
 	
 	def get(self):
 		user = self.current_user
@@ -103,8 +99,12 @@ class AccountSetupHandler(TokenAuthenticated, BaseHandler, DwollaRedirectMixin):
 				'email': user['email'],
 				'telephone': user['telephone'] or '',
 				'profileURL': [
-					user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
-					user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+					user['profileSmallURL'] or
+						'{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'),
+								'images/profile1_s.jpg'),
+					user['profileLargeURL'] or
+						'{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'),
+								'images/profile1_s.jpg'),
 				],
 				'password': True if user['password'] else False,
 				'dwolla': {
@@ -163,8 +163,8 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 			'email': user['email'],
 			'telephone': user['telephone'] or '',
 			'profileURL': [
-				user['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg',
-				user['profileLargeURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'
+				user['profileSmallURL'] or '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile1_s.jpg'),
+				user['profileLargeURL'] or '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile1_s.jpg')
 			],
 			'self': 'account',
 			'amazonFPSAccount': UserPrefs.retrieveByUserIDAndName(user['id'], 'amazonFPSAccountToken')
@@ -177,7 +177,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
-					self.application.configuration['wurkhappy']['hostname'],
+					WurkHappy.getSettingWithTag('hostname'),
 					self.request.path
 				),
 				self.request.query,
@@ -194,7 +194,7 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				emailPref['value'] = args['recipientEmail']
 				emailPref.save()
 
-			self.redirect('{0}://{1}{2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], self.request.path))
+			self.redirect('{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path))
 			return
 		else:
 			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
@@ -246,7 +246,9 @@ class AccountCreationHandler(BaseHandler):
 	def post(self):
 		try:
 			args = fmt.Parser(self.request.arguments,
-				optional=[],
+				optional=[
+					('inviteCode', fmt.String())
+				],
 				required=[
 					('email', fmt.Email()),
 					('password', fmt.Enforce(str))
@@ -303,13 +305,15 @@ class AccountCreationHandler(BaseHandler):
 			user = User()
 			user['email'] = args['email']
 			user['dateCreated'] = datetime.now()
+			user['inviteCode'] = inviteCode
 			user.setPasswordHash(args['password'])
 			user.save()
 			
 			# TODO: This should be better. Static value in config file...
 			# user.profileSmallURL = self.application.configuration['application']['profileURLFormat'].format({"id": user.id % 5, "size": "s"})
 			# "http://media.wurkhappy.com/images/profile{id}_{size}.jpg"
-			user['profileSmallURL'] = "http://media.wurkhappy.com/images/profile%d_s.jpg" % (user['id'] % 5)
+			user['profileSmallURL'] = '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile%d_s.jpg' %
+					(user['id'] % 5))
 			user.save()
 
 			with Beanstalk() as bconn:
@@ -508,7 +512,8 @@ class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 					k.set_contents_from_string(imgData.getvalue(), headers)
 					k.make_public()
 					
-					user[params[t][0]] = 'https://media.wurkhappy.com.s3.amazonaws.com/' + nameFormat % t
+					user[params[t][0]] = '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), nameFormat % t)
+					# https://media.wurkhappy.com.s3.amazonaws.com/' + nameFormat % t
 		
 		user.save()
 		self.renderJSON(user.getPublicDict())
@@ -597,7 +602,7 @@ class AmazonVerificationJSONHandler(CookieAuthenticated, JSONBaseHandler):
 			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
 		self.set_status(201)
-		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(self.request.protocol, self.application.configuration['wurkhappy']['hostname'], user['id']))
+		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), user['id']))
 		return
 
 

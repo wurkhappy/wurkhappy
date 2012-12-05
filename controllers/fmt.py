@@ -148,6 +148,50 @@ class IntegerInRange(Enforce):
 
 
 
+class Boolean(Enforce):
+	def __init__(self, default=False):
+		Enforce.__init__(self, bool, default)
+	
+	def filter(self, value):
+		if value.lower() in ['true', 't', 'yes', 'y']:
+			return True
+		elif value.lower() in ['false', 'f', 'no', 'n']:
+			return False
+		else:
+			raise Exception("boolean values must be either 'true' or 'false'")
+	
+	def __lshift__(self, value):
+		if value is None:
+			return self.default
+
+		return self.filter(value[0])
+
+
+
+class String(Enforce):
+	def __init__(self, r=[None, None], default=None):
+		Enforce.__init__(self, str, default)
+		self.range = r
+	
+	def filter(self, value):
+		length = len(value)
+
+		if self.range[0] is not None and length < self.range[0]:
+			raise Exception("value must have at least {0} characters".format(self.range[0]))
+
+		if self.range[1] is not None and length >= self.range[1]:
+			raise Exception("value must not exceed {0} characters".format(self.range[0]))
+
+		return value
+	
+	def __lshift__(self, value):
+		if value is None:
+			return self.default
+
+		return self.filter(value[0])
+
+
+
 class StringInSet(Enforce):
 	def __init__(self, s, default=None):
 		Enforce.__init__(self, str, default)

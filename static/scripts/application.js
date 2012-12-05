@@ -56,6 +56,172 @@ $(document).ready(function() {
 		return false;
 	});
 	
+	// Limit input length for 'limited-length' fields
+	
+	$('.limited-length').each(function (idx, elt) {
+		var $elt = $(elt),	
+			maxLength = Number($elt.attr('data-max-length'), 10),
+			minLength = Number($elt.attr('data-min-length'), 10) || 0,
+			$charCount;
+
+			if ($elt.val().length < minLength) {
+				$charCount = $(
+					'<p class="small" style="font-size:11px;color:orange;margin-bottom:0;text-align:right;"><span class="countdown">Please type at least ' +
+					minLength + '</span> <span class="text">characters</span></p>'
+				);
+			} else {
+				$charCount = $(
+					'<p class="small" style="font-size:11px;color:#999;margin-bottom:0;text-align:right;"><span class="countdown">' +
+					(maxLength - $elt.val().length) + 
+					'</span> <span class="text">characters remaining</span></p>'
+				);
+			}
+		
+		$charCount.attr('id', $elt.attr('name'));
+		$elt.after($charCount);
+		var changeFn = function(evt) {
+			var currentLength = maxLength - $elt.val().length;
+			$count = $elt.siblings('#' + $elt.attr('name'));
+			
+			if (currentLength <= 10) {
+				$count.css('color', 'red');
+			} else if ($elt.val().length <= minLength) {
+				$count.css('color', 'orange');
+			} else {
+				$count.css('color', '');
+			}
+
+			if ($elt.val().length <= minLength) {
+				$count.find('span.countdown').html('Please type at least ' + minLength);
+				$count.find('span.text').html('characters');
+			} else if (currentLength >= 0) {
+				$count.find('span.countdown').html(currentLength);
+				$count.find('span.text').html('characters remaining');
+			} else {
+				$count.find('span.countdown').html(- currentLength);
+				$count.find('span.text').html('characters over');
+			}
+		};
+
+		$elt.bind('keyup cut paste', changeFn);
+	});
+
+	$('#mode-toggle').buttonset();
+	$('#mode-toggle input[name=feedback-mode]').change(function(evt) {
+		var selected = $(evt.target).attr('id');
+		if (selected === 'contact-help') {
+			$('#help-view').slideDown(200);
+			$('#feedback-view').slideUp(200);
+		} else if (selected === 'contact-feedback') {
+			$('#feedback-view').slideDown(200);
+			$('#help-view').slideUp(200);
+		}
+	});
+
+	$('#contact-close').button();
+	$('#contact-close').click(function(evt) {
+		$('#contact-view').fadeOut(300);
+		return evt.preventDefault();
+	});
+
+	$('#contact-submit').button();
+	$('#contact-submit').click(function(evt) {
+		var eltLengthInRange = function($elt) {
+			var minLength = Number($elt.attr('data-min-length'), 10) || 0,
+				maxLength = Number($elt.attr('data-max-length'), 10) || Infinity,
+				length = $elt.val().length;
+			return length <= maxLength && length >= minLength;
+		},
+			data = {'_xsrf': getCookie('_xsrf')};
+
+		if ($('#contact-help').prop('checked') === true) {
+			var $attemptedTask = $('textarea[name=attemptedTask]'),
+				$expectedResult = $('textarea[name=expectedResult]'),
+				$actualResult = $('textarea[name=actualResult]'),
+				formIsValid = true;
+			
+			if (!eltLengthInRange($attemptedTask)) {
+				formIsValid = false;
+				$attemptedTask.css('border', '1px solid red');
+			}
+
+			if (!eltLengthInRange($expectedResult)) {
+				formIsValid = false;
+				$expectedResult.css('border', '1px solid red');
+			}
+
+			if (!eltLengthInRange($actualResult)) {
+				formIsValid = false;
+				$actualResult.css('border', '1px solid red');
+			}
+
+			if (!formIsValid) {
+				return evt.preventDefault();
+			}
+
+			data['attemptedTask'] = $attemptedTask.val();
+			data['expectedResult'] = $expectedResult.val();
+			data['actualResult'] = $actualResult.val();
+			data['discloseUser'] = $('#help-disclose-user').checked;
+		} else {
+			var $comments = $('textarea[name=comments]');
+
+			if (!eltLengthInRange($comments)) {
+				$comments.css('border', '1px solid red');
+				return evt.preventDefault();
+			}
+
+			data['comments'] = $comments.val();
+			data['discloseUser'] = $('#feedback-disclose-user').checked;
+		}
+
+		$.ajax({
+			url: '/feedback.json',
+			type: 'POST',
+			dataType: 'json',
+			data: data,
+			success: function(data, status, xhr) {
+				$('#contact-close').click();
+				$('textarea[name=attemptedTask]').val('');
+				$('textarea[name=expectedResult]').val('');
+				$('textarea[name=actualResult]').val('');
+				$('textarea[name=comments]').val('');
+				alert('Thank you for your feedback');
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				var error = jQuery.parseJSON(jqXHR.responseText);
+				alert(error ? error.display : 'Could not process feedback.');
+			}
+		});
+
+		return evt.preventDefault();
+	});
+
+	$('#feedback-button').button();
+	$('#feedback-button').click(function(evt) {
+		$('#contact-view').fadeToggle(300);
+		return evt.preventDefault();
+	});
+	// Revert to jQuery placeholders if Modernizr doesn't detect HTML5 features
+
+	if (!Modernizr.input.placeholder) {
+		$("input").each(function() {
+			if ($(this).val()=="" && $(this).attr("placeholder")!="") {
+				$(this).val($(this).attr("placeholder"));
+				$(this).focus(function() {
+					if ($(this).val()==$(this).attr("placeholder")) {
+						$(this).val("");
+					}
+				});
+				$(this).blur(function() {
+					if ($(this).val()=="") {
+						$(this).val($(this).attr("placeholder"));
+					}
+				});
+			}
+		});
+	}
+
 	$("input#client-suggest").autoSuggest("/user/me/contacts.json", {
 		selectedItemProp: "fullName",
 		selectedValuesProp: "id",
@@ -81,16 +247,15 @@ $(document).ready(function() {
 			// for the create agreement page it's "clientID", but it needs to be "vendorID" for
 			// the request agreement form
 			
-			$('#nameFormInput').next().not(':hidden').focus(); //added by marcus to fix next box focus
+			$('input[name=title]').focus(); //added by marcus to fix next box focus
 			$('ul.as-selections li.as-original input').hide(); // added by marcus to fix additional selections problem
-			
 		},
 		tabPressed: function(elem) {
 			// I wish I knew why I have to use a timeout here, but at least it works.
 			
-			setTimeout(function() {
-				$('input[name=title]').focus();
-			}, 50);
+			// setTimeout(function() {
+			// 	$('input[name=title]').focus();
+			// }, 50);
 		}
 	});
 	

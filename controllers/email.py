@@ -38,11 +38,14 @@ class Email (object):
 		# Be a good guest and clean up after yourself. Just realized this is *soooo* not threadsafe.
 		self._server.quit()
 	
-# -------------------------------------------------------------------
-# Send an email
-# -------------------------------------------------------------------
+	# -------------------------------------------------------------------
+	# Send an email
+	# -------------------------------------------------------------------
 	@classmethod
 	def sendmail(clz, from_e, from_u, to_e, subject, body):
+		'''Opens an SMTP connection with the server specified in settings
+			 and assembles a message to be sent, then closes the connection'''
+
 		if not clz.settings:
 			raise EmailConnectionError
 		else:

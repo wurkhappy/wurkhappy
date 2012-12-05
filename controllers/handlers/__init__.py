@@ -4,6 +4,7 @@ __all__ = [
 	"agreements",
 	"authentication",
 	"callbacks",
+	"feedback",
 	"help",
 	"legal",
 	"notifications",

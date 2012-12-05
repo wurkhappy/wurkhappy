@@ -137,6 +137,43 @@ h3 {
 	cursor: pointer;
 }
 
+/* FEEDBACK BUTTON AND FORM
+================================================================================ */
+/*
+#navigation ul {
+  margin: 0;
+  padding: 0;
+  float: right;
+}
+
+#contact  {
+	position: absolute;
+	display: block;
+  float: left;
+  padding: 15px 0 15px 10px;
+}
+
+#navigation ul li a:link,
+#navigation ul li a:visited {
+  display: block;
+  float: left;
+  padding: 4px 14px;
+  color: rgb(104,110,116);
+  background-color: rgb(220,224,228);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  text-decoration: none;
+  border: 1px solid rgb(230,234,238);
+}
+
+#navigation ul li a:hover,
+#navigation ul li a:active {
+  background-color: rgb(230,234,238);
+  border: 1px solid rgb(240,244,248);
+}
+*/
+
 /* STRUCTURE
 ================================================================================ */
 

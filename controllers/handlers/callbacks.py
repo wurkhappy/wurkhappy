@@ -6,6 +6,7 @@ from models.agreement import Agreement, AgreementPhase
 from models.transaction import Transaction
 from controllers import fmt
 from controllers.amazonaws import AmazonFPS
+from controllers.application import WurkHappy
 
 from tornado.web import RequestHandler
 from tornado.httpclient import HTTPClient, HTTPError
@@ -119,10 +120,9 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 			paramString = '&'.join('&'.join('{0}={1}'.format(k, v) for v in vs)
 				for k, vs in self.request.arguments.iteritems())
 			
-			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
-					self.request.protocol,
-					self.application.configuration['wurkhappy']['hostname'],
-					self.request.path
+			signatureIsValid = self.verifySignature(
+				'{0}://{1}{2}'.format(
+					self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path
 				),
 				self.request.body, # paramString,
 				self.application.configuration['amazonaws']
@@ -168,10 +168,12 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 				if not transaction:
 					transaction = Transaction(
 						transactionReference=reference,
-						dateInitiated=datetime.fromtimestamp(args['transactionDate']),
 						senderID=agreement['clientID'],
 						recipientID=agreement['vendorID']
 					)
+					
+					if args['transactionDate']:
+						transaction['dateInitiated'] = datetime.fromtimestamp(args['transactionDate'])
 				
 				if not transaction['amount'] and args['transactionAmount']:
 					currencyParser = fmt.Currency()

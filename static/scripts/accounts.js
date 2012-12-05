@@ -58,6 +58,8 @@ var buttonActions = {
 					
 					$('#password-form input').val('');
 					$('#details-button').click();
+					
+					window.location.href = '/';
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
 					var error = jQuery.parseJSON(jqXHR.responseText);
@@ -207,7 +209,7 @@ var buttonActions = {
 	
 	'dwolla_skip': {
 		default: function (self, evt) {
-			window.location = '/';
+			window.location.href = '/';
 			return evt.preventDefault();
 		}
 	},
