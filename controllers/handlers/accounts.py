@@ -236,7 +236,12 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 class AccountCreationHandler(BaseHandler):
 	
 	def get(self):
-		self.render("user/signup.html", title="Sign Up", error=None)
+		signupCount = User.countRecentSignups()
+
+		if signupCount > 50 or self.get_argument('closed', False):
+			self.render("user/signup_closed.html", title="Sign Up", error=None)
+		else:
+			self.render("user/signup.html", title="Sign Up", error=None)
 	
 	def post(self):
 		try:
@@ -277,6 +282,18 @@ class AccountCreationHandler(BaseHandler):
 			self.set_status(e.status_code)
 			self.render("user/signup.html", title="Sign Up for Wurk Happy", error=error)
 			return
+		
+		signupCount = User.countRecentSignups()
+		inviteCode = None
+
+		if signupCount > 50 or self.get_argument('closed', False):
+			if args['inviteCode'] is None:
+				self.render("users/signup_closed.html", title="Sign Up", error=None)
+			
+			try:
+				inviteCode = int(hex(Data(args['inviteCode'], Phonetic)), 16)
+			except ValueError, e:
+				self.render("user/signup_closed.html", title="Sign Up", error=None)
 		
 		# Check whether user exists already
 		user = User.retrieveByEmail(args['email'])
@@ -939,3 +956,6 @@ class PaymentMethodJSONHandler(Authenticated, BaseHandler):
 		paymentMethod.save()
 		
 		self.renderJSON([True])
+
+
+

@@ -361,10 +361,11 @@ class AgreementState(object):
 					"There was a problem with your request. Our engineering "
 					"team has been notified and will look into it."
 				),
-				"debug": "state transition error"
+				"debug": "state transition error ({0})".format(error.message)
 			}
 			
-			raise HTTPErrorBetter(409, 'state transition error', json.dumps(error))
+			logging.error(json.dumps(error))
+			raise HTTPErrorBetter(409, 'state transition error ({0})'.format(error.message), json.dumps(error))
 		
 		return self.agreement.getCurrentState()
 	
@@ -411,9 +412,9 @@ class DraftState(AgreementState):
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('1')
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('2')
 
 class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
@@ -424,12 +425,12 @@ class EstimateState(AgreementState):
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
-			raise StateTransitionError()
+			raise StateTransitionError('3')
 			if action == 'save':
 				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('4')
 		elif role == 'client':
 			if action == 'accept':
 				self.agreement['dateAccepted'] = datetime.now()
@@ -438,9 +439,9 @@ class EstimateState(AgreementState):
 				self.agreement['dateDeclined'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('5')
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('6')
 	
 class DeclinedState(AgreementState):
 	def __init__(self, agreement):
@@ -472,9 +473,9 @@ class DeclinedState(AgreementState):
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('7')
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('8')
 	
 class InProgressState(AgreementState):
 	def __init__(self, agreement):
@@ -492,9 +493,9 @@ class InProgressState(AgreementState):
 				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('9')
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('10')
 
 class CompletedState(AgreementState):
 	def __init__(self, agreement):
@@ -513,9 +514,9 @@ class CompletedState(AgreementState):
 				phase['dateContested'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('11')
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('12')
 
 class ContestedState(AgreementState):
 	def __init__(self, agreement):
@@ -538,9 +539,9 @@ class ContestedState(AgreementState):
 				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError()
+				raise StateTransitionError('13')
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('14')
 	
 class PaidState(AgreementState):
 	def __init__(self, agreement):

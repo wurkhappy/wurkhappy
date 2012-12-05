@@ -87,7 +87,12 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		) # TODO: Fixme!
 		data['accessKey'] = accessKey
 		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
-		data['description'] = phase['description']
+		
+		if len(phase['description']) > 100:
+			data['description'] = phase['description'][:97] + '...'
+		else:
+			data['description'] = phase['description']
+		
 		data['immediateReturn'] = 'false'
 		data['ipnUrl'] = '{0}://{1}/callbacks/amazon/simplepay/paymentnotification'.format(
 			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
@@ -112,5 +117,6 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			buttonImageURL='https://images-na.ssl-images-amazon.com/images/G/01/asp/golden_large_paynow_withlogo_darkbg.gif',
 			data=data
 		)
+
 
 

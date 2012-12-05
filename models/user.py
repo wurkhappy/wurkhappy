@@ -389,7 +389,7 @@ class UserState(object):
 				"debug": "state transition error"
 			}
 			
-			raise HTTPErrorBetter(409, 'state transition error', json.dumps(error))
+			raise HTTPErrorBetter(409, 'state transition error ({0})'.format(e), json.dumps(error))
 		
 		return self.user.getCurrentState()
 
@@ -404,17 +404,10 @@ class BetaUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-			# if 'confirmation' not in data:
-			# 	raise StateTransitionError("missing required fields")
-			# 
-			# userToken = UserToken(userID=self.user['id'])
-			# userToken.setTokenHash(data['confirmation'])
-			# userToken.save()
-			
-			self.user['dateInvited'] = datetime.now()
-			# self.user.setConfirmationHash(data['confirmation'])
+			if not self.user['dateInvited']:
+				self.user['dateInvited'] = datetime.now()
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('unknown action for BetaUserState')
 
 
 
@@ -427,17 +420,10 @@ class InvitedUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-# 			if 'confirmation' not in data:
-# 				raise StateTransitionError("missing required fields")
-# 			
-# 			userToken = UserToken(userID=self.user['id'])
-# 			userToken.setTokenHash(data['confirmation'])
-# 			userToken.save()
-			
-			self.user['dateInvited'] = datetime.now()
-			# self.user.setConfirmationHash(data['confirmation'])
+			if not self.user['dateInvited']:
+				self.user['dateInvited'] = datetime.now()
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('unknown action for InvitedUserState')
 
 
 
@@ -450,17 +436,10 @@ class NewUserState(UserState):
 	
 	def _prepareFields(self, action, data):
 		if action is "send_verification":
-# 			if 'confirmation' not in data:
-# 				raise StateTransitionError("missing required fields")
-# 			
-# 			userToken = UserToken(userID=self.user['id'])
-# 			userToken.setTokenHash(data['confirmation'])
-# 			userToken.save()
-			
-			self.user['dateInvited'] = datetime.now()
-			# self.user.setConfirmationHash(data['confirmation'])
+			if not self.user['dateInvited']:
+				self.user['dateInvited'] = datetime.now()
 		else:
-			raise StateTransitionError()
+			raise StateTransitionError('unknown action for NewUserState')
 
 
 
@@ -479,8 +458,13 @@ class PendingUserState(UserState):
 				self.user.setPasswordHash(data['password'])
 			
 			self.user['dateVerified'] = datetime.now()
+		elif action is "send_verification":
+			if not self.user['dateInvited']:
+				self.user['dateInvited'] = datetime.now()
 		else:
-			raise StateTransitionError()
+			logging.warn(self.user)
+			logging.warn(action)
+			raise StateTransitionError('unknown action for PendingUserState')
 
 
 
@@ -492,7 +476,7 @@ class ActiveUserState(UserState):
 		return 'Active user'
 	
 	def _prepareFields(self, action, data):
-		raise StateTransitionError()
+		raise StateTransitionError('no actions allowed for ActiveUserState')
 
 
 
@@ -504,4 +488,4 @@ class InvalidUserState(UserState):
 		return 'Locked account'
 	
 	def _prepareFields(self, action, data):
-		raise StateTransitionError()
+		raise StateTransitionError('no actions allowed for InvalidUserState')
