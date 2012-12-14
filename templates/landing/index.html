@@ -9,8 +9,10 @@
 
 			<div class="column-one-half">
 				<ul>
-					<li><a href="/about">About Us</a></li>
+					<!--<li><a href="/about">About Us</a></li>-->
 					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
+					<!--<li><a href="">Create Your Free Account</a></li>-->
+        	<li><a href="">Log In</a></li>
 				</ul>
 			</div>
 		</div>
@@ -20,118 +22,88 @@
 {% block main %}
 	<div id="intro" class="clear">
 		<div class="container">
-			<div class="column-one-third">
-				<h2>Work Faster</h2>
-				<p>Quickly send and manage your estimates, proposals, and payments.</p>
-				<img src="{{ static_url('images/promo-1.png') }}" alt="Something Cool">
-			</div>
-			<div class="column-one-third">
-				<h2>Work Smarter</h2>
-				<p>Stay involved when it impacts the customer, and automate the rest.</p>
-				<img src="{{ static_url('images/promo-2.png') }}" alt="Something Cool">
-			</div>
-			<div class="column-one-third">
-				<h2>Work Professionally</h2>
-				<p>Make a great impression with simple, clear and focused interfaces.</p>
-				<img src="{{ static_url('images/promo-3.png') }}" alt="Something Cool">
-			</div>
-			<div class="clear">
-				<h1>Wurk Happy, your business made simple.</h1>
-			</div>
+	  	<div class="clear">
+	    	<h1>Simple Agreement, Billing, and Payment</h1>
+				<h2>Built for Freelancers, Loved by Clients</h2>
+	  	</div>
+	  	<div class="column-one-third">
+				<div class="dot">
+					<img src="{{ static_url('images/agreement.jpg') }}" alt="Simple Agreement">
+				</div>
+	    	<h3>Create an Agreement</h3>
+	    	<p>Send a clear, professional<br />agreement in minutes.</p>
+	  	</div>
+	  	<div class="column-one-third">
+				<div class="dot">
+					<img class="img" src="{{ static_url('images/buttons.jpg') }}" alt="Simple Billing">
+				</div>
+	    	<h3>Request Payment</h3>
+	    	<p>Get paid and pay with<br />the click of a button.</p>
+	  	</div>
+	  	<div class="column-one-third">
+				<div class="dot">
+					<img src="{{ static_url('images/paid.jpg') }}" alt="Simple Payment">
+				</div>
+	    	<h3>Get paid</h3>
+				<p>Receive and send funds online,<br> usually within one business day.</p>
+	  	</div>
 		</div>
 	</div>
 	
 	<div id="internal" class="clear">
 		<div class="container">
 			<ul>
+				<li class="tab current" id="about-button"><a href="#">About</a></li>
+      	<li class="tab" id="pricing-button"><a href="#">Pricing</a></li>
+				<!--
 				<li class="tab current" id="proposals-button"><a href="#">Proposals &amp; Estimates</a></li>
-				<li class="tab" id="relationships-button"><a href="#">Relationship Management</a></li>
-				<li class="tab" id="payments-button"><a href="#">Automatic Payments</a></li>
-				<!--<li class="action-button"><a href="">Create Your Free Account</a></li>-->
+								<li class="tab" id="relationships-button"><a href="#">Relationship Management</a></li>
+								<li class="tab" id="payments-button"><a href="#">Automatic Payments</a>
+				
+				<li class="action-button"><a href="">Create Your Free Account</a></li>-->
 			</ul>
 		</div>
 	</div>
 
 	<div id="content" class="clear">
-		<div class="container tab-content" id="proposals-container"> <!-- Start "For Everyone" tab -->
-			<div class="column-one-third">
+		<div class="container tab-content" id="about-container"> <!-- Start "about" tab -->
+			
+    	<div id="about" class="column-two-third">
+      	<h2>What is Wurk Happy?</h2>
+      	<p>Wurk Happy is an online platform that facilitates simple agreement, billing, and payment for freelancers and their clients.</p>
+				<p>We make the payment process fast and transparent by improving communication, reducing administration, and decreasing payment processing times.</p>
+    	</div>
 
-				<h2>Simple for Sender</h2>
-				<p>Getting proposals and estimates sent is a breeze! Just add the relevant details of the services provided, any refund policies, and setup a step-by-step payment schedule.</p>
-				<ul class="features">
-					<li>Define Services and Refunds</li>
-					<li>Setup Payment Schedules</li>
-					<li>Automate with Templates</li>
-				</ul>
-
-			</div>
-
-			<div class="column-one-third">
-
-				<h2>Clear for Recipient</h2>
-				<p>Within a few seconds, a recipient can view an easy to understand proposal and estimate. Changes can be requested and an agreement can be connected to a payment method.</p>
-				<ul class="features">
-					<li>Make Change Requests</li>
-					<li>Agree Through Application</li>
-					<li>Manage Multiple Agreements</li>
-				</ul>
-
-			</div>
-		</div> <!-- End "For Everyone" tab -->
+		</div> <!-- End "about" tab -->
 	
-		<div class="container tab-content hidden" id="relationships-container"> <!-- Start "Work With Clients" tab -->
-			<div class="column-one-third">
-				<h2>Maintain Agreements</h2>
-				<p>Easily update any agreement and all sides will be alerted to any requests or changes. Agreements can be cancelled at any time and a full history of all actions is built right in.</p>
-				<ul class="features">
-					<li>Change Requests</li>
-					<li>Editable Agreements</li>
-					<li>Full Agreement History</li>
-				</ul>
-			</div>
-			<div class="column-one-third">
-				<h2>Respectful Payments</h2>
-				<p>It's just good business to make payments on time. Setup a clear payment schedule and automate payments when both sides consider a milestone complete.</p>
-				<ul class="features">
-					<li>Setup Payment Schedules</li>
-					<li>Payments on Completion</li>
-					<li>Clear Grace Periods</li>
-				</ul>
-			</div>
-		</div> <!-- End "Work With Clients" tab -->
-
-		<div class="container tab-content hidden" id="payments-container"> <!-- Start "Work With Freelancers" tab -->
-			<div class="column-one-third">
-				<h2>Protecting Value</h2>
-				<p>Once the work is considered complete by both sides, the appropriate payment is automatically initiated. Keeping the project on schedule and payments current will benefit everyone.</p>
-				<ul class="features">
-					<li>Setup Payment Schedules</li>
-					<li>Payments on Completion</li>
-					<li>Alerts for Payment Problems</li>
-				</ul>
-			</div>
-			<div class="column-one-third">
-				<h2>Reducing Friction</h2>
-				<p>When a project is delayed because of a payment problem, everyone loses. Keeping everyone on the same page and paid up is a great way to build valuable business relationships.</p>
-				<ul class="features">
-					<li>Connect to a Credit Card</li>
-					<li>Connect to a Bank Account</li>
-					<li>Manage Cash Flow</li>
-				</ul>
-			</div>
-		</div> <!-- End "Work With Freelancers" tab -->
+		<div class="container tab-content hidden" id="pricing-container"> <!-- Start "pricing" tab -->
+			<div id="pricing" class="column-two-third">
+      	<h2>Straightforward Pricing</h2>
+				<p>Wurk Happy only charges a processing fee when you receive payment.</p>
+				<h4>If you choose to get paid by etransfer (Perfect for large payment amounts):</h4>
+      	<p>We charge 1.5% of the payment received - up to a maximum fee per transaction of $15.</p>
+				<p>Funds are transferred from bank account to bank account, guaranteed to be available within 1 business day.</p>
+				<h4>If you choose to get paid by credit card:</h4>
+				<p>We charge 3.5% per transaction.</p>
+				<p>Fund are available within 5-7 business days (though it's often within 1-2 days) after transfer from your account with the payment processor.</p>
+    	</div>
+		</div> <!-- End "pricing" tab -->
 		
 		<div class="container">
 			<div class="column-one-third">
 				<form action="/signup" method="get" accept-charset="utf-8">
 					{% raw xsrf_form_html() %}
 					<fieldset>
-						<legend id="form-header">Subscribe to Learn More</legend>
+						<legend id="form-header">Create Your Free Account</legend>
 						<label id="email-label" for="email">Your Email:</label>
-						<input type="text" name="email" class="text-field" placeholder="name@website.com">
+						<div class="input-box">
+							<input type="email" name="email" class="text-field" placeholder="name@website.com">
+						</div>
+						<label for="email">Choose a password:</label>
+          	<input type="password" name="" value="" id="password" class="text-field" />
 					</fieldset>
 					<fieldset>
-						<input type="submit" value="Subscribe" class="submit-button">
+						<input type="submit" value="Register" class="submit-button">
 					</fieldset>
 				</form>
 			</div>

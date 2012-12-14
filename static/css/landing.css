@@ -52,7 +52,7 @@ table {
 body {
   text-align: center;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background: rgb(220,224,228) url(/static/images/bg.png);
+  background: rgb(220,224,228) url(../images/bg.png);
   color: rgb(100,100,100);
 }
 
@@ -81,15 +81,15 @@ strong {
   font-weight: bold;
 }
 
-h1, h2 {
+h1, h2, h3 {
   color: rgb(0,0,0);
   padding: 0 20px;
-  font-family: "museo-1", Museo;
+  font-family: Museo;
 }
 
 h1 { 
   font-size: 40px;
-  line-height: 80px;
+  line-height: 60px;
   font-weight: 300;
   margin: 0;
 }
@@ -102,7 +102,14 @@ h2 {
 }
 
 h3 {
-  font-weight: bold;
+  font-weight: 300;
+  font-size: 1.4em;
+  padding: 0 20px;
+  margin: 20px 0 10px 0;
+}
+
+h4 {
+	font-weight: bold;
   font-size: 1em;
   padding: 0 20px;
   margin: 20px 0 10px 0;
@@ -139,7 +146,6 @@ h3 {
 .hidden {
   display: none;
 }
-
 
 /* NAVIGATION
 ================================================================================ */
@@ -181,13 +187,13 @@ h3 {
 }
 
 #navigation p {
-  font-family: "museo-1", Museo;
+  font-family: Museo;
   font-size: 24px;
   font-weight: 100;
   line-height: 24px;
   padding: 0;
   margin: 0;
-  background: transparent url(/static/images/logo.png) no-repeat left;
+  background: transparent url(../images/logo.png) no-repeat left;
   float: left;
 }
 
@@ -210,14 +216,28 @@ h3 {
 
 
 #intro {
-  background: rgb(0,122,177) url(/static/images/shade-intro.png) repeat-x top;
+  background: rgb(0,122,177) url(../images/shade-intro.png) repeat-x top;
   color: rgb(191,229,246);
   border-bottom: 1px solid rgb(0,122,177);
   padding: 20px 0 20px 0;
   color: rgb(205,230,240);
 }
 
+#intro .dot {
+	border: 5px solid white;
+	border-radius: 200px;
+	width: 250px;
+	height: 250px;
+	box-shadow: 2px 2px 20px #555;
+  display: block;
+  margin: 20px 0 0 0;
+	overflow: hidden;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 #intro h2,
+#intro h3,
 #intro p {
   text-align: center;
 }
@@ -225,23 +245,29 @@ h3 {
 #intro h1 {
   text-shadow: 0 1px 0 rgba(0,0,0,.5);
   color: rgb(255,255,255);
-  background: transparent url(/static/images/logo-large.png) no-repeat left;
-  padding-left: 90px;
-  margin-left: 60px;
+	text-align: center;
+	margin-bottom: 0;
 }
 
 #intro h2 {
-  font-weight: 500;
+	font-family: "Museo Sans";
+	font-weight: 100;
+  color: rgb(255,255,255);
+	margin: 0 0 18px 0;
+}
+
+#intro h3 {
+	font-weight: 300;
   text-shadow: 0 1px 0 rgba(0,0,0,.5);
   color: rgb(255,255,255);
-  margin: 10px 0 10px 0;
+  margin: 20px 0 8px 0;
 }
 
-#intro img {
-  display: block;
-  margin: 20px 0 0 0;
+#intro small {
+	margin-left: 320px;
+	font-style: italic;
+	padding: 20px;
 }
-
 
 /* INTERNAL
 ================================================================================ */
@@ -279,38 +305,41 @@ h3 {
   float: right;
 }
 
-  #internal ul li.action-button a {
-    display: block;
-    text-align: center;
-    padding: 10px 20px;
-    color: rgb(255,255,255);
-    text-decoration: none;
-    -webkit-box-shadow: 0 0 3px rgba(0,0,0,1);
-    -moz-box-shadow: 0 0 3px rgba(0,0,0,1);
-    box-shadow: 0 0 3px rgba(0,0,0,1);
-    text-shadow: 0 -1px 0 rgba(0,0,0,.5);
-    background-image: url(/static/images/shade-button.png);
-    background-repeat: repeat-x;
-    background-position: top center;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 5px;
-  }
+#internal ul li.action-button a {
+  display: block;
+  text-align: center;
+  padding: 10px 20px;
+  color: rgb(255,255,255);
+  text-decoration: none;
+  -webkit-box-shadow: 0 0 3px rgba(0,0,0,1);
+  -moz-box-shadow: 0 0 3px rgba(0,0,0,1);
+  box-shadow: 0 0 3px rgba(0,0,0,1);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.5);
+  background-image: url(../images/shade-button.png);
+  background-repeat: repeat-x;
+  background-position: top center;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
 
-  #internal ul li.action-button a:link,
-  #internal ul li.action-button a:visited {
-    background-color: rgb(136,204,85);
-  }
+#internal ul li.action-button a:link,
+#internal ul li.action-button a:visited {
+  background-color: rgb(136,204,85);
+}
 
-  #internal ul li.action-button a:hover,
-  #internal ul li.action-button a:active {
-    background-color: rgb(122,183,76);
-  }
+#internal ul li.action-button a:hover,
+#internal ul li.action-button a:active {
+  background-color: rgb(122,183,76);
+}
 
 
 /* CONTENT
 ================================================================================ */
 
+#content p {
+	text-align: left;
+}
 
 #content {
   background-color: rgb(255,255,255);
@@ -322,20 +351,21 @@ h3 {
 }
 
 #content ul.features li {
-  background: transparent url(/static/images/star-16x16.png) no-repeat left;
+  background: transparent url(../images/thumb_up-16x16.png) no-repeat left;
   padding: 10px 10px 10px 25px;
   list-style: none;
   border-top: 1px solid rgb(245,245,245);
 }
 
 #content form {
-  border: 1px solid rgb(240,240,240);
+	/*outline: 1px solid rgb(169,176,184);*/
+  border: 1px solid #ddd;
   background-color: rgb(253,253,253);
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
   margin: 0;
-  padding: 19px 20px;
+  padding: 20px 10px;
 }
 
 #content form legend {
@@ -344,14 +374,14 @@ h3 {
   margin: 0;
   padding: 0;
   font-weight: 100;
-  font-family: "museo-1", Museo;
+  font-family: Museo;
   color: rgb(0,0,0);
   
 }
 
 #content form legend.secure {
   padding: 0 0 0 26px;
-  background-image: url(/static/images/lock-16x16.png);
+  background-image: url(../images/lock-16x16.png);
   background-repeat: no-repeat;
   background-position: left center;
 }
@@ -363,18 +393,26 @@ h3 {
 
 #content form label {
   display: block;
-  padding: 0 0 5px 0;
+  padding: 10px 0 5px 0;
   color: rgb(0,0,0);
   font-weight: bold;
 }
 
+#content form div.input-box {
+	margin: 0;
+	padding: 0;
+}
+
 #content form input.text-field {
-  margin: 0 0 10px 0;
+  margin: 0;
   padding: 5px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   border: 1px solid rgb(200,200,200);
   font-size: 1em;
-  width: 250px;
+  width: 100%;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 #content form input.text-field:focus {
   outline: none;
@@ -384,18 +422,21 @@ h3 {
 #content form input.submit-button {
   font-size: 1em;
   padding: 10px 20px;
+	margin-top: 10px;
   font-weight: bold;
   border: none;
+	width: 200px;
   color: rgb(255,255,255);
   background-color: rgb(0,122,177);
   text-shadow: 0 -1px 0 rgba(0,0,0,.5);
-  background-image: url(/static/images/shade-button.png);
+  background-image: url(../images/shade-button.png);
   background-repeat: repeat-x;
   background-position: top center;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
   cursor: pointer;
+	float: right;
 }
 
 #content form input.submit-button:hover,
