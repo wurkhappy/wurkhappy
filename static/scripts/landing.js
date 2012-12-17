@@ -42,6 +42,7 @@ $(document).ready(function () {
 		$email.hide();
 		$form.find('#email-label').hide();
 		
+		
 		if (addressIsValid($email.val())) {
 			var $header = $form.find('#form-header');
 			var previousText = $header.text();
@@ -83,7 +84,9 @@ $(document).ready(function () {
 			$form.find('#email-label').show();
 			$email.select();
 			$email.focus();
-			alert('I\'m sorry, that didn\'t look like a proper email address. Could you please enter a valid email address?');
+			$('.validation').html('Please enter a valid email');
+			$('input#email-field').addClass('border');
+			
 		}
 		return false;
 	});

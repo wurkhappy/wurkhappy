@@ -80,7 +80,7 @@
 			<div id="pricing" class="column-two-third">
       	<h2>Straightforward Pricing</h2>
 				<p>Wurk Happy only charges a processing fee when you receive payment.</p>
-				<h4>If you choose to get paid by etransfer (Perfect for large payment amounts):</h4>
+				<h4>If you choose to get paid by bank transfer (Perfect for large payment amounts):</h4>
       	<p>We charge 1.5% of the payment received - up to a maximum fee per transaction of $15.</p>
 				<p>Funds are transferred from bank account to bank account, guaranteed to be available within 1 business day.</p>
 				<h4>If you choose to get paid by credit card:</h4>
@@ -95,12 +95,12 @@
 					{% raw xsrf_form_html() %}
 					<fieldset>
 						<legend id="form-header">Create Your Free Account</legend>
-						<label id="email-label" for="email">Your Email:</label>
+						<label id="email-label" for="email">Your Email: <span class="validation" id="email-validation"></span></label>
 						<div class="input-box">
-							<input type="email" name="email" class="text-field" placeholder="name@website.com">
+							<input type="email" name="email" id="email-field" class="text-field" placeholder="name@website.com" required="required">
 						</div>
 						<label for="email">Choose a password:</label>
-          	<input type="password" name="" value="" id="password" class="text-field" />
+          	<input type="password" name="" value="" id="password" class="text-field" required="required" />
 					</fieldset>
 					<fieldset>
 						<input type="submit" value="Register" class="submit-button">

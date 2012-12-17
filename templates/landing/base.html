@@ -31,8 +31,16 @@
 		})();
 
 	</script>
-
+	<noscript>
+		<style>
+			.dim {opacity: .5;}
+		</style>
+	    <div class="noscriptmsg">
+	    	<p>Wurk Happy requires javascript to function properly. Please enable javascript in your web browser.</p>
+	    </div>
+	</noscript>
 </head>
+<div class="dim">
 <body>
 
 	{% block header %}
@@ -61,4 +69,5 @@
 	</script>
 
 </body>
+</div>
 </html>
