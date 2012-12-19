@@ -40,34 +40,35 @@
 	    </div>
 	</noscript>
 </head>
+
 <div class="dim">
-<body>
+	<body>
 
-	{% block header %}
-	{% end %}
+		{% block header %}
+		{% end %}
 
-	{% block main %}
-	{% end %}
+		{% block main %}
+		{% end %}
 
-	<div id="copyright" class="clear">
-		<div class="container">
-			<p>Copyright &#169; 2013 Wurk Happy. All Rights Reserved &nbsp; &bull; &nbsp; <a href="/legal/terms">Terms of Service</a> &nbsp; &bull; &nbsp; <a href="/legal/privacy">Privacy Policy</a></p>
+		<div id="copyright" class="clear">
+			<div class="container">
+				<p>Copyright &#169; 2013 Wurk Happy. All Rights Reserved &nbsp; &bull; &nbsp; <a href="/legal/terms">Terms of Service</a> &nbsp; &bull; &nbsp; <a href="/legal/privacy">Privacy Policy</a>&nbsp; &bull; &nbsp;<a href="/help/faq">FAQ</a></p>
+			</div>
 		</div>
-	</div>
 
-	<!-- Javascript at the bottom for fast page loading -->
+		<!-- Javascript at the bottom for fast page loading -->
 
-	<script src="{{ static_url("scripts/libs/jquery-1.4.2.js") }}"></script>
+		<script src="{{ static_url("scripts/libs/jquery-1.4.2.js") }}"></script>
 
-	<!-- scripts concatenated and minified via ant build script-->
-	<script src="{{ static_url("scripts/landing.js") }}"></script>
-	<!-- end concatenated and minified scripts-->
-	<script type="text/javascript">
-		$(window).unload(function() {
-			_gaq.push(['_trackEvent', 'Unload']);
-		});
-	</script>
+		<!-- scripts concatenated and minified via ant build script-->
+		<script src="{{ static_url("scripts/landing.js") }}"></script>
+		<!-- end concatenated and minified scripts-->
+		<script type="text/javascript">
+			$(window).unload(function() {
+				_gaq.push(['_trackEvent', 'Unload']);
+			});
+		</script>
 
-</body>
+	</body>
 </div>
 </html>

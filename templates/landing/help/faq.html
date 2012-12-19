@@ -1,17 +1,42 @@
+
+
+
+
 {% extends "../base.html" %}
+
+{% block header %}
+	<div id="navigation" class="clear">
+		<div class="container">
+			<div class="column-one-half">
+				<p><a href="/">Wurk Happy</a></p>
+			</div>
+
+			<div class="column-one-half">
+				<ul>
+					<!--<li><a href="/about">About Us</a></li>-->
+					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
+					<!--<li><a href="">Create Your Free Account</a></li>-->
+	      	<li><a href="">Log In</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div id="intro" class="clear">
+		<div class="column-three-fouth">
+			<h1>Frequently Asked Questions</h1>
+		</div>
+		<div class="column-one-fouth">
+		</div>
+	</div>
+
+{% end %}
+
 
 {% block main %}
 
 <div class="container">
 
-	{% block navigation %}
-	{% end %}
-
-	{% block header %}
-	{% end %}
-
-
-	<div id="content" class="clear">
+	<div id="content" class="clear faq">
 		<div><p></p></div>
 		<div class="column-three-fourth">
 			<h2>Getting Started</h2>
@@ -45,13 +70,38 @@
 			the &ldquo;Payment Information&rdquo; tab of the 
 			<a href="/user/me/account">Account</a> page.</p>
 
+			<h2>Using Zipmark Payments</h2>
+			
+			<p><strong>How is Zipmark different from other payment services?</strong><br />
+			Zipmark transactions are just like a check from your account, except without the paper or the trip to the bank for the depositor. What this means is that just like a check from your bank, with Zipmark you pay with your money and get paid directly in your account except without fees or delays.</p>
+			
+			<p>Some internet and mobile payment tools require you to "load" a payment account just to pay with your own money, and then charge fees and take 24 to 48 hours to get access to money paid. With Zipmark it is always your money in your bank account.</p>
+			
+			<p><strong>What do I need to send or receive money with Zipmark?</strong><br />
+			Zipmark users must have:</p>
+			
+			<ul>
+				<li>A checking account at a bank, credit union or thrift, which is in good standing.</li>
+				<li>A Zipmark account registered at www.zipmark.com (invitation only for now)</li>
+			</ul>
 
-
+			<p><strong>When will I get money I received with Zipmark</strong><br />
+			Most Zipmark transactions are available on the morning of the next business day and are processed through the US Federal Reserve Bank Services. On occasion it can get there even faster.</p>
+			
+			<p><strong>What will I see in my bank account when I send money with Zipmark</strong><br />
+			Zipmark payers will see the transaction in their online banking, personal finance site (Mint, Quicken, etc.) or even at the ATM. The record of the transaction will look and feel like you wrote a check from your account and will be accompanied by a check image that indicates who you paid through Zipmark. You can print the check and use it as a record of the transaction if you wish.</p>
+			
+			<p><strong>How is the information I give Zipmark secured?</strong><br />
+			Zipmark uses electronic checks that are a financial industry standard and a safe and reliable way of processing payments. It uses technology that has been developed and tested to process your check information securely. Zipmark treats all user information with the same level of security and we never share any of your information with anyone.</p>
+			
+			<p><strong>How can I contact Zipmark support?</strong><br />
+			Registered users, please email us and we will respond within 1 hour: concierge@zipmark.com</p>
+			<p>Everyone else: hello@zipmark.com</p>
+			
+			<h2>Payments Through Wurk Happy</h2>
+			<p>Wurk Happy simplifies online payment by allowing two payment options - digital check and credit card.</p>
 			
 			<h2>Using Amazon Payments</h2>
-			
-			<p><strong>What is Amazon Payments?</strong><br />
-			Amazon Payments is a service that provides you with the ability to send and receive payments for goods or services by using the payment methods already associated with your Amazon.com account. To make a payment, you can use a credit card, bank account, or Amazon Payments Account balance.</p>
 			
 			<p><strong>How long does it take to sign up for amazon payments?</strong><br />
 			On average it takes users about 15 minutes to sign up for Amazon payments. If you already have an amazon account than it can take as little as 3-5 minutes, including verifying a bank account.</p>
@@ -82,45 +132,10 @@
 			cards, or other sensitive personal information, and we rely on Amazon's
 			sophisticated fraud prevention service.</p>
 			
+			<h2>Contact Wurk Happy</h2>
+			<p><strong>Can I contact the founders of Wurk Happy?</strong><br />
+			Yes! If you have any questions, concerns, or suggestions please let us know. Contact our CEO Marcus Ellison at marcus@wurkhappy.com</p>
 		</div>
-	</div>
-</div>
-
-{% end %}
-
-
-
-{% block header %}
-
-<div id="intro" class="clear">
-	<div class="column-three-fouth">
-		<h1>Frequently Asked Questions</h1>
-	</div>
-	<div class="column-one-fouth">
-	</div>
-</div>
-
-{% end %}
-
-
-
-{% block navigation %}
-
-<div id="navigation" class="clear">
-	<div class="column-three-fourth">
-		<ul class="clear">
-			<li><p class="logo-sm"><a href="/">Wurk Happy</a></p></li>
-			<li><a href="/agreements/with/clients"><strong>Agreements with Clients</strong></a></li>
-			<li><a href="/agreements/with/vendors"><strong>Agreements with Contractors</strong></a></li>
-			<!--<li><a href="/templates">Templates</a></li>-->
-		</ul>
-	</div>
-	<div class="column-one-fourth">
-		<ul id="admin" class="clear">
-			<li><a href="/logout">Log Out</a></li>
-			<li><a href="/user/me/account">Account</a></li>
-			<!--<li><a href="#">Preferences</a></li>-->
-		</ul>
 	</div>
 </div>
 

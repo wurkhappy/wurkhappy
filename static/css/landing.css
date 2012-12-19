@@ -365,7 +365,6 @@ h4 {
 #content p {
 	text-align: left;
 	width: 500px; /*to maximize readability - 66-75 characters per line*/
-	/*hyphen: auto;*/
 }
 
 #content h4 {
@@ -488,6 +487,18 @@ h4 {
 #content .border {
 		border: 1px solid red !important;
 	}
+	
+#content.faq p {
+	text-align: justify;
+	width: 100%; /*to maximize readability - 66-75 characters per line*/
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	    hyphens: auto;
+}
+
+#content.faq ul li {
+	list-style-type:decimal;
+}
 
 /* COPYRIGHT
 ================================================================================ */

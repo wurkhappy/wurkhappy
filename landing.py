@@ -37,6 +37,7 @@ class Application(web.Application):
 			(r'/legal/(\w+)/?', landing.LegalHandler),
 			(r'/jobs/?', landing.JobsHandler),
 			(r'/techstars/?', landing.TechstarsHandler),
+			(r'/help/(\w+)/?', landing.HelpHandler),
 		]
 		
 		settings = {
