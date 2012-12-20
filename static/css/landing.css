@@ -500,6 +500,141 @@ h4 {
 	list-style-type:decimal;
 }
 
+.fixed {
+	position: fixed;
+	bottom: 0;
+}
+
+.line {
+	border-bottom: 1px solid rgb(184, 190, 196);
+}
+
+#logindiv form {
+	position: relative;
+  border: 1px solid #ddd;
+  background-color: rgb(253,253,253);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  margin: 0;
+  padding: 20px 10px;
+}
+
+#logindiv form legend {
+  font-size: 24px;
+  line-height: 30px;
+  margin: 0;
+  padding: 0;
+  font-weight: 100;
+  font-family: Museo;
+  color: rgb(0,0,0);
+  
+}
+
+#logindiv form legend.secure {
+  padding: 0 0 0 26px;
+  background-image: url(../images/lock-16x16.png);
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+#logindiv form fieldset {
+  margin: 0;
+  padding: 10px 0 0 0;
+}
+
+#logindiv form label {
+  display: block;
+  padding: 10px 0 5px 0;
+  color: rgb(0,0,0);
+  font-weight: bold;
+}
+
+#logindiv form div.input-box {
+	margin: 0;
+	padding: 0;
+}
+
+#logindiv form input.text-field {
+  margin: 0;
+  padding: 5px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  border: 1px solid rgb(200,200,200);
+  font-size: 1em;
+  width: 100%;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+}
+#logindiv form input.text-field:focus {
+  outline: none;
+  border: 1px solid rgb(100,100,100);
+}
+
+#logindiv form input.submit-button {
+	position: absolute;
+  font-size: 1em;
+  padding: 10px 20px;
+	margin-top: -20px;
+  font-weight: bold;
+  border: none;
+	width: 300px;
+  color: rgb(255,255,255);
+  background-color: rgb(0,122,177);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.5);
+  background-image: url(../images/shade-button.png);
+  background-repeat: repeat-x;
+  background-position: top center;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+	left: 50%;
+	margin-left: -150px;
+}
+
+#logindiv form input.submit-button:hover,
+#logindiv form input.submit-button:focus {
+  outline: none;
+  background-color: rgb(0,145,210);
+}
+
+#logindiv form label span.validation {
+	display: inline-block;
+	width: 70%;
+	font-size: 14px;
+	color: red;
+	text-align: right;
+	font-weight: normal;
+}
+
+.login {
+	height: 200px;
+	width: 220px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-left: -149px;
+	margin-top:-119px;
+}
+
+#logindiv p.faux-label {
+	display: block;
+	font-size: .75em;
+	color: rgb(150,150,150);
+}
+
+#logindiv.login form {
+	height: 238px;
+	width: 298px;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin-left: -149px;
+	margin-top:-119px;
+
+}
+
 /* COPYRIGHT
 ================================================================================ */
 

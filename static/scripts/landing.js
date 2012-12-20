@@ -11,6 +11,17 @@ function addressIsValid(addr) {
 }
 
 $(document).ready(function () {
+	
+	$('.login').hide();
+
+	$('#login').click( function() {
+		$('#copyright').addClass('fixed');
+		$('#navigation').addClass('line');
+		$('.login').show();
+		$('.fade').fadeOut('fast');
+		});
+	
+	
 	$('.tab').click(function () {
 		// Get current elt's class, find corresponding container class
 		// and adjust visibility. Set current class to current.
