@@ -12,6 +12,32 @@ function addressIsValid(addr) {
 
 $(document).ready(function () {
 	
+	//store the the navs lis, sections of content
+	var $allNavs = $('.faqnav li');
+	var $allSections = $('.section');
+	
+	$allNavs.click( function(event) {
+		
+		//Adjust current class on FAQ Nav li
+		$allNavs.removeClass('current');
+		$(this).closest('li').addClass('current');
+		
+		//Hide all the sections
+		$allSections.hide();
+		
+		//Store the current sections's id
+		var $currentSection = $(this).children().attr('href');
+		
+		//Show current section
+		$($currentSection).show();
+		
+		event.preventDefault();
+		
+	});
+	
+	
+	
+	//Login overlay
 	$('.login').hide();
 
 	$('#login').click( function() {
@@ -19,16 +45,18 @@ $(document).ready(function () {
 		$('#navigation').addClass('line');
 		$('.login').show();
 		$('.fade').fadeOut('fast');
-		});
+	});
 	
-	
+	//Tab click on landing page
 	$('.tab').click(function () {
 		// Get current elt's class, find corresponding container class
 		// and adjust visibility. Set current class to current.
 		var $button = $(this);
+		console.log($button);
 		
 		if (!$button.hasClass('current')) {
 			var id = $button.attr('id').match(/(\w+)-button/);
+			console.log(id);
 			
 			if (id && id[1]) {
 				$('.tab.current').toggleClass('current');

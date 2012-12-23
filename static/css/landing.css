@@ -487,18 +487,6 @@ h4 {
 #content .border {
 		border: 1px solid red !important;
 	}
-	
-#content.faq p {
-	text-align: justify;
-	width: 100%; /*to maximize readability - 66-75 characters per line*/
-	-webkit-hyphens: auto;
-	-moz-hyphens: auto;
-	    hyphens: auto;
-}
-
-#content.faq ul li {
-	list-style-type:decimal;
-}
 
 .fixed {
 	position: fixed;
@@ -633,6 +621,70 @@ h4 {
 	margin-left: -149px;
 	margin-top:-119px;
 
+}
+
+.faqnav {
+	font-size: 26px;
+	font-family: "Museo Sans";
+	list-style-type: none;
+	padding: 0px;
+	margin: 20px 0px 0px 30px;
+	position: fixed;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	box-shadow: 0 0 5px 5px #ddd;
+}
+
+.faqnav li {
+	padding: 15px 10px;
+	overflow: hidden;
+}
+
+.faqnav a {
+	width: 100%;
+	padding: 15px 235px;
+	margin:0px -235px;
+}
+
+.faqnav a:hover {
+	text-decoration: none;
+	color: #0072a3;
+}
+
+.faq {
+	list-style-type:decimal;
+}
+
+div.faqcontent {
+	min-height: 600px;
+	margin-left: 350px;
+	text-align: justify;
+	width: 100%;
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	    hyphens: auto;
+}
+
+.faqnav .current {
+	background: rgb(0,153,221);
+	color: white;
+}
+
+.faqnav .current a {
+	color: white;
+}
+
+
+div.faqcontent h2 {
+	font-family: "Museo Sans";
+}
+
+.section {
+	display: none;
+}
+
+#why {
+	display: block;
 }
 
 /* COPYRIGHT

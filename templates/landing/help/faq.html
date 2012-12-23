@@ -16,7 +16,7 @@
 					<!--<li><a href="/about">About Us</a></li>-->
 					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
 					<!--<li><a href="">Create Your Free Account</a></li>-->
-	      	<li><a href="">Log In</a></li>
+	      	<li><a id="login" href="#">Log In</a></li>
 				</ul>
 			</div>
 		</div>
@@ -34,31 +34,75 @@
 
 {% block main %}
 
-<div class="container">
+<div class="container fade">
 
-	<div id="content" class="clear faq">
-		<div><p></p></div>
-		<div class="column-three-fourth">
-			<h2>Getting Started</h2>
+	<div id="content" class="clear">
+		<div class="column-one-fourth">
+			<ul class="faqnav">
+				<li class="current">
+					<a href="#why">Why</a>
+				</li>
+				<li>
+					<a href="#story">Story</a>
+				</li>
+				<li>
+					<a href="#start">Getting Started</a>
+				</li>
+				<li>
+					<a href="#payments">Wurk Happy Payments</a>
+				</li>
+				<li>
+					<a href="#ecosystem">A Better Ecosystem</a>
+				</li>
+			</ul>
+		</div>
+		<div class="column-three-fourth faqcontent">
+			
+			<div id="why" class="section">
+				<h2>Why</h2>
 
-			<p><strong>How much does it cost to join?</strong><br />
-			Nothing! Wurk Happy is free to join!</p>
+				<p><strong>How much does it cost to join?</strong><br />
+				Nothing! Wurk Happy is free to join!</p>
 
-			<p><strong>How long does it take to sign up?</strong><br />
-			It only takes a few minutes create a Wurk Happy account.</p>
+				<p><strong>How long does it take to sign up?</strong><br />
+				It only takes a few minutes create a Wurk Happy account.</p>
 
-			<p><strong>What information do I need to sign up?</strong><br />
-			Wurk Happy requires your name, email address, and telephone number. In
-			order to receive payments, you will need to set up an Amazon Payments
-			business account. Amazon needs additional personal information to
-			verify your identity.</p>
+				<p><strong>What information do I need to sign up?</strong><br />
+				Wurk Happy requires your name, email address, and telephone number. In
+				order to receive payments, you will need to set up an Amazon Payments
+				business account. Amazon needs additional personal information to
+				verify your identity.</p>
 
-			<p><strong>Why do I need to sign up for an Amazon Payments account?</strong><br />
-			Contractors who want to collect payment from their clients need an
-			Amazon Payments account to receive payment. We believe Amazon provides
-			the right mix of reliability, security, and simplicity our customers
-			need in order to feel confident sending and receiving funds online.</p>
+				<p><strong>Why do I need to sign up for an Amazon Payments account?</strong><br />
+				Contractors who want to collect payment from their clients need an
+				Amazon Payments account to receive payment. We believe Amazon provides
+				the right mix of reliability, security, and simplicity our customers
+				need in order to feel confident sending and receiving funds online.</p>
+			</div>
+			
+			<div id="start" class="section">			
+				<h2>Getting Started</h2>
 
+				<p><strong>How much does it cost to join?</strong><br />
+				Nothing! Wurk Happy is free to join!</p>
+
+				<p><strong>How long does it take to sign up?</strong><br />
+				It only takes a few minutes create a Wurk Happy account.</p>
+
+				<p><strong>What information do I need to sign up?</strong><br />
+				Wurk Happy requires your name, email address, and telephone number. In
+				order to receive payments, you will need to set up an Amazon Payments
+				business account. Amazon needs additional personal information to
+				verify your identity.</p>
+
+				<p><strong>Why do I need to sign up for an Amazon Payments account?</strong><br />
+				Contractors who want to collect payment from their clients need an
+				Amazon Payments account to receive payment. We believe Amazon provides
+				the right mix of reliability, security, and simplicity our customers
+				need in order to feel confident sending and receiving funds online.</p>
+			</div>
+
+		<div id="story" class="section">	
 			<h2>Using Wurk Happy</h2>
 
 			<p><strong>How much does it cost to use Wurk Happy?</strong><br />
@@ -69,7 +113,9 @@
 			to receive payments. Click the &ldquo;Accept Marketplace Fee&rdquo; button on
 			the &ldquo;Payment Information&rdquo; tab of the 
 			<a href="/user/me/account">Account</a> page.</p>
-
+		</div>
+		
+		<div id="payments" class="section">	
 			<h2>Using Zipmark Payments</h2>
 			
 			<p><strong>How is Zipmark different from other payment services?</strong><br />
@@ -80,7 +126,7 @@
 			<p><strong>What do I need to send or receive money with Zipmark?</strong><br />
 			Zipmark users must have:</p>
 			
-			<ul>
+			<ul class="faq">
 				<li>A checking account at a bank, credit union or thrift, which is in good standing.</li>
 				<li>A Zipmark account registered at www.zipmark.com (invitation only for now)</li>
 			</ul>
@@ -100,9 +146,11 @@
 			
 			<h2>Payments Through Wurk Happy</h2>
 			<p>Wurk Happy simplifies online payment by allowing two payment options - digital check and credit card.</p>
-			
+		</div>
+		
+		<div id="ecosystem" class="section">
+				
 			<h2>Using Amazon Payments</h2>
-			
 			<p><strong>How long does it take to sign up for amazon payments?</strong><br />
 			On average it takes users about 15 minutes to sign up for Amazon payments. If you already have an amazon account than it can take as little as 3-5 minutes, including verifying a bank account.</p>
 			
@@ -123,8 +171,9 @@
 			<p><strong>How do I withdraw funds from my Amazon Payments Account?</strong><br />
 			If you want to withdraw funds from your Amazon payments account, you can do so by initiating either an Amazon.com Gift Certificate purchase or a transfer to your bank account. To transfer funds to your bank, you must complete the bank account verification process. Learn more about withdrawing funds from your Amazon Payments Account.</p>
 			
+		</div>
 			
-			
+		<div class="section">	
 			<h2>Security and Policies</h2>
 
 			<p><strong>Is Wurk Happy safe?</strong><br />
@@ -136,7 +185,30 @@
 			<p><strong>Can I contact the founders of Wurk Happy?</strong><br />
 			Yes! If you have any questions, concerns, or suggestions please let us know. Contact our CEO Marcus Ellison at marcus@wurkhappy.com</p>
 		</div>
+		</div>
 	</div>
 </div>
+<div id="logindiv" class="login">
+	<div class="container">
+		<div class="column-one-third">
+			<form action="/login" method="POST" accept-charset="utf-8" id="login_form" class="js-form">
+				<fieldset>
+					<legend id="form-header">Log in</legend>
+					<label id="email-label" for="email">Email: <span class="validation" id="email-validation"></span></label>
+					<div class="input-box">
+						<input type="email" name="email" id="email-field" class="text-field" placeholder="name@website.com" required="required">
+					</div>
+					<label for="email">Password:</label>
+         	<input type="password" name="" value="" placeholder="password" id="password" class="text-field" required="required" />
+					<p class="faux-label"><span><a href="/user/me/password">Forgot your password?</a></span></p>
+				</fieldset>
+				<fieldset>
+					<input type="submit" value="Log in" class="submit-button">
+				</fieldset>
+			</form>
+		</div>
+	</div>
+</div>
+
 
 {% end %}
