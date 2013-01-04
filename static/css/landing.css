@@ -509,6 +509,7 @@ h4 {
 }
 
 #logindiv form legend {
+	float: left;
   font-size: 24px;
   line-height: 30px;
   margin: 0;
@@ -529,6 +530,23 @@ h4 {
 #logindiv form fieldset {
   margin: 0;
   padding: 10px 0 0 0;
+}
+
+#cancel {
+	float: right;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	padding: 5px;
+}
+
+#cancel:hover {
+	float: right;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	padding: 5px;
+	color: white;
+	background: rgb(0, 153, 221);
+	text-decoration: none;
 }
 
 #logindiv form label {
@@ -600,7 +618,7 @@ h4 {
 	height: 200px;
 	width: 220px;
 	position: absolute;
-	top: 50%;
+	top: 25%;
 	left: 50%;
 	margin-left: -149px;
 	margin-top:-119px;
@@ -616,7 +634,7 @@ h4 {
 	height: 238px;
 	width: 298px;
 	position: fixed;
-	top: 50%;
+	top: 35%;
 	left: 50%;
 	margin-left: -149px;
 	margin-top:-119px;

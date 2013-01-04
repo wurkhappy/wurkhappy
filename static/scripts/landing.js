@@ -12,12 +12,12 @@ function addressIsValid(addr) {
 
 $(document).ready(function () {
 	
-	//Faq page navigation
-	//store the the navs lis, sections of content
-	var $allNavs = $('.faqnav li');
-	var $allSections = $('.section');
-	
-	$allNavs.click( function(event) {
+	$('.faqnav li:not(.title)').click( function(event) {
+		
+		//Faq page navigation
+		//store the the navs lis, sections of content
+		var $allNavs = $('.faqnav li:not(.title)');
+		var $allSections = $('.section');
 		
 		//Adjust current class on FAQ Nav li
 		$allNavs.removeClass('current');
@@ -41,11 +41,23 @@ $(document).ready(function () {
 	//Login overlay
 	$('.login').hide();
 
-	$('#login').click( function() {
+	$('#login').click( function(e) {
 		$('#copyright').addClass('fixed');
 		$('#navigation').addClass('line');
 		$('.login').show();
 		$('.fade').fadeOut('fast');
+		
+		e.preventDefault();
+		
+	});
+	
+	$('#cancel').click( function() {
+		$('#copyright').removeClass('fixed');
+		$('#navigation').removeClass('line');
+		$('.login').hide();
+		$('.fade').fadeIn('fast');
+		
+		e.preventDefault();
 	});
 	
 	//Tab click on landing page
