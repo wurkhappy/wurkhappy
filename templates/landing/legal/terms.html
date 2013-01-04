@@ -10,7 +10,8 @@
 			<div class="column-one-half">
 				<ul>
 					<li><a href="mailto:contact@wurkhappy.com">Contact Us</a></li>
-	      	<li><a id="login" href="#">Log In</a></li>
+	      	<li id="log_in"><a id="login" href="#">Log In</a></li>
+					<li id="log_out"><a id="cancel" href="#">Cancel</a></li>
 				</ul>
 			</div>
 		</div>
@@ -438,17 +439,16 @@
 		<div class="column-one-third">
 			<form action="/login" method="POST" accept-charset="utf-8" id="login_form" class="js-form">
 				<fieldset>
-					<legend id="form-header">Log in</legend>
-					<label id="email-label" for="email">Email: <span class="validation" id="email-validation"></span></label>
+					<label class="clear" id="email-label" for="email">Email: <span class="validation" id="email-validation"></span></label>
 					<div class="input-box">
-						<input type="email" name="email" id="email-field" class="text-field" placeholder="name@website.com" required="required">
+						<input type="email" name="email"  id="target" class="text-field" placeholder="name@website.com" required="required" autofocus="autofocus">
 					</div>
 					<label for="email">Password:</label>
-         	<input type="password" name="" value="" placeholder="password" id="password" class="text-field" required="required" />
+         	<input type="password" name="" value="" id="password" class="text-field" required="required" />
 					<p class="faux-label"><span><a href="/user/me/password">Forgot your password?</a></span></p>
 				</fieldset>
 				<fieldset>
-					<input type="submit" value="Log in" class="submit-button">
+					<input type="submit" value="Log In" class="submit-button">
 				</fieldset>
 			</form>
 		</div>

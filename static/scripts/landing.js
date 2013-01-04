@@ -10,8 +10,8 @@ function addressIsValid(addr) {
 	return addr.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/);
 }
 
-$(document).ready(function () {
-	
+$(document).ready(function() {
+		
 	$('.faqnav li:not(.title)').click( function(event) {
 		
 		//Faq page navigation
@@ -36,28 +36,53 @@ $(document).ready(function () {
 		
 	});
 	
-	
-	
 	//Login overlay
 	$('.login').hide();
-
-	$('#login').click( function(e) {
+	$('#log_out').hide();
+	
+	var t1, t2;
+	
+	$('#login').on('click', function(evt) {		
+		
+		// delay the focus function on the email input so that the function isn't called until
+		// after the login appears.
+		// wrap it in setTimeout because delay is limited
+		// set an identifier to SetTimeout so that it can be cleared later on.
+		
+		t1 = setTimeout(function() {
+			$('.login').fadeIn('fast');
+		}, 200);
+		
+		t2 = setTimeout(function() {
+			$('#target').focus();
+		}, 300);
+		
+		
+		
+		// hide stuff, show stuff, add class, fade stuff
+		$('#log_in').hide();
+		$('#log_out').show();
 		$('#copyright').addClass('fixed');
 		$('#navigation').addClass('line');
-		$('.login').show();
 		$('.fade').fadeOut('fast');
 		
-		e.preventDefault();
-		
+		evt.preventDefault();
 	});
 	
-	$('#cancel').click( function() {
+	//Do the same thing as above but opposite
+	$('#cancel').click( function(e) {
+		$('#log_out').hide();
+		$('#log_in').show();
 		$('#copyright').removeClass('fixed');
 		$('#navigation').removeClass('line');
-		$('.login').hide();
-		$('.fade').fadeIn('fast');
+		$('.login').fadeOut('fast');
+		$('.fade').fadeIn('slow');
+		
+		clearTimeout(t1);
+		clearTimeout(t2);
 		
 		e.preventDefault();
+
 	});
 	
 	//Tab click on landing page
