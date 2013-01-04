@@ -623,8 +623,23 @@ h4 {
 
 }
 
+.faq {
+	width: ;
+}
 .faqnav {
 	font-size: 26px;
+	font-family: "Museo Sans";
+	list-style-type: none;
+	padding: 0px;
+	margin: 20px 0px 0px 30px;
+	position: fixed;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	box-shadow: 0 0 5px 5px #ddd;
+}
+
+.faqnav.legal {
+	font-size: 14px;
 	font-family: "Museo Sans";
 	list-style-type: none;
 	padding: 0px;
@@ -646,13 +661,20 @@ h4 {
 	margin:0px -235px;
 }
 
+.faqnav.legal li {
+	padding: 5px 10px;
+	overflow: hidden;
+}
+
+.faqnav.legal a {
+	width: 100%;
+	padding: 5px 235px;
+	margin:0px -235px;
+}
+
 .faqnav a:hover {
 	text-decoration: none;
 	color: #0072a3;
-}
-
-.faq {
-	list-style-type:decimal;
 }
 
 div.faqcontent {
@@ -665,6 +687,10 @@ div.faqcontent {
 	    hyphens: auto;
 }
 
+.faqcontent li {
+	width: 500px;
+}
+
 .faqnav .current {
 	background: rgb(0,153,221);
 	color: white;
@@ -674,17 +700,38 @@ div.faqcontent {
 	color: white;
 }
 
-
 div.faqcontent h2 {
 	font-family: "Museo Sans";
+	width: 550px;
 }
 
 .section {
 	display: none;
 }
 
-#why {
+#what {
 	display: block;
+}
+
+#introduction {
+	display: block;
+}
+
+.box {
+	border:1px solid black;
+	margin:15px;
+	padding:5px;
+	width: 525px;
+}
+
+.title {
+	color: black;
+	background: #ddd;
+	opacity: .5;
+}
+
+.title a:hover {
+	color: black;
 }
 
 /* COPYRIGHT

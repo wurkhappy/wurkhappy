@@ -12,6 +12,7 @@ function addressIsValid(addr) {
 
 $(document).ready(function () {
 	
+	//Faq page navigation
 	//store the the navs lis, sections of content
 	var $allNavs = $('.faqnav li');
 	var $allSections = $('.section');
