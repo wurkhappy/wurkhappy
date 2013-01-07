@@ -155,10 +155,6 @@ h4 {
   display: none;
 }
 
-.dim {
-
-}
-
 /* NAVIGATION
 ================================================================================ */
 
@@ -660,11 +656,11 @@ h4 {
 	color: #0072a3;
 }
 
-div.faqcontent {
+.faqcontent {
+	width: 600px;
 	min-height: 600px;
 	margin-left: 350px;
 	text-align: justify;
-	width: 100%;
 	-webkit-hyphens: auto;
 	-moz-hyphens: auto;
 	    hyphens: auto;
