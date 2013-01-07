@@ -412,9 +412,9 @@ class DraftState(AgreementState):
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('1')
+				raise StateTransitionError('unknown action for vendor in DraftState')
 		else:
-			raise StateTransitionError('2')
+			raise StateTransitionError('incorrect role for DraftState')
 
 class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
@@ -430,7 +430,7 @@ class EstimateState(AgreementState):
 				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('4')
+				raise StateTransitionError('unknown action for vendor in EstimateState')
 		elif role == 'client':
 			if action == 'accept':
 				self.agreement['dateAccepted'] = datetime.now()
@@ -439,9 +439,9 @@ class EstimateState(AgreementState):
 				self.agreement['dateDeclined'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('5')
+				raise StateTransitionError('unknown action for client in EstimateState')
 		else:
-			raise StateTransitionError('6')
+			raise StateTransitionError('incorrect role for EstimatesState')
 	
 class DeclinedState(AgreementState):
 	def __init__(self, agreement):
@@ -473,9 +473,9 @@ class DeclinedState(AgreementState):
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('7')
+				raise StateTransitionError('unknown action for vendor in DeclinedState')
 		else:
-			raise StateTransitionError('8')
+			raise StateTransitionError('incorrect role for DeclinedState')
 	
 class InProgressState(AgreementState):
 	def __init__(self, agreement):
@@ -493,9 +493,9 @@ class InProgressState(AgreementState):
 				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError('9')
+				raise StateTransitionError('unknown action for vendor in InProgressState')
 		else:
-			raise StateTransitionError('10')
+			raise StateTransitionError('incorrect role for InProgressState')
 
 class CompletedState(AgreementState):
 	def __init__(self, agreement):
@@ -514,9 +514,9 @@ class CompletedState(AgreementState):
 				phase['dateContested'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError('11')
+				raise StateTransitionError('unknown action for client in CompletedState')
 		else:
-			raise StateTransitionError('12')
+			raise StateTransitionError('incorrect role for CompletedState')
 
 class ContestedState(AgreementState):
 	def __init__(self, agreement):
@@ -539,20 +539,21 @@ class ContestedState(AgreementState):
 				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError('13')
+				raise StateTransitionError('unknown action for vendor in ContestedState')
 		else:
-			raise StateTransitionError('14')
+			raise StateTransitionError('incorrect role for ContestedState')
 	
 class PaidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
 	def _prepareFields(self, r, a, d):
-		pass
+		raise StateTransitionError('no actions allowed for PaidState')
 	
 class InvalidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
 	def _prepareFields(self, r, a, d):
-		pass
+		raise StateTransitionError('no actions allowed for InvalidState')
+
