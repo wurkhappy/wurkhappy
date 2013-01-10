@@ -214,6 +214,7 @@ class User(MappedObj):
 			# We have a payment method for the user, but we don't know its type. We need to
 			# look for it in each payment method subtype...
 
+			pass
 			# user <--> paymentMethod <--> paymentInfo
 		else:
 			return None

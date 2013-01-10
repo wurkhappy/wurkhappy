@@ -7,6 +7,7 @@ import logging
 import json
 import sys
 import functools
+import re
 from datetime import datetime
 
 
@@ -26,6 +27,7 @@ class BaseHandler(web.RequestHandler):
 			'The authentication mixin should be first.')
 	
 	def renderJSON(self, obj):
+		self.set_header('Access-Control-Allow-Origin', 'https://www.wurkhappy.com/')
 		self.set_header('Content-Type', 'application/json')
 		self.finish(json.dumps(obj, cls=ORMJSONEncoder))
 	
@@ -39,7 +41,11 @@ class BaseHandler(web.RequestHandler):
 # -------------------------------------------------------------------
 
 class JSONBaseHandler(web.RequestHandler):
-	
+	ALLOWED_ORIGINS = [
+		'https://localhost',
+		'https://([a-z0-9]([a-z0-9\-]*[a-z0-9])?\.)?wurkhappy\.com'
+	]
+
 	@staticmethod
 	def authenticated(method):
 		"""Decorate methods with this to require that the user be logged in."""
@@ -67,6 +73,7 @@ class JSONBaseHandler(web.RequestHandler):
 		return wrapper
 	
 	def renderJSON(self, obj):
+		self.set_header('Access-Control-Allow-Origin', 'https://www.wurkhappy.com/')
 		self.set_header('Content-Type', 'application/json')
 		# TODO: The following should only be set for POST requests, but this is easier for now.
 		self.set_header('Cache-Control', 'no-cache')
@@ -102,6 +109,44 @@ class JSONBaseHandler(web.RequestHandler):
 				exc_info=True)
 			self.send_error(500, exc_info=sys.exc_info())
 			# TODO: Send pretty JSON error instead of default 500
+	
+	def options(self, *args, **kwargs):
+		origin = self.request.headers.get('Origin', None)
+		allowedOrigin = False
+
+ 		for rexp in self.ALLOWED_ORIGINS:
+ 			r = re.compile('^{0}'.format(rexp))
+ 			if r.match(origin):
+ 				allowedOrigin = True
+ 				break
+ 		
+ 		if not allowedOrigin:
+ 			self.set_status(405)
+ 			self.write('{"error":"Method Not Allowed"}')
+ 			self.finish()
+			return
+
+		methodList = ['OPTIONS']
+		
+		# We look up each supported HTTP method in both the base class
+		# and the subclass, and compare their function objects. If they
+		# don't match, the subclass must have defined an overriding
+		# method, so we add the method to the allowed methods header.
+
+		for method in self.SUPPORTED_METHODS:
+			override = getattr(self, method.lower())
+			baseImpl = getattr(JSONBaseHandler, method.lower())
+
+			if override.__func__ is not baseImpl.__func__:
+				methodList.append('{0}'.format(method))
+		
+		self.set_header('Access-Control-Allow-Origin', origin)
+		self.set_header('Access-Control-Allow-Methods', ', '.join(methodList))
+		self.set_header('Access-Control-Allow-Headers', 'Content-Type, Accept, Accept-Encoding, If-Modified-Since, Cookie')
+
+		self.set_status(204)
+		self.finish()
+
 
 
 

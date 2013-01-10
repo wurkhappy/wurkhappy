@@ -825,7 +825,7 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 
 
 
-class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
+class AgreementJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 
 	@web.authenticated
 	def get(self, agreementID):
@@ -847,7 +847,7 @@ class AgreementJSONHandler(Authenticated, BaseHandler, AgreementBase):
 
 
 
-class AgreementStatusJSONHandler(Authenticated, BaseHandler, AgreementBase):
+class AgreementStatusJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 
 	@JSONBaseHandler.authenticated
 	def get(self, agreementID):
