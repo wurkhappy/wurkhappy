@@ -42,7 +42,7 @@ class BaseHandler(web.RequestHandler):
 
 class JSONBaseHandler(web.RequestHandler):
 	ALLOWED_ORIGINS = [
-		'https://localhost',
+		'http://localhost(:[0-9]{1,5})?',
 		'https://([a-z0-9]([a-z0-9\-]*[a-z0-9])?\.)?wurkhappy\.com'
 	]
 
@@ -73,10 +73,12 @@ class JSONBaseHandler(web.RequestHandler):
 		return wrapper
 	
 	def renderJSON(self, obj):
-		self.set_header('Access-Control-Allow-Origin', 'https://www.wurkhappy.com/')
+		#		self.set_header('Access-Control-Allow-Origin', 'https://www.wurkhappy.com/')
 		self.set_header('Content-Type', 'application/json')
-		# TODO: The following should only be set for POST requests, but this is easier for now.
-		self.set_header('Cache-Control', 'no-cache')
+
+		if self.request.method == 'POST':
+			self.set_header('Cache-Control', 'no-cache')
+		
 		self.finish(json.dumps(obj, cls=ORMJSONEncoder))
 
 	def write_error(self, status_code, **kwargs):
@@ -141,8 +143,9 @@ class JSONBaseHandler(web.RequestHandler):
 				methodList.append('{0}'.format(method))
 		
 		self.set_header('Access-Control-Allow-Origin', origin)
+		self.set_header('Access-Control-Allow-Credentials', 'true')
 		self.set_header('Access-Control-Allow-Methods', ', '.join(methodList))
-		self.set_header('Access-Control-Allow-Headers', 'Content-Type, Accept, Accept-Encoding, If-Modified-Since, Cookie')
+		self.set_header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Accept-Encoding, If-Modified-Since, Cookie, X-Xsrftoken')
 
 		self.set_status(204)
 		self.finish()
