@@ -4,7 +4,10 @@
  * ========================================================
  */
 
-
+function getCookie(name) {
+	var c = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+	return c ? c[1] : undefined;
+}
 
 function addressIsValid(addr) {
 	return addr.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/);
@@ -107,52 +110,57 @@ $(document).ready(function() {
 		return false;
 	});
 	
-	$('.submit-button').click(function (event) {
+	$('#login_form').on('submit', function (evt) {
+		evt.preventDefault();
 		var self = this;
 		var $form = $(this).closest('form');
 		var $email = $form.find('input[name=email]');
-		var $token = $form.find('input[name=_xsrf]');
-		
-		//TODO: Hide the signup form
-		$email.blur();
-		$(self).hide();
-		$email.hide();
-		$form.find('#email-label').hide();
-		
+		var $passwd = $form.find('input[name=password]');
 		
 		if (addressIsValid($email.val())) {
 			var $header = $form.find('#form-header');
 			var previousText = $header.text();
 			
-			$header.text('Sending...');
+			$header.text('Sending...');			
 			
 			$.ajax({
-				url: '/signup.json',
+				url: 'https://sandbox.wurkhappy.com/login.json',
 				type: 'POST',
 				data: {
 					'email': $email.val(),
-					'_xsrf': $token.val()
+					'password': $passwd.val()
 				},
+				xhrFields: {withCredentials: true},
+				crossDomain: true,
 				dataType: 'json',
 				success: function (data, status, xhr) {
-					if (data['success']) {
+					if (data['user']) {
+						// TODO: Redirect to https://beta.wurkhappy.com/
+						// (Actually https://sandbox.wurkhappy.com/ until the patch I uploaded today goes live.)
+						window.location.href = 'https://sandbox.wurkhappy.com/';
+			
+						$passwd.val('');
 						$email.val('');
-						$(self).remove();
-						$form.find('#form-header').text('Thank you!');
-						$form.append('<p>We will contact you soon with more information.</p>');
+						$('#server_error').html('');
+						
+						
 					} else {
-						alert(data['message']);
+						alert('Something went wrong on the server. Please try again later.');
 					}
 				},
 				error: function (xhr, status, error) {
+					
+					// TODO: Clear the password field and display error text (maybe above the form box?)
+					
 					var data = $.parseJSON(xhr.responseText);
 					$form.find('#form-header').text(previousText);
-					$(self).show();
-					$email.show();
-					$form.find('#email-label').show();
-					$email.select();
-					$email.focus();
-					alert(data['message']);
+					$passwd.val('');
+					$email.val('');
+					$passwd.select();
+					$passwd.focus();
+					$('#server_error').html('Please enter a valid email or password');
+					$('input#email-field').addClass('border');
+					$('.validation').html('');
 				}
 			});
 		} else {
@@ -165,7 +173,6 @@ $(document).ready(function() {
 			$('input#email-field').addClass('border');
 			
 		}
-		return false;
 	});
 });
 

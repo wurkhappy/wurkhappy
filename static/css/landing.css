@@ -717,6 +717,10 @@ div.faqcontent h2 {
 	display: none;
 }
 
+#server_error {
+	color: red;
+}
+
 /* COPYRIGHT
 ================================================================================ */
 
