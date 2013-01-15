@@ -112,44 +112,48 @@ class JSONBaseHandler(web.RequestHandler):
 			self.send_error(500, exc_info=sys.exc_info())
 			# TODO: Send pretty JSON error instead of default 500
 	
-	def options(self, *args, **kwargs):
-		origin = self.request.headers.get('Origin', None)
-		allowedOrigin = False
-
- 		for rexp in self.ALLOWED_ORIGINS:
- 			r = re.compile('^{0}'.format(rexp))
- 			if r.match(origin):
- 				allowedOrigin = True
- 				break
- 		
- 		if not allowedOrigin:
- 			self.set_status(405)
- 			self.write('{"error":"Method Not Allowed"}')
- 			self.finish()
-			return
-
-		methodList = ['OPTIONS']
+	@staticmethod
+	def _cross_origin(wrapped):
+		@functools.wraps(wrapped)
+		def wrapper(self, *args, **kwargs):
+			origin = self.request.headers.get('Origin', None)
 		
-		# We look up each supported HTTP method in both the base class
-		# and the subclass, and compare their function objects. If they
-		# don't match, the subclass must have defined an overriding
-		# method, so we add the method to the allowed methods header.
-
-		for method in self.SUPPORTED_METHODS:
-			override = getattr(self, method.lower())
-			baseImpl = getattr(JSONBaseHandler, method.lower())
-
-			if override.__func__ is not baseImpl.__func__:
-				methodList.append('{0}'.format(method))
-		
-		self.set_header('Access-Control-Allow-Origin', origin)
-		self.set_header('Access-Control-Allow-Credentials', 'true')
-		self.set_header('Access-Control-Allow-Methods', ', '.join(methodList))
-		self.set_header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Accept-Encoding, If-Modified-Since, Cookie, X-Xsrftoken')
-
-		self.set_status(204)
-		self.finish()
-
+			if origin:
+				allowedOrigin = False
+				
+ 				for rexp in self.ALLOWED_ORIGINS:
+ 					r = re.compile('^{0}'.format(rexp))
+ 					if r.match(origin):
+ 						allowedOrigin = True
+ 						break
+ 				
+ 				if not allowedOrigin:
+ 					self.set_status(405)
+ 					self.write('{"error":"Method Not Allowed"}')
+ 					self.finish()
+					return
+				
+				methodList = ['OPTIONS']
+				
+				# We look up each supported HTTP method in both the base class
+				# and the subclass, and compare their function objects. If they
+				# don't match, the subclass must have defined an overriding
+				# method, so we add the method to the allowed methods header.
+				
+				for method in self.SUPPORTED_METHODS:
+					override = getattr(self, method.lower())
+					baseImpl = getattr(JSONBaseHandler, method.lower())
+				
+					if override.__func__ is not baseImpl.__func__:
+						methodList.append('{0}'.format(method))
+				
+				self.set_header('Access-Control-Allow-Origin', origin)
+				self.set_header('Access-Control-Allow-Credentials', 'true')
+				self.set_header('Access-Control-Allow-Methods', ', '.join(methodList))
+				self.set_header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Accept-Encoding, If-Modified-Since, Cookie, X-Xsrftoken')
+			
+			return wrapped(self, *args, **kwargs)
+		return wrapper
 
 
 

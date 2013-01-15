@@ -36,6 +36,12 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 	def check_xsrf_cookie(self):
 		pass
 	
+	@JSONBaseHandler._cross_origin
+	def options(self):
+		self.set_status(204)
+		self.finish()
+	
+	@JSONBaseHandler._cross_origin
 	def post(self):
 		try:
 			args = fmt.Parser(self.request.arguments,
