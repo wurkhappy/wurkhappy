@@ -501,7 +501,8 @@ h4 {
   -moz-border-radius: 5px;
   border-radius: 10px;
   margin: 0;
-  padding: 0px 10px;
+  padding-left: 10px;
+ 	padding-right: 10px;
 }
 
 #logindiv form legend {
@@ -719,6 +720,10 @@ div.faqcontent h2 {
 
 #server_error {
 	color: red;
+}
+
+.invalid {
+	padding-bottom: 25px;
 }
 
 /* COPYRIGHT

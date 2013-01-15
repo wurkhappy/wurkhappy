@@ -90,16 +90,16 @@
 		
 		<div class="container">
 			<div class="column-one-third">
-				<form action="https://beta.wurkhappy.com/account/create" method="POST" accept-charset="utf-8">
+				<form action="" method="POST" id="create_form" accept-charset="utf-8">
 					{% raw xsrf_form_html() %}
 					<fieldset>
 						<legend id="form-header">Create Your Free Account</legend>
 						<label id="email-label" for="email">Your Email: <span class="validation" id="email-validation"></span></label>
 						<div class="input-box">
-							<input type="email" name="email" id="email-field" class="text-field" placeholder="name@website.com" required="required">
+							<input type="email" name="email" id="email-field" class="text-field" placeholder="name@website.com" required >
 						</div>
 						<label for="email">Choose a password:</label>
-          	<input type="password" name="" value="" id="password" class="text-field" required="required" />
+          	<input type="password" name="" value="" id="password" class="text-field" required >
 					</fieldset>
 					<fieldset>
 						<input type="submit" value="Register" class="submit-button">
@@ -112,15 +112,15 @@
 	<div id="logindiv" class="login">
 		<div class="container">
 			<div class="column-one-third">
-				<form action="" method="POST" accept-charset="utf-8" id="login_form" class="js-form">
+				<form action="/account/create" method="POST" accept-charset="utf-8" id="login_form" class="js-form">
 					<fieldset>
 						<div id="server_error"></div>
 						<label class="clear" id="email-label" for="email">Email: <span class="validation" id="email-validation"></span></label>
 						<div class="input-box">
-							<input type="email" name="email"  id="target" class="text-field" placeholder="name@website.com" required="required" >
+							<input type="email" name="email"  id="target" class="text-field input" placeholder="name@website.com" required >
 						</div>
 						<label for="email">Password:</label>
-	         	<input type="password" name="password" value="" id="password" class="text-field" required="required" id="password-validation" />
+	         	<input type="password" name="password" value="" id="password" class="text-field" required id="password-validation" />
 						<p class="faux-label"><span><a href="/user/me/password">Forgot your password?</a></span></p>
 					</fieldset>
 					<fieldset>

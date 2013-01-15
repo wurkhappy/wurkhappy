@@ -13,7 +13,22 @@ function addressIsValid(addr) {
 	return addr.match(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/);
 }
 
+
+
 $(document).ready(function() {
+	
+	var elements = document.getElementsByTagName("INPUT");
+  for (var i = 0; i < elements.length; i++) {
+      elements[i].oninvalid = function(evt) {
+          evt.target.setCustomValidity("");
+          if (!evt.target.validity.valid) {
+              evt.target.setCustomValidity("This field cannot be left blank");
+          }
+      };
+      elements[i].oninput = function(evt) {
+          evt.target.setCustomValidity("");
+      };
+  }
 		
 	$('.faqnav li:not(.title)').click( function(event) {
 		
@@ -134,6 +149,72 @@ $(document).ready(function() {
 				crossDomain: true,
 				dataType: 'json',
 				success: function (data, status, xhr) {
+					Console.log('this is a success');
+					if (data['user']) {
+						// TODO: Redirect to https://beta.wurkhappy.com/
+						// (Actually https://sandbox.wurkhappy.com/ until the patch I uploaded today goes live.)
+						window.location.href = 'https://sandbox.wurkhappy.com/';
+			
+						$passwd.val('');
+						$email.val('');
+						$('#server_error').html('');
+						
+						
+					} else {
+						alert('Something went wrong on the server. Please try again later.');
+					}
+				},
+				error: function (xhr, status, error) {
+					
+					var data = $.parseJSON(xhr.responseText);
+					$form.find('#form-header').text(previousText);
+					$passwd.val('');
+					$email.val('');
+					$passwd.select();
+					$passwd.focus();
+					$('#login_form').addClass('invalid');
+					$('#server_error').html('Please enter a valid email or password');
+					$('input#email-field').addClass('border');
+					$('.validation').html('');
+				}
+			});
+		} else {
+			$(self).show();
+			$email.show();
+			$form.find('#email-label').show();
+			$email.select();
+			$email.focus();
+			$('.validation').html('Please enter a valid email');
+			$('input#email-field').addClass('border');
+			
+		}
+	});
+	
+	$('#create_form').on('submit', function (evt) {
+		evt.preventDefault();
+		var self = this;
+		var $form = $(this).closest('form');
+		var $email = $form.find('input[name=email]');
+		var $passwd = $form.find('input[name=password]');
+		
+		if (addressIsValid($email.val())) {
+			var $header = $form.find('#form-header');
+			var previousText = $header.text();
+			
+			$header.text('Sending...');			
+			
+			$.ajax({
+				url: 'https://sandbox.wurkhappy.com/account/create/',
+				type: 'POST',
+				data: {
+					'email': $email.val(),
+					'password': $passwd.val()
+				},
+				xhrFields: {withCredentials: true},
+				crossDomain: true,
+				dataType: 'json',
+				success: function (data, status, xhr) {
+					Console.log('this is a success');
 					if (data['user']) {
 						// TODO: Redirect to https://beta.wurkhappy.com/
 						// (Actually https://sandbox.wurkhappy.com/ until the patch I uploaded today goes live.)
@@ -158,6 +239,7 @@ $(document).ready(function() {
 					$email.val('');
 					$passwd.select();
 					$passwd.focus();
+					$('#login_form').addClass('invalid');
 					$('#server_error').html('Please enter a valid email or password');
 					$('input#email-field').addClass('border');
 					$('.validation').html('');
@@ -171,8 +253,20 @@ $(document).ready(function() {
 			$email.focus();
 			$('.validation').html('Please enter a valid email');
 			$('input#email-field').addClass('border');
-			
 		}
 	});
+	
+	// clear error messages when login/create forms are clicked
+	$('#login_form').click( function(evt) {
+		$('#server_error').html('');
+		$('.validation').html('');
+	});
+	
+	$('#create_form').click( function(evt) {
+		$('#server_error').html('');
+		$('.validation').html('');
+		$('input#email-field').removeClass('border');
+	});
+	
 });
 
