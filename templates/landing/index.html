@@ -83,14 +83,14 @@
 				<p>Wurk Happy only charges a processing fee when you receive payment.</p>
 				<p><strong>If you choose to get paid by bank transfer,</strong> we charge 1.5% of the payment received - up to a maximum fee per transaction of $15.</p>
 				<p>Funds are transferred from bank account to bank account, and are usually available within 1 business day.</p>
-				<p><strong>If you choose to get paid by credit card,</strong> we charge 3.5% per transaction.</p>
+				<p><strong>If you choose to get paid by credit card,</strong> we charge 5% per transaction.</p>
 				<p>Funds are available within 5-7 business days (though it's often within 1-2 days) after transfer from your account with the payment processor.</p>
     	</div>
 		</div> <!-- End "pricing" tab -->
 		
 		<div class="container">
 			<div class="column-one-third">
-				<form action="" method="POST" id="create_form" accept-charset="utf-8">
+				<form action="https://sandbox.wurkhappy.com/account/create" method="POST" id="create_form" accept-charset="utf-8">
 					{% raw xsrf_form_html() %}
 					<fieldset>
 						<legend id="form-header">Create Your Free Account</legend>
@@ -99,7 +99,7 @@
 							<input type="email" name="email" id="email-field" class="text-field" placeholder="name@website.com" required >
 						</div>
 						<label for="email">Choose a password:</label>
-          	<input type="password" name="" value="" id="password" class="text-field" required >
+          	<input type="password" name="password" value="" id="password" class="text-field" required >
 					</fieldset>
 					<fieldset>
 						<input type="submit" value="Register" class="submit-button">

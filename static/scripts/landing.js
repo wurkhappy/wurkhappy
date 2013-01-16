@@ -149,7 +149,6 @@ $(document).ready(function() {
 				crossDomain: true,
 				dataType: 'json',
 				success: function (data, status, xhr) {
-					Console.log('this is a success');
 					if (data['user']) {
 						// TODO: Redirect to https://beta.wurkhappy.com/
 						// (Actually https://sandbox.wurkhappy.com/ until the patch I uploaded today goes live.)
@@ -191,68 +190,15 @@ $(document).ready(function() {
 	});
 	
 	$('#create_form').on('submit', function (evt) {
-		evt.preventDefault();
-		var self = this;
 		var $form = $(this).closest('form');
 		var $email = $form.find('input[name=email]');
-		var $passwd = $form.find('input[name=password]');
 		
-		if (addressIsValid($email.val())) {
-			var $header = $form.find('#form-header');
-			var previousText = $header.text();
-			
-			$header.text('Sending...');			
-			
-			$.ajax({
-				url: 'https://sandbox.wurkhappy.com/account/create/',
-				type: 'POST',
-				data: {
-					'email': $email.val(),
-					'password': $passwd.val()
-				},
-				xhrFields: {withCredentials: true},
-				crossDomain: true,
-				dataType: 'json',
-				success: function (data, status, xhr) {
-					Console.log('this is a success');
-					if (data['user']) {
-						// TODO: Redirect to https://beta.wurkhappy.com/
-						// (Actually https://sandbox.wurkhappy.com/ until the patch I uploaded today goes live.)
-						window.location.href = 'https://sandbox.wurkhappy.com/';
-			
-						$passwd.val('');
-						$email.val('');
-						$('#server_error').html('');
-						
-						
-					} else {
-						alert('Something went wrong on the server. Please try again later.');
-					}
-				},
-				error: function (xhr, status, error) {
-					
-					// TODO: Clear the password field and display error text (maybe above the form box?)
-					
-					var data = $.parseJSON(xhr.responseText);
-					$form.find('#form-header').text(previousText);
-					$passwd.val('');
-					$email.val('');
-					$passwd.select();
-					$passwd.focus();
-					$('#login_form').addClass('invalid');
-					$('#server_error').html('Please enter a valid email or password');
-					$('input#email-field').addClass('border');
-					$('.validation').html('');
-				}
-			});
-		} else {
-			$(self).show();
-			$email.show();
-			$form.find('#email-label').show();
+		if (!addressIsValid($email.val())) {
 			$email.select();
 			$email.focus();
 			$('.validation').html('Please enter a valid email');
 			$('input#email-field').addClass('border');
+			evt.preventDefault();
 		}
 	});
 	
