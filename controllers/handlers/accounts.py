@@ -234,6 +234,8 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 # -------------------------------------------------------------------
 
 class AccountCreationHandler(BaseHandler):
+	def check_xsrf_cookie(self):
+		pass
 	
 	def get(self):
 		signupCount = User.countRecentSignups()
