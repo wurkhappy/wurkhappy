@@ -118,7 +118,6 @@ $(document).ready(function() {
 		// Get current elt's class, find corresponding container class
 		// and adjust visibility. Set current class to current.
 		var $button = $(this);
-		console.log($button);
 		
 		if (!$button.hasClass('current')) {
 			var id = $button.attr('id').match(/(\w+)-button/);

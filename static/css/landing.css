@@ -83,7 +83,7 @@ strong {
 h1, h2, h3 {
   color: rgb(0,0,0);
   padding: 0 20px;
-  font-family: Museo;
+  font-family: "Museo", Helvetica, Arial, sans-serif;
 }
 
 h1 { 
@@ -202,7 +202,7 @@ h4 {
 }
 
 #navigation p {
-  font-family: Museo;
+  font-family: "Museo", Helvetica, Arial, sans-serif;
   font-size: 24px;
   font-weight: 100;
   line-height: 24px;
@@ -265,7 +265,7 @@ h4 {
 }
 
 #intro h2 {
-	font-family: "Museo Sans";
+  font-family: "Museo-Sans", Helvetica, Arial, sans-serif;
 	font-weight: 100;
   color: rgb(255,255,255);
 	margin: 0 0 18px 0;
@@ -400,7 +400,7 @@ h4 {
   margin: 0;
   padding: 0;
   font-weight: 100;
-  font-family: Museo;
+  font-family: "Museo", Helvetica, Arial, sans-serif;
   color: rgb(0,0,0);
   
 }
@@ -512,7 +512,7 @@ h4 {
   margin: 0;
   padding: 0;
   font-weight: 100;
-  font-family: Museo;
+  font-family: "Museo", Helvetica, Arial, sans-serif;
   color: rgb(0,0,0);
   
 }
@@ -630,7 +630,7 @@ h4 {
 
 .faqnav {
 	font-size: 14px;
-	font-family: "Museo Sans";
+  font-family: "Museo", Helvetica, Arial, sans-serif;
 	list-style-type: none;
 	padding: 0px;
 	margin: 20px 0px 0px 30px;
@@ -681,7 +681,7 @@ h4 {
 }
 
 div.faqcontent h2 {
-	font-family: "Museo Sans";
+  font-family: "Museo", Helvetica, Arial, sans-serif;
 	width: 550px;
 }
 
