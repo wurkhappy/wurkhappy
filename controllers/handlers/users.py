@@ -17,7 +17,7 @@ import logging
 # Contact listing
 # -------------------------------------------------------------------
 
-class ContactsJSONHandler(Authenticated, BaseHandler):
+class ContactsJSONHandler(Authenticated, JSONBaseHandler):
 	@web.authenticated
 	def get(self):
 		user = self.current_user

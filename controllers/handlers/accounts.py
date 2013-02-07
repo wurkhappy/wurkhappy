@@ -234,6 +234,8 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 # -------------------------------------------------------------------
 
 class AccountCreationHandler(BaseHandler):
+	def check_xsrf_cookie(self):
+		pass
 	
 	def get(self):
 		signupCount = User.countRecentSignups()
@@ -811,7 +813,7 @@ class PasswordJSONHandler(TokenAuthenticated, JSONBaseHandler):
 # 201 on success with JSON repr of the new method and a Location
 # header for the newly created resource.
 
-class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
+class NewPaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
 	@web.authenticated
 	def post(self):
 		user = self.current_user
@@ -923,7 +925,7 @@ class NewPaymentMethodJSONHandler(Authenticated, BaseHandler):
 # Retrieves the JSON representation of a specific payment method or
 # deletes said method.
 
-class PaymentMethodJSONHandler(Authenticated, BaseHandler):
+class PaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
 	@web.authenticated
 	def get(self, paymentMethodID):
 		user = self.current_user

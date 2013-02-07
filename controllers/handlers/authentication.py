@@ -33,6 +33,15 @@ class LoginJSONHandler(Authenticated, JSONBaseHandler):
 	with the same verification behavior as the LoginHandler. Sets a secure
 	cookie and returns the current user's public dict if successful.'''
 	
+	def check_xsrf_cookie(self):
+		pass
+	
+	@JSONBaseHandler._cross_origin
+	def options(self):
+		self.set_status(204)
+		self.finish()
+	
+	@JSONBaseHandler._cross_origin
 	def post(self):
 		try:
 			args = fmt.Parser(self.request.arguments,

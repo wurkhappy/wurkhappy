@@ -1,4 +1,6 @@
 *.pyc
 _*.yaml
+_*.vim
+*.swp
 .DS_Store
 config.json

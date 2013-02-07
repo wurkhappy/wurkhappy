@@ -73,6 +73,11 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		phase = AgreementPhase.retrieveByID(phaseID)
 		agreement = Agreement.retrieveByID(phase['agreementID'])
 		vendor = User.retrieveByID(agreement['vendorID'])
+		agreementName = (agreement['name']
+			if len(agreement['name']) <= 78
+			else agreement['name'][:75] + '...'
+		)
+
 		email = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		token = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_token_id')
 		

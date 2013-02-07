@@ -203,17 +203,33 @@ class User(MappedObj):
 		return self['password'] is None and self['confirmation'] == cipherText
 	
 	def getDefaultPaymentMethod(self):
-		paymentPref = UserPrefs.retrieveByUserIDAndName(self['id'], 'preferredPaymentID')
-		
+		paymentPref = UserPrefs.retrieveByUserIDAndName(self['id'], 'defaultPaymentMethodID')
+
 		if paymentPref:
-			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
+			paymentMethod = paymentMethod.retrieveByID(paymentPref['value'])
 		else:
-			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self['id'])
-			
-			if not paymentMethod:
-				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self['id'])
+			paymentMethod = paymentMethod.retrieveMostRecentByUserID(self['id'])
 		
-		return paymentMethod
+		if paymentMethod:
+			# We have a payment method for the user, but we don't know its type. We need to
+			# look for it in each payment method subtype...
+
+			pass
+			# user <--> paymentMethod <--> paymentInfo
+		else:
+			return None
+#		
+#		paymentPref = UserPrefs.retrieveByUserIDAndName(self['id'], 'preferredPaymentID')
+#		
+#		if paymentPref:
+#			paymentMethod = PaymentMethod.retrieveByID(paymentPref.value)
+#		else:
+#			paymentMethod = PaymentMethod.retrieveACHMethodWithUserID(self['id'])
+#			
+#			if not paymentMethod:
+#				paymentMethod = PaymentMethod.retrieveCCMethodWithUserID(self['id'])
+#		
+#		return paymentMethod
 	
 	def getCurrentState(self):
 		"""
