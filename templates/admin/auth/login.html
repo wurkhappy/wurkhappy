@@ -1,6 +1,11 @@
 {% extends "../base.html" %}
 
 {% block main %}
+
+{% set slug = {"_xsrf": data['_xsrf']} %}
+
+{% module Slug(slug) %}
+
 <div class="container">
 	{% block navigation %}
 	{% end %}
@@ -17,8 +22,7 @@
 	</div>
 
 	<div id="content" class="clear">
-		<form action="/login" method="POST" accept-charset="utf-8">
-			{% raw xsrf_form_html() %}
+		<form action="/login" method="POST" accept-charset="utf-8" id="login_form" class="js-form">
 			<fieldset>
 				<label for="email">Email</label>
 				<input type="email" name="email" value="" size="60" />
@@ -41,6 +45,11 @@
 
 {% block styles-custom %}
 	<link rel="stylesheet" type="text/css" href="{{ static_url("css/admin.css") }}" media="all" />
+{% end %}
+
+{% block scripts-custom %}
+<script src="{{ static_url('scripts/libs/jquery-autosuggest-1.4.js') }}" type="text/javascript"></script>
+<script src="{{ static_url("scripts/login.js") }}"></script>
 {% end %}
 
 

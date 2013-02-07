@@ -34,6 +34,7 @@ class Application(web.Application):
 			(r'/', root.RootHandler),
 			(r'/login', auth.LoginHandler),
 			(r'/logout', auth.LogoutHandler),
+			(r'/login.json', auth.LoginJSONHandler),
 			
 			(r'/users/?', users.UserListHandler),
 			(r'/user/([0-9]+)/?', users.UserDetailHandler),

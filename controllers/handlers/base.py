@@ -26,7 +26,7 @@ class BaseHandler(web.RequestHandler):
 			'The authentication mixin should be first.')
 	
 	def renderJSON(self, obj):
-		self.set_header('Content-Type', 'application/json')
+		self.set_header('Content-Type', 'text/html; charset=UTF-8') # application/json; charet=UTF-8')
 		self.finish(json.dumps(obj, cls=ORMJSONEncoder))
 	
 	def write_error(self, statusCode, **kwargs):
@@ -67,7 +67,7 @@ class JSONBaseHandler(web.RequestHandler):
 		return wrapper
 	
 	def renderJSON(self, obj):
-		self.set_header('Content-Type', 'application/json')
+		self.set_header('Content-Type', 'text/html; charset=UTF-8') # application/json; charset=UTF-8')
 		# TODO: The following should only be set for POST requests, but this is easier for now.
 		self.set_header('Cache-Control', 'no-cache')
 		self.finish(json.dumps(obj, cls=ORMJSONEncoder))

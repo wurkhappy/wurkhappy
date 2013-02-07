@@ -1,6 +1,6 @@
 from base import BaseHandler, Authenticated
 
-class RootHandler(BaseHandler):
+class RootHandler(Authenticated, BaseHandler):
 	def get(self):
 		if self.current_user:
 			self.redirect('/users')

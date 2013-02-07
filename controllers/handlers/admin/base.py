@@ -17,7 +17,7 @@ class BaseHandler(web.RequestHandler):
 		)
 	
 	def renderJSON(self, obj):
-		self.set_header('Content-Type', 'application/json')
+		self.set_header('Content-Type', 'application/json; charset=UTF-8')
 		self.write(json.dumps(obj, cls=ORMJSONEncoder))
 
 
