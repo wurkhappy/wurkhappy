@@ -1,23 +1,26 @@
-<html>
-<body>
-	<p style="background-color: #DFF5FF; border-bottom: 1px solid #DDDDDD; padding: 10px; margin: 0;">
-		<img src="data:image/gif;base64,R0lGODlhlgAUALMPAAAAABERESIiIjMzM0RERFVVVWZmZnd3d4iIiJmZmaqqqru7u8zMzN3d3e7u7v///yH5BAEAAA8ALAAAAACWABQAAAT/8MlJq7046827/+DXHElonmiqrlYiAITZEEjD3niuGgBsLr3A5mBwVAgLisNwMB0IJQ2DULRMYzoVI+ALKXpNqQBB+YYliADDxDBgM45vsnIQzLOpAmBgSgAERhsGBRQHA3wTBQYoTx0AdxONeFo9ayA8ixwJQhMCfoEPAVFObxqPFpITDQs2GAygVrAoeqUdL5YbDQCWDAAOAwoSvTYEAGcSp8UHDHoSqZu4FKd0bw0CAgQCA63KmwQBBJbd4OCWBwGtEgsBxxYNXKMcQLUaY2gxRGgCkbXTT578hInCMK3QG0OJCDkLMCCQgQCBzjWU8DAQFQqKNAFA50EPpCEK/2k8ULDvQUZn/eYcAEAm4K920gYQmEkTmypcCjg9WJnugb2dAHr+3BRI10cMeibm6uIh5wMHu5DZCBAMZQV/AOgIeIKIIIIFYMO6qcAgAZGszro6U4iwkEKfURCo1eDgBT0LxXpygMqA5AQovUClQqayVh1Dby8UDChM24GzjBkP3nkQEUAP72DIouCnJYgBCJhEMiDXIAWjVk2jJnhUkoOB6tBSpsPW8Fu+6zZL4TIg2oQviT8cKCCg6oMFAgoca+vMn2EsY1mjwgKEAo9IQSn85Knd8wMD4DOB2LIRASgHK+92IClbQoDiFHpZkuucmoTX3qW1xgI1yibZEjkEyIVCShkw4ATrqHECAy/8UQACBXARHAhQBaeHLOkJUMQAxsxmmgR+3LVYag9sckg4XCTxxDnZ9MYPi9r49sAhKaDHRQ9/GDdJBQ4soNuOFCwgYyM9+kakkBhclgIDHHryI5BQnjDZhxmsE+WVWIIwZWR0kMBOlmCGecEC8VRAJgYjGKCjBhEAADs=" width="150" style="display: block;">
-	</p>
-	
-	<h2 style="font-weight: bold; font-size: 24px; line-height: 32px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">You have just received a new proposal from {{ data['vendor']['fullName'] }}.</h2>
-	
-	<h1 style="font-weight: bold; font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;"><a href="http://{{ data['hostname'] }}/agreement/{{ data['agreement']['id'] }}?t={{ data['agreement']['token'] }}" style="text-decoration: none; color: #0099DD;">{{ data['agreement']['name'] }}</a></h1>
-	
-	<!--{% set num = len(data['agreement']['phases']) %}-->
-	<p style="font-size: 12px; font-style: italic; color: #999999; margin: 0; padding: 5px 10px 0 10px; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">{{ num }} phase{% if num != 1 %}s{% end %} totaling {{ data['agreement']['costString'] }}</p>
-	
-	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Click on the above link to view the details of {{ data['vendor']['fullName'] }}&rsquo;s work proposal.</p>
-	
-	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 20px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">You&rsquo;ve received this email because {{ data['vendor']['fullName'] }} wants to use Wurk Happy to make agreements, billing, and payments easy when you work together.</p>
-	
-	<p style="font-size: 16px; line-height: 24px; margin: 0; padding: 10px 10px 20px 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Wurk Happy is an online software tool that makes it easy to manage work, agreements, clients, freelancers, and payments in a simple interface.</p>
-	
-	<!-- <p style="background-color: #DFF5FF; border-top: 1px solid #DDDDDD; font-size: 12px; line-height: 16px; margin: 0; padding: 10px 10px 0 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">To see this proposal and estimate will need to <a href="" style="text-decoration: none; color: #0099DD;">create an account</a>. It's free and only takes a few seconds.</p> -->
-	<p style="background-color: #DFF5FF; font-size: 12px; line-height: 16px; margin: 0; padding: 10px 10px 10px 10px; color: #666666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;">Powered by <a href="" style="text-decoration: none; color: #0099DD;">Wurk Happy</a> &mdash; Agreement and Payment Made Simple.</p>
-</body>
-</html>
+{% extends "email_base.html" %}
+
+{% block body %}
+<!-- BODY --><table class="body-wrap" style='margin:0;padding:10px;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:100%;font-size:18px;line-height:24px;'><tr style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'>
+<td style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'></td>
+		<td class="container" bgcolor="#FFFFFF" style='margin:0 auto!important;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;display:block!important;max-width:600px!important;clear:both!important;'>
+ 
+			<!-- content -->	
+			<div class="content" style='margin:0 auto;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:600px;display:block;'>
+				<table style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:100%;'><tr style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'>
+<td style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'>
+							<h1 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:32px;color:black;padding-top:20px;padding-right:10px;padding-left:10px;font-size:24px;font-weight:bold;'>You have just received a new agreement from {{ data['vendor']['fullName'] }}</h1>
+ 
+							<h2 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:24px;color:#666666;padding-top:20px;padding-right:10px;padding-left:10px;font-weight:bold;font-size:18px;'><a href="http://{{ data['hostname'] }}/agreement/{{ data['agreement']['id'] }}?t={{ data['agreement']['token'] }}" title="Verify Email" style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#0099DD;text-decoration:none;font-weight:bold;'>{{ data['agreement']['name'] }}</a></h2>
+							<span style="margin:0;padding:5px 10px 0 10px;font-family:'Helvetica Neue', Arial, Helvetica, sans-serif;font-size:12px;font-style:italic;color:#999999;">{{ num }} phase{% if num != 1 %}s{% end %} totaling {{ data['agreement']['costString'] }}</span>
+ 
+							<p style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#666666;padding-top:20px;padding-left:10px;padding-right:10px;'>Click on the above link to view the details of Marcus Ellison’s work agreement.</p>
+						</td>
+					</tr></table>
+</div>
+			<!-- /content -->	
+ 
+		</td>
+	</tr></table>
+<!-- /BODY -->
+{% end %}
