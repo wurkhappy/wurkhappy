@@ -14,13 +14,17 @@
 							<h2 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:24px;color:#666666;padding-top:20px;padding-right:10px;padding-left:10px;font-weight:bold;font-size:18px;'><a href="http://{{ data['hostname'] }}/agreement/{{ data['agreement']['id'] }}?t={{ data['agreement']['token'] }}" title="Verify Email" style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#0099DD;text-decoration:none;font-weight:bold;'>{{ data['agreement']['name'] }}</a></h2>
 							<span style="margin:0;padding:5px 10px 0 10px;font-family:'Helvetica Neue', Arial, Helvetica, sans-serif;font-size:12px;font-style:italic;color:#999999;">{{ num }} phase{% if num != 1 %}s{% end %} totaling {{ data['agreement']['costString'] }}</span>
  
-							<p style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#666666;padding-top:20px;padding-left:10px;padding-right:10px;'>Click on the above link to view the details of Marcus Ellison’s work agreement.</p>
+							<h3 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:1.1;color:black;padding-top:20px;padding-right:10px;padding-left:10px;font-weight:900;font-size:18px;'>What's next?</h3>
+ 
+							<p style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#666666;padding-top:20px;padding-left:10px;padding-right:10px;'><a href="#" title="View Agreement" style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#0099DD;text-decoration:none;font-weight:bold;'>Click Here</a>* to accept the agreement or request changes.</p>
+							<p style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#666666;padding-top:20px;padding-left:10px;padding-right:10px;'>*First time users will need to register for a Wurk Happy account. (It only takes a few minutes.)</p>
 						</td>
 					</tr></table>
 </div>
 			<!-- /content -->	
- 
 		</td>
+		<td style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'></td>
 	</tr></table>
 <!-- /BODY -->
+
 {% end %}
