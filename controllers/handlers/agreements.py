@@ -12,6 +12,9 @@ from models.user import *
 from models.agreement import *
 from models.request import Request
 from models.transaction import Transaction
+from models.paymentmethod import (
+	UserPayment, PaymentBase, OOBPaymentMethod, AmazonPaymentMethod, ZipmarkPaymentMethod
+)
 from controllers import fmt
 from controllers.orm import ORMJSONEncoder
 from controllers.beanstalk import Beanstalk
@@ -102,7 +105,8 @@ class AgreementListHandler(Authenticated, BaseHandler):
 				"other_name": usr and usr.getFullName(),
 				"date": agr['dateCreated'].strftime('%B %d, %Y'),
 				"amount": agr.getCostString(),
-				"profileURL": usr and (usr['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'), # Default profile photo? Set during signup?
+				"profileURL": usr and (usr['profileSmallURL'] or 'http://media.wurkhappy.com/images/profile1_s.jpg'),
+				# Default profile photo? Set during signup?
 				"state": agr.getCurrentState().__class__.__name__,
 			})
 
@@ -266,6 +270,18 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 			# Modify behavior to prompt for Amazon configuration if no
 			# confirmation is on file.
 			
+			paymentMethod = PaymentBase.retrieveDefaultByUserID(user['id'])
+			empty['paymentMethod'] = paymentMethod and paymentMethod.getPublicDict()
+
+			if paymentMethod and paymentMethod.canReceivePayment():
+				empty['paymentMethodStatus'] = 'verified'
+			elif paymentMethod is not None:
+				empty['paymentMethodStatus'] = 'pending'
+			else:
+				empty['paymentMethodStatus'] = None
+
+			# THIS vvvvv IS GETTING REPLACED WITH THIS ^^^^^
+
 			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
 			amzAcctVerified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
 
@@ -596,6 +612,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		
 		# We use the presence of the recipient email key to selectively render the Amazon button UI module.
 		if templateDict['self'] == 'client' and isinstance(currentState, CompletedState):
+			# TODO: We shouldn't be doing this. Render the proper payment button based on the default payment method.
 			templateDict['recipientEmail'] = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
 		
 		# Modify behavior to prompt for Amazon configuration if no
@@ -603,7 +620,18 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		
 		if agreement['vendorID'] == user['id']:
 			templateDict['uri'] = self.request.uri
+
+			paymentMethod = PaymentBase.retrieveDefaultByUserID(user['id'])
+			empty['paymentMethod'] = paymentMethod and paymentMethod.getPublicDict()
 			
+			if paymentMethod and paymentMethod.canReceivePayment():
+				empty['paymentMethodStatus'] = 'verified'
+			elif paymentMethod is not None:
+				empty['paymentMethodStatus'] = 'pending'
+			else:
+				empty['paymentMethodStatus'] = None
+
+			# TODO: THIS IS MORE CRAP THAT UGGGHHGHHGHGHGHGHGHGHG
 			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
 			amzAcctVerified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
 
@@ -627,22 +655,25 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 						templateDict['actions'][0] = ('action-amazon-prompt', 'Mark Phase Complete')
 			
 			if isinstance(currentState, (DraftState, DeclinedState)):
-				self.render("agreement/edit.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
+				self.render("agreement/edit.html",
+					title=title, data=templateDict,
+					json=lambda x: json.dumps(x, cls=ORMJSONEncoder)
+				)
 			else:
-				self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x,
-							cls=ORMJSONEncoder))
+				self.render("agreement/detail.html",
+					title=title, data=templateDict,
+					json=lambda x: json.dumps(x, cls=ORMJSONEncoder)
+				)
 		else:
-			# Adding account info here because I'm a dumbass.
-			# TODO: figure out the right way to populate this info
-			# paymentMethod = user.getDefaultPaymentMethod()
-			# userDwolla = UserDwolla.retrieveByUserID(user['id'])
-			# templateDict['account'] = userDwolla and userDwolla['dwollaID'][-4:]# paymentMethod and paymentMethod.getPublicDict()
-			self.render("agreement/detail.html", title=title, data=templateDict, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
+			self.render("agreement/detail.html",
+				title=title, data=templateDict,
+				json=lambda x: json.dumps(x, cls=ORMJSONEncoder)
+			)
 
 
 
 class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBase):
-	@web.authenticated
+	@JSONBaseHandler.authenticated
 	def post(self, action):
 		user = self.current_user
 
@@ -723,7 +754,6 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 
 		agreement['clientID'] = client and client['id']
 		logging.warn(agreement)
-		# agreement.save()
 		
 		summary = AgreementSummary(summary=args['summary'])
 
@@ -735,20 +765,21 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 				description=descr,
 				estDateCompleted=date
 			)
-			# phase['agreementID'] = agreement['id']
-			# phase['phaseNumber'] = num
-			# phase['amount'] = cost
-			# phase['description'] = descr
-			# phase['estDateCompleted'] = date
 			phases.append(phase)
 
-		
+		# TODO: CHECK CLIENT ID AND PHASE LENGTH BY TRIGGERING A STATE TRANSITION FOR SENDING
+
 		if action == "send":
+
+			# DELETE FROM HERE vvvvvvvvvvvvvvvvvvv
 			if not agreement['clientID']:
 				# TODO: Check this. I'm pretty sure it makes sense, but uh...
 				error = {
 					"domain": "application.conflict",
-					"display": "You need to choose a recipient in order to send this agreement. Please choose a client in the recipient field.",
+					"display": (
+						"You need to choose a recipient in order to send this agreement. "
+						"Please choose a client in the recipient field."
+					),
 					"debug": "'clientID' or 'email' parameter required"
 				}
 				self.set_status(400)
@@ -769,6 +800,7 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 				self.set_status(400)
 				self.renderJSON(error)
 				return
+			# TO HERE ^^^^^^^^^^^^^^^^^^^^^^^
 
 			clientState = client.getCurrentState()
 			
@@ -788,15 +820,7 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 			else:
 				msg = dict()
 			
-			# with Beanstalk() as bconn:
-			# 	tube = self.application.configuration['notifications']['beanstalk_tube']
-			# 	bconn.use(tube)
-			# 	r = bconn.put(msg)
-			# 	logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
-			
 			agreement['dateSent'] = datetime.now()
-			# agreement.save()
-
 
 		agreement.save()
 		
@@ -827,21 +851,32 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 
 class AgreementJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 
-	@web.authenticated
+	@JSONBaseHandler.authenticated
 	def get(self, agreementID):
 		user = self.current_user
 
 		agreement = Agreement.retrieveByID(agreementID)
 
 		if not agreement:
-			self.set_status(404)
-			self.write('{"success": false}')
-			return
+			self.error_description = {
+				"domain": "resource.not_found",
+				"display": (
+					"We couldn't find the agreement you specified. "
+					"Could you please try that again?"
+				),
+				"debug": "the 'agreementID' specified was not found"
+			}
+			raise web.HTTPError(404, "AgreementID not found")
 
 		if agreement['vendorID'] != user['id'] and agreement['clientID'] != user['id']:
-			self.set_status(403)
-			self.write('{"success": false}')
-			return
+			self.error_description = {
+				"domain": "resource.forbidden",
+				"display": (
+					"You are not authorized to view this agreement."
+				),
+				"debug": "the 'agreementID' specified is forbidden"
+			}
+			raise web.HTTPError(403, "Attempt to view unauthorized agreement")
 
 		self.renderJSON(self.assembleDictionary(agreement))
 
@@ -856,14 +891,25 @@ class AgreementStatusJSONHandler(Authenticated, JSONBaseHandler, AgreementBase):
 		agreement = Agreement.retrieveByID(agreementID)
 
 		if not agreement:
-			self.set_status(404)
-			self.write('{"success": false}')
-			return
+			self.error_description = {
+				"domain": "resource.not_found",
+				"display": (
+					"We couldn't find the agreement you specified. "
+					"Could you please try that again?"
+				),
+				"debug": "the 'agreementID' specified was not found"
+			}
+			raise web.HTTPError(404, "AgreementID not found")
 
 		if agreement['vendorID'] != user['id'] and agreement['clientID'] != user['id']:
-			self.set_status(403)
-			self.write('{"success": false}')
-			return
+			self.error_description = {
+				"domain": "resource.forbidden",
+				"display": (
+					"You are not authorized to view this agreement."
+				),
+				"debug": "the 'agreementID' specified is forbidden"
+			}
+			raise web.HTTPError(403, "Attempt to view unauthorized agreement")
 
 		stateDict = {
 			"agreement": {
@@ -887,25 +933,32 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 		agreement = Agreement.retrieveByID(agreementID)
 
 		if not agreement:
-			self.set_status(404)
-			self.write('{"success": false}')
-			return
+			self.error_description = {
+				'domain': 'resource.not_found',
+				'display': (
+					"We couldn't find the agreement you specified. "
+					"Could you please try that again?"
+				),
+				'debug': "the 'agreementID' specified was not found"
+			}
+			raise web.HTTPError(404, "AgreementID not found")
 
 		if agreement['vendorID'] != user['id'] and agreement['clientID'] != user['id']:
-			self.set_status(403)
-			self.write('{"success": false}')
-			return
+			self.error_description = {
+				'domain': 'resource.forbidden',
+				'display': (
+					"You are not authorized to view this agreement."
+				),
+				'debug': "the 'agreementID' specified is forbidden"
+			}
+			raise web.HTTPError(403, "Attempt to view unauthorized agreement")
 
 		agreementText = None
 
 		role = "vendor" if agreement['vendorID'] == user['id'] else "client"
 
-		logging.info(role)
-		logging.info(action)
-
 		currentState = agreement.getCurrentState()
 		phase = agreement.getCurrentPhase()
-		logging.info(currentState.__class__.__name__)
 
 		# In order to make sure records are not put in inconsistent states, a
 		# list of unsaved records is maintained so records can be saved
@@ -917,8 +970,6 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 		# Because of a change to the way we model agreement states (more
 		# specifically the transitions between them), we're packing up a data
 		# object that gets passed to the performTransition() function.
-
-		# transitionData = {}
 
 		# If role is vendor, make changes to the agreement before modifying
 		# the agreement's state. That way, if the state transition is invalid
@@ -946,6 +997,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 			if isinstance(currentState, DraftState):
 				client = None
 
+				# The agreement ....
 				if args['clientID']:
 					client = User.retrieveByID(args['clientID'])
 
@@ -984,18 +1036,6 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					
 					agreement['clientID'] = client['id']
 
-				if action == "send":
-					if client is None:
-						# TODO: should this be handled in the doTransition method?
-						self.error_description = {
-							"domain": "application.consistency",
-							"display": (
-								"To send an estimate, you must specify a client. "
-								"Please enter a recipient's name or email address."
-							),
-							"debug": "'clientID' value required to send estimate"
-						}
-						raise web.HTTPError(400, '')
 
 			if (isinstance(currentState, DraftState) or
 					isinstance(currentState, EstimateState) or
@@ -1010,7 +1050,6 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 				
 				summary['summary'] = args['summary'] or summary['summary']
 
-				# TODO: Defer phase saves until state transition is complete
 				phaseCount = 0
 				
 				for num, (cost, descr, date) in enumerate(zip(args['cost'], args['details'], args['date'])):
@@ -1030,19 +1069,6 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					
 					unsavedRecords.append(phase)
 					phaseCount += 1
-				
-				if action == "send" and phaseCount == 0:
-					self.error_description = {
-						"domain": "application.conflict",
-						"display": (
-							"You must include at least one phase in order to "
-							"send this agreement. Please provide a cost, "
-							"estimated date of completion, and description "
-							"for at least one phase of work."
-						),
-						"debug": "'cost', 'details', and 'date' parameters must not be empty"
-					}
-					raise web.HTTPError(400, 'Attempt to send empty agreement')
 				
 				unsavedRecords.append(summary)
 		
@@ -1145,18 +1171,63 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
 		
 		except StateTransitionError as e:
-			# TODO: This is where we would describe each of the possible errors
-			error = {
-				"domain": "application.consistency",
-				"display": (
-					"We were unable to process your request at this time. "
-					"Could you please try again in a moment? If the problem "
-					"persists, you can get in touch with our support staff."
-				),
-				"debug": "error location (file marker / stacktrace ID)"
+			errorMap = {
+				'actionNotAllowed': {
+					'domain': 'application.consistency',
+					'display': (
+						"The action you requested is not something you can do "
+						"to this agreement."
+					),
+					'debug': "action not allowed",
+					'status': 400
+				},
+				'unknownAction': {
+					'domain': 'application.consistency',
+					'display': (
+						"This agreement doesn't support the action you requested. "
+						"Please reload the page and try again."
+					),
+					'debug': "unknown action for current state",
+					'status': 400
+				},
+				'missingClient': {
+					'domain': 'application.consistency',
+					'display': (
+						"To send an estimate, you must specify a client. "
+						"Please enter a recipient's name or email address."
+					),
+					'debug': "'clientID' value required to send estimate",
+					'status': 400
+				},
+				'missingPhases': {
+					'domain': 'application.conflict',
+					'display': (
+						"You must include at least one phase in order to "
+						"send this agreement. Please provide a cost, "
+						"estimated date of completion, and description "
+						"for at least one phase of work."
+					),
+					'debug': "'cost', 'details', and 'date' parameters must not be empty",
+					'status': 400
+				},
+				'default': {
+					'domain': 'application.consistency',
+					'display': (
+						"We were unable to process your request at this time. "
+						"Could you please try again in a moment? If the problem "
+						"persists, you can get in touch with our support staff."
+					),
+					'debug': "error location (file marker / stacktrace ID)",
+					'status': 400
+				}
 			}
-			self.set_status(409)
-			self.renderJSON(error)
+
+			error = errorMap.get(e.type, None) or errorMap['default']
+			status = error['status']
+			del error['status']
+			
+			self.error_description = error
+			raise web.HTTPError(status, e.message)
 
 		for record in unsavedRecords:
 			record.save()

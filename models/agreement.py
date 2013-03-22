@@ -3,6 +3,7 @@ from controllers.orm import *
 from collections import OrderedDict
 from datetime import datetime
 from controllers.fmt import HTTPErrorBetter
+from models.errors import StateTransitionError
 
 import json
 import bcrypt
@@ -183,17 +184,15 @@ class Agreement(MappedObj):
 			(ContestedState, dateAccepted and dateCompleted and dateContested and dateContested > dateCompleted),
 			(CompletedState, dateAccepted and dateCompleted and (not dateContested or dateContested < dateCompleted)),
 			(InProgressState, dateSent and dateAccepted),
-			(EstimateState, dateSent                       and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
-			#                        and not dateContested
-			#                       |---------------------|  Do we need this?
+			(EstimateState, dateSent and not dateAccepted and (not dateDeclined or (dateSent and dateDeclined < dateSent))),
 			
 			(DeclinedState, dateSent and dateDeclined and not dateAccepted),
-			(DraftState, not dateSent), # The following will break shit, but we need to figure out how to do it: or (dateDeclined and dateDeclined > dateSent)),
+			(DraftState, not dateSent),
+			# The following will break shit, but we need to figure out how to do it:
+			# (DraftState, not dateSent) or (dateDeclined and dateDeclined > dateSent)),
 			(InvalidState, True)
 		]
-		
-		# like find-first
-		# logging.info("(%d) %s: %s" % (self['id'], self['name'], [s[0] for s in states if s[1]]))
+
 		subStateName = [s[0] for s in states if s[1]][0]
 		return subStateName(self)
 		
@@ -319,54 +318,30 @@ class AgreementPhase (MappedObj):
 
 
 # -------------------------------------------------------------------
-# State Transition Error (move to models.errors?)
-# -------------------------------------------------------------------
-
-class StateTransitionError(AssertionError):
-	pass
-
-
-
-# -------------------------------------------------------------------
 # Agreement State
 # -------------------------------------------------------------------
 
 class AgreementState(object):
 	""" AgreementState """
 	
-	transitionNames = ["send", "save", "accept", "decline", "mark_complete", "dispute", "verify"]
-	fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
-	actionMap = dict(zip(transitionNames, fieldNames))
+	# transitionNames = ["send", "save", "accept", "decline", "mark_complete", "dispute", "verify"]
+	# fieldNames = ['dateSent', 'dateModified', 'dateAccepted', 'dateDeclined', 'dateCompleted', 'dateContested', 'dateVerified']
+	# actionMap = dict(zip(transitionNames, fieldNames))
 	
 	inProgressPhaseNumber = None
 	
 	def __init__(self, agreementInstance):
 		assert isinstance(agreementInstance, Agreement)
 		self.agreement = agreementInstance
-		self.actions = {"vendor": {}, "client" : {}}
+		# self.actions = {"vendor": {}, "client" : {}}
 	
-	def addAction(self, role, actionName):
-		self.actions[role][actionName] = self.actionMap[actionName]
+	# def addAction(self, role, actionName):
+	# 	self.actions[role][actionName] = self.actionMap[actionName]
 	
-	def performTransition(self, role, action, unsavedRecords):
+	def performTransition(self, role, action, data, unsavedRecords):
 		""" currentState : string, dict -> AgreementState """
 		
-		try:
-			return self._prepareFields(role, action, unsavedRecords)
-		except StateTransitionError as e:
-			# TODO: We need to separate this from model code. UGHHHH
-			error = {
-				"domain": "application.consistency",
-				"display": (
-					"There was a problem with your request. Our engineering "
-					"team has been notified and will look into it."
-				),
-				"debug": "state transition error ({0})".format(error.message)
-			}
-			
-			logging.error(json.dumps(error))
-			raise HTTPErrorBetter(409, 'state transition error ({0})'.format(error.message), json.dumps(error))
-		
+		self._prepareFields(role, action, data, unsavedRecords)
 		return self.agreement.getCurrentState()
 	
 	@classmethod
@@ -400,28 +375,35 @@ class AgreementState(object):
 class DraftState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
-		self.addAction('vendor', "save")
-		self.addAction('vendor', "send")
+		# self.addAction('vendor', "save")
+		# self.addAction('vendor', "send")
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, data, unsavedRecords):
 		if role == 'vendor':
+			if self.agreement['clientID'] is None:
+				raise StateTransitionError('missing required client for estimate', 'missingClient')
+			
 			if action == 'save':
 				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
+				# We require that an estimate have at least one phase in order to be sent.
+				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount > 0):
+					raise StateTransitionError('missing agreement phases', 'missingPhases')
+
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('unknown action for vendor in DraftState')
+				raise StateTransitionError('unknown action for vendor in DraftState', 'unknownAction')
 		else:
-			raise StateTransitionError('incorrect role for DraftState')
+			raise StateTransitionError('incorrect role for DraftState', 'actionNotAllowed')
 
 class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
-		self.addAction('vendor', "save")
-		self.addAction('client', "accept")
-		self.addAction('client', "decline")
+		# self.addAction('vendor', "save")
+		# self.addAction('client', "accept")
+		# self.addAction('client', "decline")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
@@ -430,7 +412,7 @@ class EstimateState(AgreementState):
 				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('unknown action for vendor in EstimateState')
+				raise StateTransitionError('unknown action for vendor in EstimateState', 'unknownAction')
 		elif role == 'client':
 			if action == 'accept':
 				self.agreement['dateAccepted'] = datetime.now()
@@ -439,15 +421,15 @@ class EstimateState(AgreementState):
 				self.agreement['dateDeclined'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('unknown action for client in EstimateState')
+				raise StateTransitionError('unknown action for client in EstimateState', 'unknownAction')
 		else:
-			raise StateTransitionError('incorrect role for EstimatesState')
+			raise StateTransitionError('incorrect role for EstimatesState', 'actionNotAllowed')
 	
 class DeclinedState(AgreementState):
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
-		self.addAction('vendor', "save")
-		self.addAction('vendor', "send")
+		# self.addAction('vendor', "save")
+		# self.addAction('vendor', "send")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
@@ -455,6 +437,10 @@ class DeclinedState(AgreementState):
 				self.agreement['dateModified'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
+				# We require that an estimate have at least one phase in order to be sent.
+				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount > 0):
+					raise StateTransitionError('missing agreement phases', 'missingPhases')
+
 				# If the agreement has been declined, reset previous comments
 				# before re-sending the updated agreement. This also applies
 				# to all of the agreement's phases.
@@ -473,14 +459,14 @@ class DeclinedState(AgreementState):
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
 			else:
-				raise StateTransitionError('unknown action for vendor in DeclinedState')
+				raise StateTransitionError('unknown action for vendor in DeclinedState', 'unknownAction')
 		else:
-			raise StateTransitionError('incorrect role for DeclinedState')
+			raise StateTransitionError('incorrect role for DeclinedState', 'actionNotAllowed')
 	
 class InProgressState(AgreementState):
 	def __init__(self, agreement):
 		super(InProgressState, self).__init__(agreement)
-		self.addAction('vendor', 'mark_complete')
+		# self.addAction('vendor', 'mark_complete')
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
@@ -493,15 +479,15 @@ class InProgressState(AgreementState):
 				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError('unknown action for vendor in InProgressState')
+				raise StateTransitionError('unknown action for vendor in InProgressState', 'unknownAction')
 		else:
-			raise StateTransitionError('incorrect role for InProgressState')
+			raise StateTransitionError('incorrect role for InProgressState', 'actionNotAllowed')
 
 class CompletedState(AgreementState):
 	def __init__(self, agreement):
 		super(CompletedState, self).__init__(agreement)
-		self.addAction('client', 'verify')
-		self.addAction('client', 'dispute')
+		# self.addAction('client', 'verify')
+		# self.addAction('client', 'dispute')
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'client':
@@ -514,15 +500,15 @@ class CompletedState(AgreementState):
 				phase['dateContested'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError('unknown action for client in CompletedState')
+				raise StateTransitionError('unknown action for client in CompletedState', 'unknownAction')
 		else:
-			raise StateTransitionError('incorrect role for CompletedState')
+			raise StateTransitionError('incorrect role for CompletedState', 'actionNotAllowed')
 
 class ContestedState(AgreementState):
 	def __init__(self, agreement):
 		super(ContestedState, self).__init__(agreement)
-		self.addAction('vendor', 'save')
-		self.addAction('vendor', 'send')
+		# self.addAction('vendor', 'save')
+		# self.addAction('vendor', 'send')
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
@@ -539,21 +525,23 @@ class ContestedState(AgreementState):
 				phase['dateCompleted'] = datetime.now()
 				unsavedRecords.append(phase)
 			else:
-				raise StateTransitionError('unknown action for vendor in ContestedState')
+				raise StateTransitionError('unknown action for vendor in ContestedState', 'unknownAction')
 		else:
-			raise StateTransitionError('incorrect role for ContestedState')
+			raise StateTransitionError('incorrect role for ContestedState', 'actionNotAllowed')
 	
 class PaidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
 	def _prepareFields(self, r, a, d):
-		raise StateTransitionError('no actions allowed for PaidState')
+		raise StateTransitionError('no actions allowed for PaidState', 'actionNotAllowed')
 	
 class InvalidState(AgreementState):
 	def __init__(self, agreement):
 		super(self.__class__, self).__init__(agreement)
 	
 	def _prepareFields(self, r, a, d):
-		raise StateTransitionError('no actions allowed for InvalidState')
+		raise StateTransitionError('no actions allowed for InvalidState', 'actionNotAllowed')
+
+
 

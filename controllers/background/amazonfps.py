@@ -1,5 +1,6 @@
-from models.user import User, UserPrefs
+from models.user import User
 from models.transaction import Transaction
+from models.paymentmethod import AmazonPaymentMethod
 from controllers.orm import ORMJSONEncoder
 from controllers.amazonaws import AmazonFPS, AmazonS3
 
@@ -101,19 +102,18 @@ class TestHandler(QueueHandler):
 	def receive(self, body):
 		logging.info('{"message": "received message"}')
 		user = User.retrieveByID(body['userID'])
-		amazonEmail = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
-		amazonToken = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
+		paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
 
 		if user:
-			if not (amazonEmail and amazonToken):
+			if not (paymentMethod['recipientEmail'] and paymentMethod['tokenID']):
 				raise Exception("User has not Accepted Amazon's marketplace terms")
 			
 			logging.info(json.dumps({
 				"message": "Amazon verification test hook recieved user",
 				"userID": user['id'],
 				"amazonPaymentsAccount": {
-					"recipientEmail": amazonEmail['value'],
-					"tokenID": amazonToken['value']
+					"recipientEmail": paymentMethod['recipientEmail'],
+					"tokenID": paymentMethod['tokenID']
 				},
 			}))
 		else:
@@ -128,29 +128,20 @@ class VerificationHandler(QueueHandler):
 		if not user:
 			raise Exception("No such user")
 		
-		amazonEmail = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
-		amazonToken = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
-		
-		if not (amazonEmail and amazonToken):
+		paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
+
+		if not (paymentMethod['recipientEmail'] and paymentMethod['tokenID']):
 			raise Exception("User has not Accepted Amazon's marketplace terms")
 		
-		status = self.getAmazonAccountStatus(amazonToken['value'])
+		status = self.getAmazonAccountStatus(paymentMethod['tokenID'])
 		
 		if not status:
 			raise Exception("Amazon API error")
 		
 		if status in ['VerificationComplete', 'VerificationCompleteNoLimits']:
-			amazonConfirmed = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
-			
-			if not amazonConfirmed:
-				amazonConfirmed = UserPrefs(
-					userID=user['id'],
-					name='amazon_verification_complete',
-				)
-			
-			amazonConfirmed['value'] = 'True'
-			amazonConfirmed.save()
-			
+			paymentMethod['verificationComplete'] = 1
+			paymentMethod.save()
+
 			# Enqueue verification status onto the Nginx HTTP push module.
 			# This is a temporary hack, and should probably use a unique ID
 			# that's not the user's UID.
@@ -186,3 +177,4 @@ class VerificationHandler(QueueHandler):
 				"verificationComplete": status in ['VerificationComplete', 'VerificationCompleteNoLimits']
 			}
 		}))
+

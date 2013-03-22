@@ -9,6 +9,10 @@
 import MySQLdb
 import json
 
+from models.errors import DatabaseConnectionError
+
+
+
 # -------------------------------------------------------------------
 # Custom JSON encoder to add support for datetime objects
 # -------------------------------------------------------------------
@@ -25,9 +29,6 @@ class ORMJSONEncoder(json.JSONEncoder):
 # -------------------------------------------------------------------
 # Database Wrappers & Somesuch
 # -------------------------------------------------------------------
-
-class DatabaseConnectionError(Exception):
-	pass
 
 class Database(object):
 	settings = {}

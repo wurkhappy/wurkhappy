@@ -130,22 +130,6 @@ class AgreementInviteHandler(QueueHandler):
 		# (We might have pairs of templates or something...)
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
-		# TODO: This defeats the function of an invitation to prevent it from going out to
-		# non-registered users, but we're keeping things closed for now...
-		
-		# Turning this off for now... Let's see what happens.
-		
-		# if not isinstance(client.getCurrentState(), ActiveUserState):
-		# 	logging.warn(json.dumps({
-		# 		"message": "Attempted to send message to invalid user",
-		# 		"actionType": body['action'],
-		# 		"recipientID": client['id'],
-		# 		"recipientEmail": client['email'],
-		# 		"agreementID": agreement['id']
-		# 	}))
-		# 	
-		# 	return
-		
 		self.sendEmail({
 			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
 			'to': (client.getFullName(), client['email']),

@@ -9,17 +9,29 @@ from collections import OrderedDict
 # A payment method is record of stored payment info. Eventually we'll
 # want to have much more granular contol over what's going on here.
 
-class PaymentMethod(MappedObj):
-	tableName = 'paymentMethod'
+class UserPayment(MappedObj):
+	tableName = 'userPayment'
 	columns = {
 		'id': None,
 		'userID': None,
-		'dateDeleted': None,
-		'oobPMID': None,
-		'amazonPMID': None,
-		'zipmarkPMID': None
+		'pmID': None,
+		'pmTable': None,
+		'isDefault': None,
+		'dateDeleted': None
 	}
-	
+
+	@classmethod
+	def retrieveByPMIDAndPMTable(clz, pmID, pmTable):
+		'''
+		Retrieve the linking table record for a specified pmID and pmTable.
+		'''
+
+		query = 'SELECT * FROM {0} WHERE pmID = %s AND pmTable = %s'
+
+		with Database() as (conn, cursor):
+			cursor.execute(query.format(clz.tableName), pmID, pmTable)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
 
 
 
@@ -29,24 +41,44 @@ class PaymentBase(MappedObj):
 	'''
 	
 	@classmethod
-	def _retrieveByUserID(clz, userID):
-		'''Helper method for the base class's `retrieveByUserID` method, which
-		calls the helper on each subclass of the base class.'''
+	def retrieveByUserID(clz, userID):
+		'''
+		Retrieves only the payment method for a specified user ID where the 
+		payment method type matches the PaymentBase subclass the method was
+		called on.
+		'''
+
+		if clz is PaymentBase:
+			raise NotImplementedError('you must call retrieveByUserID on a PaymentBase subclass')
+
+		query = '''SELECT pm.* FROM userPayment up, {0} pm WHERE pm.id = up.pmID
+			AND up.userID = %s AND up.dateDeleted IS NULL AND up.pmTable = "{0}"'''
 
 		with Database() as (conn, cursor):
-			query = '''SELECT oob.* FROM {0} AS oob, {1} AS pm WHERE pm.userID = %s
-				AND dateDeleted IS NULL AND pm.oobPMID = oob.id LIMIT 1'''
-			cursor.execute(query.format(clz.tableName, PaymentMethod.tableName), userID)
+			cursor.execute(query.format(clz.tableName), userID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
-
+	
 	@classmethod
-	def retrieveByUserID(clz, userID):
-		paymentMethods = []
-		for pmClass in clz.__subclasses__():
-			paymentMethods.append(pmClass._retrieveByUserID(userID))
+	def retrieveAllByUserID(clz, userID):
+		'''
+		Retrieves all payment method instances associated with the specified
+		user ID. Searches for subclasses of PaymentBase and calls _retrieveByUserID
+		on each subclass and returns a flattened list of payment methods found.
+		'''
 		
-		# IYI:
+		query = '''SELECT pm.* FROM userPayment up, {0} pm WHERE pm.id = up.pmID
+			AND up.pmTable = "{0}" AND up.dateDeleted IS NULL AND up.userID = %s'''
+		
+		with Database() as (conn, cursor):
+			for c in clz.__subclasses__():
+				cursor.execute(query.format(c.tableName), userID)
+				result = cursor.fetchone()
+				while result:
+					yield c.initWithDict(result)
+					result = cursor.fetchone()
+
+		# IYI, a detail from the previous implementation of this method:
 		# 
 		# Let's say you have a list of lists:
 		# 
@@ -80,7 +112,34 @@ class PaymentBase(MappedObj):
 		#              lst.append(i)
 		#     return lst
 		
-		return list(i for c in clz.__subclasses__() for i in c._retrieveByUserID(userID))
+	
+	@classmethod
+	def retrieveDefaultByUserID(clz, userID):
+		'''
+		Retrieves the payment method associated with the specified user ID
+		that is marked as default, or None if none exists.
+		'''
+
+		query = '''SELECT pm.* FROM userPayment up JOIN {0} pm ON pm.id = up.pmID
+			WHERE up.pmTable = "{0}" AND up.userID = %s AND up.dateDeleted IS NULL
+			AND up.isDefault IS NOT NULL'''
+		
+		# We restrict the query further by requiring a default flag in the
+		# userPayment record. We still iterate over all subclasses, since
+		# we don't know which query will produce results. However, since we
+		# enforce a unique index on the userID, default combination, we are
+		# assured that there will only ever be one record.
+
+		with Database() as (conn, cursor):
+			for c in clz.__subclasses__():
+				cursor.execute(query.format(c.tableName), userID)
+				result = cursor.fetchone()
+				while result:
+					return c.initWithDict(result)
+		return None
+
+	def getPublicDict(self):
+		raise NotImplementedError('Subclasses of PaymentBase must override getPublicDict')
 	
 	def canReceivePayment(self):
 		raise NotImplementedError('Subclasses of PaymentBase must override canReceivePayment')
@@ -107,7 +166,20 @@ class OOBPaymentMethod(PaymentBase):
 		'state': None,
 		'postCode': None
 	}
-
+	displayName = 'Pay by Check'
+	iconURL = ''
+	
+	def getPublicDict(self):
+		return OrderedDict([
+			('id', self['id']),
+			('type', self.tableName),
+			('address1', self['address1']),
+			('address2', self['address2']),
+			('city', self['city']),
+			('state', self['state']),
+			('postCode', self['postCode'])
+		])
+	
 	def addressIsValid(self):
 		return (
 			self['address1'] and
@@ -122,6 +194,9 @@ class OOBPaymentMethod(PaymentBase):
 	def canSendPayment(self):
 		return self.addressIsValid()
 
+	def displayString(self):
+		return 'nnnn'
+
 
 
 class AmazonPaymentMethod(PaymentBase):
@@ -131,9 +206,21 @@ class AmazonPaymentMethod(PaymentBase):
 		'tokenID': None,
 		'tokenSecretID': None,
 		'recipientEmail': None,
-		'verificationComplete': None
+		'verificationComplete': None,
+		'variableMarketplaceFee': None
 	}
-
+	displayName = 'Amazon Payments'
+	iconURL = ''
+	
+	def getPublicDict(self):
+		return OrderedDict([
+			('id', self['id']),
+			('type', self.tableName),
+			('tokenID', self['tokenID']),
+			('recipientEmail', self['recipientEmail']),
+			('verificationComplete', self['verificationComplete'])
+		])
+	
 	def canReceivePayment(self):
 		return self['verificationComplete'] == True
 
@@ -145,9 +232,18 @@ class AmazonPaymentMethod(PaymentBase):
 class ZipmarkPaymentMethod(PaymentBase):
 	tableName = 'zipmarkPaymentMethod'
 	columns = {
-		'id': None
+		'id': None,
+		'merchantID': None
 	}
-
+	displayName = 'Pay with Zipmark'
+	iconURL = ''
+	
+	def getPublicDict(self):
+		return OrderedDict([
+			('id', self['id']),
+			('type', self.tableName)
+		])
+	
 	def canReceivePayment(self):
 		return self['merchantID'] is not None
 

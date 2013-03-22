@@ -218,3 +218,4 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 		else:
 			self.renderJSON(["MEH"])
 		return
+

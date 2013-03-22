@@ -1,8 +1,8 @@
 from __future__ import division
 
 from base import *
-from models.user import User, UserPrefs, UserDwolla, ActiveUserState
-from models.paymentmethod import PaymentMethod
+from models.user import User, UserDwolla, ActiveUserState
+from models.paymentmethod import UserPayment, PaymentBase, AmazonPaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
 from controllers.amazonaws import AmazonS3, AmazonFPS
@@ -167,14 +167,23 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				user['profileLargeURL'] or '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile1_s.jpg')
 			],
 			'self': 'account',
-			'amazonFPSAccount': UserPrefs.retrieveByUserIDAndName(user['id'], 'amazonFPSAccountToken')
+			# 'amazonFPSAccount': UserPrefs.retrieveByUserIDAndName(user['id'], 'amazonFPSAccountToken')
 		}
 		
 		if args['status'] == 'SR' and args['tokenID'] and args['refundTokenID'] and args['recipientEmail']:
-			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id') or UserPrefs(userID=user['id'], name='amazon_token_id')
-			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id') or UserPrefs(userID=user['id'], name='amazon_refund_token_id')
-			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email') or UserPrefs(userID=user['id'], name='amazon_recipient_email')
+			paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
 
+			if not paymentMethod:
+				paymentMethod = AmazonPaymentMethod()
+				paymentMethod.save()
+
+				userPayment = UserPayment(
+					userID=user['id'],
+					pmID=paymentMethod['id'],
+					pmTable=paymentMethod.tableName
+				)
+				userPayment.save()
+			
 			signatureIsValid = self.verifySignature('{0}://{1}{2}'.format(
 					self.request.protocol,
 					WurkHappy.getSettingWithTag('hostname'),
@@ -185,30 +194,22 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 			)
 			
 			if signatureIsValid or self.application.configuration['tornado'].get('debug') == True:
-				tokenPref['value'] = args['tokenID']
-				tokenPref.save()
-
-				refundPref['value'] = args['refundTokenID']
-				refundPref.save()
-
-				emailPref['value'] = args['recipientEmail']
-				emailPref.save()
+				paymentMethod['tokenID'] = args['tokenID']
+				paymentMethod['refundTokenID'] = args['refundTokenID']
+				paymentMethod['recipientEmail'] = args['recipientEmail']
+				paymentMethod.save()
 
 			self.redirect('{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path))
 			return
 		else:
-			tokenPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
-			refundPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')
-			emailPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
+			paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
 		
-		if tokenPref and refundPref:
-			verifiedPref = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
-			
+		if paymentMethod['tokenID'] and paymentMethod['refundTokenID']:
 			userDict['amazonFPSAccount'] = {
-				'tokenID': tokenPref['value'],
-				'refundTokenID': refundPref['value'],
-				'recipientEmail': emailPref['value'],
-				'verificationStatus': 'verified' if verifiedPref and verifiedPref['value'] == 'True' else 'pending'
+				'tokenID': paymentMethod['tokenID'],
+				'refundTokenID': paymentMethod['refundTokenID'],
+				'recipientEmail': paymentMethod['recipientEmail'],
+				'verificationStatus': 'verified' if paymentMethod['verificationComplete'] == 1 else 'pending'
 			}
 		else:
 			userDict['amazonFPSAccount'] = None
@@ -533,19 +534,16 @@ class AmazonAccountJSONHandler(Authenticated, JSONBaseHandler):
 	def get(self):
 		user = self.current_user
 		
-		token = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
-		refund = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_refund_token_id')
-		email = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
-		verified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
+		paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
 		
 		if token and refund and email:
 			response = {
 				'userID': user['id'],
 				'amazonFPSAccount': {
-					'tokenID': token['value'],
-					'refundTokenID': refund['value'],
-					'recipientEmail': email['value'],
-					'verificationStatus': 'verified' if verified and verified['value'] == 'True' else 'pending'
+					'tokenID': paymentMethod['tokenID'],
+					'refundTokenID': paymentMethod['refundTokenID'],
+					'recipientEmail': paymentMethod['recipientEmail'],
+					'verificationStatus': 'verified' if paymentMethod['verificationComplete'] == 1 else 'pending'
 				}
 			}
 			
@@ -577,9 +575,9 @@ class AmazonVerificationJSONHandler(CookieAuthenticated, JSONBaseHandler):
 	def post(self):
 		user = self.current_user
 		
-		token = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_token_id')
-		
-		if not token:
+		paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
+
+		if not paymentMethod['tokenID']:
 			self.error_description = {
 				'domain': 'application.consistency',
 				'debug': 'missing token for user',

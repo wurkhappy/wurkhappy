@@ -4,7 +4,6 @@ from controllers.amazonaws import *
 from controllers.data import Data, Base58
 from profile import Profile
 
-from models.paymentmethod import PaymentMethod
 from controllers.fmt import HTTPErrorBetter
 import json
 import uuid

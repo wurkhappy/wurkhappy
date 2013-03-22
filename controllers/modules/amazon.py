@@ -4,7 +4,8 @@ from controllers.data import Data, Base64, Base58
 from controllers.amazonaws import AmazonS3, AmazonFPS
 
 from models.agreement import Agreement, AgreementPhase
-from models.user import User, UserPrefs
+from models.user import User
+from models.paymentmethod import AmazonPaymentMethod
 
 from datetime import datetime
 from collections import OrderedDict
@@ -35,7 +36,7 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		data['callerKey'] = accessKey
 		data['callerReference'] = Data(uuid4().get_bytes()).stringWithEncoding(Base58)
 		data['collectEmailAddress'] = "true"
-		data['maxVariableFee'] = "2.9"
+		data['maxVariableFee'] = "5.0"
 		data['pipelineName'] = "Recipient"
 		data['recipientPaysFee'] = "true"
 		data['returnURL'] = '{0}://{1}/user/me/account'.format(
@@ -78,8 +79,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			else agreement['name'][:75] + '...'
 		)
 
-		email = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
-		token = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_token_id')
+		paymentMethod = AmazonPaymentMethod.retrieveByUserID(vendor['id'])
 		
 		uniquingAgent = Data(uuid4().get_bytes()).stringWithEncoding(Base58)[:5]
 		
@@ -103,7 +103,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
 		)
 		data['processImmediate'] = 'true'
-		data['recipientEmail'] = email['value']
+		data['recipientEmail'] = paymentMethod and paymentMethod['recipientEmail']
 		data['referenceId'] = '{0}.{1}'.format(phaseID, uniquingAgent)
 		data['returnUrl'] = '{0}://{1}/agreement/{2}'.format(
 			self.request.protocol,
@@ -112,7 +112,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		)
 		data['signatureMethod'] = "HmacSHA256"
 		data['signatureVersion'] = "2"
-		data['variableMarketplaceFee'] = "0"
+		data['variableMarketplaceFee'] = paymentMethod.get('variableMarketplaceFee', '5.0')
 		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
 		return self.render_string(

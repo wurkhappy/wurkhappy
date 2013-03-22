@@ -1,6 +1,7 @@
 from tornado import web
 from base import BaseHandler, Authenticated
 from models.user import User, UserPrefs
+from models.paymentmethod import AmazonPaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
 
@@ -63,8 +64,8 @@ class UserDetailHandler(Authenticated, BaseHandler):
 			return
 		
 		data = user.getPublicDict()
-		amazon = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
-		data['amazon'] = amazon and amazon['value']
+		paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
+		data['amazon'] = paymentMethod and paymentMethod['recipientEmail']
 		
 		if user['invitedBy']:
 			sender = User.retrieveByID(user['invitedBy'])
@@ -124,11 +125,17 @@ class UserActionJSONHandler(Authenticated, BaseHandler):
 			user.save()
 		elif args['action'] == 'reset_amazon':
 			msg = None
-			for name in ['amazon_recipient_email', 'amazon_token_id', 'amazon_refund_token_id']:
-				p = UserPrefs.retrieveByUserIDAndName(user['id'], name)
-				if p:
-					p['dateDeleted'] = datetime.now()
-				p.save()
+
+			paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
+			
+			if paymentMethod:
+				userPayment = UserPayment.retrieveByPMIDAndPMTable(
+					paymentMethod['id'], paymentMethod.tableName
+				)
+				
+				if userPayment:
+					userPayment['dateDeleted'] = datetime.now()
+					userPayment.save()
 		else:
 			self.set_status(400)
 			return
@@ -141,3 +148,4 @@ class UserActionJSONHandler(Authenticated, BaseHandler):
 				logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
 		self.renderJSON(user.getPublicDict())
+

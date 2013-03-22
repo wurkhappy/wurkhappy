@@ -3,7 +3,6 @@ from __future__ import division
 from base import *
 from models.user import User, UserPrefs, UserDwolla
 from models.agreement import Agreement, CompletedState, StateTransitionError
-from models.paymentmethod import PaymentMethod
 from models.transaction import Transaction
 from controllers.beanstalk import Beanstalk
 from controllers import fmt

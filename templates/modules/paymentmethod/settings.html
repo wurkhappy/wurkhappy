@@ -1,0 +1,17 @@
+
+
+<div id="payment-container" class="tab-content">
+	{% if didFindPaymentMethod %}
+	<h2>Manage Payment Methods</h2>
+	{% else %}
+	<h2>Add a Payment Method</h2>
+	{% end %}
+	
+	{% for paymentMethod in paymentMethods %}
+	<span class="payment-item">
+		<img src="{% paymentMethod.iconURL %}" />
+		<h3>{% paymentMethod.displayName %}</h3>
+		{% if paymentMethod. (verified) %}
+		
+	</span>
+	{% end %}
