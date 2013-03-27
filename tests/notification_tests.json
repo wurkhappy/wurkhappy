@@ -1,0 +1,105 @@
+[
+	{
+		"template": "agreement_accept.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_change.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_dispute.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_new_user.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_pay.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_pay_receipt.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"},
+			"phase": {
+				"costString": "$600.00"
+			}
+		}
+	}, {
+		"template": "agreement_resent.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_send.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"}
+		}
+	}, {
+		"template": "agreement_work_complete.html",
+		"data": {
+			"hostname": "fake.wurkhappy.com",
+			"client": {"_ref": "users:123"},
+			"vendor": {"_ref": "users:234"},
+			"agreement": {"_ref": "agreements:987"},
+			"phase": {
+				"phaseNumber": 0,
+				"amount": "500000",
+				"costString": "$5,000.00",
+				"description": "A thing with some stuff",
+				"comments": null
+			}
+		}
+	}, {
+		"template": "request_proposal.html",
+		"data": {
+			"client": {"_ref": "users:123"},
+			"request": {
+				"message": "This is a request or something."
+			}
+		}
+	}, {
+		"template": "user_invite.html",
+		"data": {
+			"url": "https://fake.wurkhappy.com/blah/blah/blah"
+		}
+	}, {
+		"template": "user_reset_password.html",
+		"data": {
+			"user": {"_ref": "users:123"},
+			"url": "https://fake.wurkhappy.com/blah/blah/blah"
+		}
+	}
+]
+
