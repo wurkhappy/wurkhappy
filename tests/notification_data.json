@@ -1,0 +1,56 @@
+{
+	"users": {
+		"123": {
+			"id": "123",
+			"email": "vostock.j@example.com",
+			"firstName": "Jane",
+			"lastName": "Vostock",
+			"fullName": "Jane Vostock",
+			"telephone": "(212) 555-1212",
+			"profileSmallURL": null
+		},
+		"234": {
+			"id": "234",
+			"email": "Alice Auerbach",
+			"firstName": "Alice",
+			"lastName": "Auerbach",
+			"fullName": "Alice Auerbach",
+			"telephone": "(646) 555-1234",
+			"profileSmallURL": null
+		}
+	},
+	"agreements": {
+		"987": {
+			"id": "987",
+			"vendorID": "123",
+			"clientID": "234",
+			"name": "Example Agreement",
+			"costString": "$1,200.00",
+			"token": "5ezzW8XeK58z3KsPoQa3zg",
+			"phases": [
+				{
+					"phaseNumber": 0,
+					"amount": 60000,
+					"costString": "$600.00",
+					"estimatedCompletion": "2013-03-31T17:00:00Z",
+					"dateCompleted": null,
+					"dateVerified": null,
+					"dateContested": null,
+					"description": "Phase One; Introduction",
+					"comments": null
+				}, {
+					"phaseNumber": 1,
+					"amount": 60000,
+					"costString": "$600.00",
+					"estimatedCompletion": "2013-04-15T17:00:00Z",
+					"dateCompleted": null,
+					"dateVerified": null,
+					"dateContested": null,
+					"description": "Phase Two; Conclusion",
+					"comments": null
+				}
+			]
+		}
+	}
+}
+
