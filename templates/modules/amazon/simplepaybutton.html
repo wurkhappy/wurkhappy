@@ -1,6 +1,8 @@
-<form action="{{ action }}" method="{{ method }}">
+<form action="{{ action }}" method="{{ method }}" style="padding-top:0;">
 	{% for name, value in data.iteritems() %}
 		<input type="hidden" name="{{ name }}" value="{{ value }}" />
 	{% end %}
-	<input type="image" src="{{ buttonImageURL }}" border="0" style="border:0" />
+	<!--<input type="image" src="{{ buttonImageURL }}" border="0" style="border:0" />-->
+	<input type="submit" value="Set Up Amazon" class="submit-button" style="margin-left:auto;margin-right:20px;width:200px;" />
 </form>
+

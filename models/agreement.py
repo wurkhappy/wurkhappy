@@ -338,10 +338,10 @@ class AgreementState(object):
 	# def addAction(self, role, actionName):
 	# 	self.actions[role][actionName] = self.actionMap[actionName]
 	
-	def performTransition(self, role, action, data, unsavedRecords):
+	def performTransition(self, role, action, unsavedRecords, **kwargs):
 		""" currentState : string, dict -> AgreementState """
 		
-		self._prepareFields(role, action, data, unsavedRecords)
+		self._prepareFields(role, action, unsavedRecords, **kwargs)
 		return self.agreement.getCurrentState()
 	
 	@classmethod
@@ -375,10 +375,8 @@ class AgreementState(object):
 class DraftState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
-		# self.addAction('vendor', "save")
-		# self.addAction('vendor', "send")
 	
-	def _prepareFields(self, role, action, data, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
 			if self.agreement['clientID'] is None:
 				raise StateTransitionError('missing required client for estimate', 'missingClient')
@@ -388,8 +386,11 @@ class DraftState(AgreementState):
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
 				# We require that an estimate have at least one phase in order to be sent.
-				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount > 0):
+				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount == 0):
 					raise StateTransitionError('missing agreement phases', 'missingPhases')
+				
+				if ('clientID' in self.agreement and self.agreement['clientID'] is None):
+					raise StateTransitionError('missing agreement recipient', 'missingClient')
 
 				self.agreement['dateSent'] = datetime.now()
 				unsavedRecords.append(self.agreement)
@@ -401,9 +402,6 @@ class DraftState(AgreementState):
 class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
-		# self.addAction('vendor', "save")
-		# self.addAction('client', "accept")
-		# self.addAction('client', "decline")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
@@ -428,8 +426,6 @@ class EstimateState(AgreementState):
 class DeclinedState(AgreementState):
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
-		# self.addAction('vendor', "save")
-		# self.addAction('vendor', "send")
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':
@@ -438,8 +434,11 @@ class DeclinedState(AgreementState):
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
 				# We require that an estimate have at least one phase in order to be sent.
-				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount > 0):
+				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount == 0):
 					raise StateTransitionError('missing agreement phases', 'missingPhases')
+				
+				if ('clientID' in self.agreement and self.agreement['clientID'] is None):
+					raise StateTransitionError('missing agreement recipient', 'missingClient')
 
 				# If the agreement has been declined, reset previous comments
 				# before re-sending the updated agreement. This also applies
@@ -466,18 +465,17 @@ class DeclinedState(AgreementState):
 class InProgressState(AgreementState):
 	def __init__(self, agreement):
 		super(InProgressState, self).__init__(agreement)
-		# self.addAction('vendor', 'mark_complete')
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords, **kwargs):
 		if role == 'vendor':
 			if action == 'mark_complete':
 				# The caller to InProgressState.performTransition() will pass
-				# the phase number as a value in the data dictionary.
-				# phase = (p for p in self.phaseList if p.phaseNumber == data['phaseNumber'])[0]
-				phase = self.agreement.getCurrentPhase()
-				logging.warn(phase)
-				phase['dateCompleted'] = datetime.now()
-				unsavedRecords.append(phase)
+				# the phase as a keyword argument.
+				phase = kwargs.get('phase', None)
+				
+				if phase: # logging.warn(phase)
+					phase['dateCompleted'] = datetime.now()
+					unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError('unknown action for vendor in InProgressState', 'unknownAction')
 		else:
@@ -486,19 +484,21 @@ class InProgressState(AgreementState):
 class CompletedState(AgreementState):
 	def __init__(self, agreement):
 		super(CompletedState, self).__init__(agreement)
-		# self.addAction('client', 'verify')
-		# self.addAction('client', 'dispute')
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords, **kwargs):
 		if role == 'client':
 			if action == 'verify':
-				phase = self.agreement.getCurrentPhase()
-				phase['dateVerified'] = datetime.now()
-				unsavedRecords.append(phase)
+				phase = kwargs.get('phase', None)
+
+				if phase:
+					phase['dateVerified'] = datetime.now()
+					unsavedRecords.append(phase)
 			elif action == 'dispute':
-				phase = self.agreement.getCurrentPhase()
-				phase['dateContested'] = datetime.now()
-				unsavedRecords.append(phase)
+				phase = kwargs.get('phase', None)
+
+				if phase:
+					phase['dateContested'] = datetime.now()
+					unsavedRecords.append(phase)
 			else:
 				raise StateTransitionError('unknown action for client in CompletedState', 'unknownAction')
 		else:
@@ -507,8 +507,6 @@ class CompletedState(AgreementState):
 class ContestedState(AgreementState):
 	def __init__(self, agreement):
 		super(ContestedState, self).__init__(agreement)
-		# self.addAction('vendor', 'save')
-		# self.addAction('vendor', 'send')
 	
 	def _prepareFields(self, role, action, unsavedRecords):
 		if role == 'vendor':

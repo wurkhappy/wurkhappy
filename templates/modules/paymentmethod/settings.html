@@ -1,17 +1,45 @@
 
 
-<div id="payment-container" class="tab-content">
-	{% if didFindPaymentMethod %}
+<div id="payment-container" class="tab-content" style="display:none;">
 	<h2>Manage Payment Methods</h2>
-	{% else %}
-	<h2>Add a Payment Method</h2>
-	{% end %}
 	
 	{% for paymentMethod in paymentMethods %}
-	<span class="payment-item">
-		<img src="{% paymentMethod.iconURL %}" />
-		<h3>{% paymentMethod.displayName %}</h3>
-		{% if paymentMethod. (verified) %}
-		
-	</span>
+	<div class="column-one-half">
+		<span class="payment-item" {% if paymentMethod['account'] %}
+			data-payment-method-id="{{ paymentMethod['account'].userPaymentID }}"
+		{% end %}>
+			<h3>{{ paymentMethod['title'] }}</h3>
+			<p>{{ paymentMethod['about'] }}</p>
+			<div style="height: 50px; margin:20px; border-bottom:1px solid #DDD">
+				<img src="{{ paymentMethod['iconURL'] or '#' }}" height="35" />
+			</div>
+			{% if paymentMethod['account'] %}
+				{% if paymentMethod['account'].canReceivePayment() %}
+					<p><img src="{{ static_url('images/tick-16x16.png') }}" /> Enabled 
+						<span style="color: #BBB">({{ paymentMethod['account'].displayString() }})</span></p>
+					{% if paymentMethod['account'] and paymentMethod['account'].isDefault == True %}
+						<p class="payment-method-default-switch">This payment method will be used for any new payments.</p>
+					{% else %}
+						<p class="payment-method-default-switch">{% module ButtonMakeDefaultPaymentMethod() %}</p>
+					{% end %}
+				{% else %}
+					<p><img src="{{ static_url('images/warning-16x16.png') }}" /> Pending Verification</p>
+					{% if paymentMethod['class'].__name__ == 'AmazonPaymentMethod' %}
+						{% module VerifyAmazonAccountButton(userID) %}
+					{% elif paymentMethod['class'].__name__ == 'ZipmarkPaymentMethod' %}
+						{% module VerifyZipmarkAccountButton(userID) %}
+					{% end %}
+				{% end %}
+			{% else %}
+				{% if paymentMethod['class'].__name__ == 'AmazonPaymentMethod' %}
+					{% module AcceptMarketplaceFeeButton(userID) %}
+				{% elif paymentMethod['class'].__name__ == 'ZipmarkPaymentMethod' %}
+					{% module ConfigureZipmarkAccountButton(userID) %}
+				{% end %}
+			{% end %}
+		</span>
+	</div>
 	{% end %}
+</div>
+
+

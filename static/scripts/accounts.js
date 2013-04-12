@@ -7,6 +7,21 @@ var buttonActions = {
 		}
 	},
 	
+	user_info_edit: {
+		default: function (self, evt) {
+			var $profilePreview = $('#profile_info'),
+				$profilePhotoUpload = $('#profile_photo_upload'),
+				$profileEdit = $('#profile_form'),
+				$profileEditButton = $('#user_info_edit_ul'),
+				$profileUpload = $('#profile_photo_upload');
+
+			$profileEditButton.hide();
+			$profilePreview.hide();
+			$profileEdit.show();
+			$profileUpload.show();
+		}
+	},
+
 	profile_set: function (data, status, xhr) {
 		$('#profile-button').click();
 	},
@@ -150,90 +165,23 @@ var buttonActions = {
 		}
 	},
 	
-	'dwolla_connect': {
-		default: function (self, evt) {
-			var width = window.outerWidth, height = window.outerHeight, x = 0, y = 0;
-			
-			var $dimmer = $('<div class="dimmer" style="display:none;"></div>');
-			$('body').prepend($dimmer);
-			$dimmer.fadeIn(300);
-			
-			var authWindow = window.open(slug['authorizeURL'], 'Permission Request', 'width=602,height=430,resizable=0,toolbar=0,location=0,menubar=0,directories=0');
-			
-			if (window.hasOwnProperty('screenX') && window.hasOwnProperty('screenY')) {
-				x = window.screenX;
-				y = window.screenY;
-			} else {
-				x = window.screenLeft;
-				y = window.screenTop;
-			}
-			
-			authWindow.moveTo(x + (width / 2) - 301, y + (height / 2) - 215);
-			
-			var windowPollTimer;
-			windowPollTimer = setInterval(function() {
-				if (authWindow && authWindow.closed) {
-					clearInterval(windowPollTimer);
-					$dimmer.fadeOut(300);
-				}
-			}, 100);
-			
-			var successPollTimer;
-			successPollTimer = setInterval(function() {
-				var token = getQueryArg('t');
-				if (token) {
-					$.ajax({
-						url: '/user/me/account.json',
-						data: {'t': token},
-						dataType: 'json',
-						type: 'GET',
-						success: function (data, status, xhr) {
-							if (data['dwolla'] === true) {
-								clearInterval(successPollTimer);
-								window.location = '/';
-							}
-						}
-					});
-				}
-			}, 800);
-			
-			return evt.preventDefault();
-		}
-	},
-	
-	'dwolla_create': {
-		default: function (self, evt) {
-			return evt.preventDefault();
-		}
-	},
-	
-	'dwolla_skip': {
-		default: function (self, evt) {
-			window.location.href = '/';
-			return evt.preventDefault();
-		}
-	},
-	
 	profile_update: function (data, status, xhr) {
 		// TODO: Manually check the status code
 		data.telephone = data.telephone || '';
-		$('#profile_preview').replaceWith('<div id="profile_preview">\
-			<h2>Profile Preview</h2>\
-			<div class="data-table">\
-				<table border="0" cellspacing="0" cellpadding="0">\
-					<tr>\
-						<td class="meta">\
-							<span><img src="' + data.profileURL[0] + '" alt="Profile photo" width="50" height="50" /></span>\
-						</td>\
-						<td>\
-							<h3><a href="/user/me/profile">' + data.fullName + '</a></h3>\
-							<p>' + data.email + '</p>\
-							<p>' + data.telephone + '</p>\
-						</td>\
-					</tr>\
-				</table>\
-			</div>\
-		</div>');
+		var $profilePreview = $('#profile_info'),
+			$profileEdit = $('#profile_form'),
+			$profileEditButton = $('#user_info_edit_ul'),
+			$profileUpload = $('#profile_photo_upload');
+		
+		$profilePreview.find('img#profile_image').attr('src', data.profileURL[1]);
+		$profilePreview.find('a#profile_full_name').html(data.fullName);
+		$profilePreview.find('p#profile_email').html(data.email);
+		$profilePreview.find('p#profile_telephone').html(data.telephone);
+		
+		$profileEditButton.show();
+		$profilePreview.show();
+		$profileEdit.hide();
+		$profileUpload.hide();
 	},
 	
 	card_update: function (data, status, xhr) {

@@ -66,12 +66,12 @@ class AgreementListHandler(Authenticated, BaseHandler):
 	@web.authenticated
 	def get(self, withWhom):
 		user = self.current_user
-		userDwolla = UserDwolla.retrieveByUserID(user['id'])
+		# userDwolla = UserDwolla.retrieveByUserID(user['id'])
 		
 		templateDict = {
 			"_xsrf": self.xsrf_token,
-			"userID": user['id'],
-			"paymentEnabled": True if userDwolla else False
+			"userID": user['id']
+			# "paymentEnabled": True if userDwolla else False
 		}
 
 		if withWhom.lower() == 'clients':
@@ -277,21 +277,11 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				empty['paymentMethodStatus'] = 'verified'
 			elif paymentMethod is not None:
 				empty['paymentMethodStatus'] = 'pending'
-			else:
-				empty['paymentMethodStatus'] = None
-
-			# THIS vvvvv IS GETTING REPLACED WITH THIS ^^^^^
-
-			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
-			amzAcctVerified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
-
-			if amzAcctVerified and amzAcctVerified['value'] == 'True':
-				empty['amazonAccountStatus'] = 'verified'
-			elif amzAcctConnected and amzAcctConnected['value'] is not None:
-				empty['amazonAccountStatus'] = 'pending'
+				# TODO: Replace below with generalized form
 				empty['actions'][1] = ('action-amazon-verify', 'Send Agreement')
 			else:
-				empty['amazonAccountStatus'] = None
+				empty['paymentMethodStatus'] = None
+				# TODO: Replace below with generalized form
 				empty['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
 
 			self.render("agreement/edit.html", title=title, data=empty, json=lambda x: json.dumps(x, cls=ORMJSONEncoder))
@@ -417,7 +407,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 					unsavedRecords = []
 
 					try:
-						currentState = currentState.performTransition('client', 'verify', unsavedRecords)
+						currentState = currentState.performTransition('client', 'verify', unsavedRecords, phase=currentPhase)
 					except StateTransitionError as e:
 						pass
 
@@ -599,7 +589,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		# Look for the user's Dwolla account. If there is none, direct the
 		# user to the Payment Information tab. Otherwise, render the buttons.
 		
-		userDwolla = UserDwolla.retrieveByUserID(user['id'])
+		# userDwolla = UserDwolla.retrieveByUserID(user['id'])
 		
 		# if not userDwolla:
 		# 	templateDict['actions'] = [
@@ -612,8 +602,8 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		
 		# We use the presence of the recipient email key to selectively render the Amazon button UI module.
 		if templateDict['self'] == 'client' and isinstance(currentState, CompletedState):
-			# TODO: We shouldn't be doing this. Render the proper payment button based on the default payment method.
-			templateDict['recipientEmail'] = UserPrefs.retrieveByUserIDAndName(vendor['id'], 'amazon_recipient_email')
+			paymentMethod = PaymentBase.retrieveDefaultByUserID(vendor['id'])
+			templateDict['vendorPaymentMethod'] = paymentMethod
 		
 		# Modify behavior to prompt for Amazon configuration if no
 		# confirmation is on file.
@@ -622,23 +612,13 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 			templateDict['uri'] = self.request.uri
 
 			paymentMethod = PaymentBase.retrieveDefaultByUserID(user['id'])
-			empty['paymentMethod'] = paymentMethod and paymentMethod.getPublicDict()
+			templateDict['paymentMethod'] = paymentMethod and paymentMethod.getPublicDict()
 			
 			if paymentMethod and paymentMethod.canReceivePayment():
-				empty['paymentMethodStatus'] = 'verified'
+				templateDict['paymentMethodStatus'] = 'verified'
 			elif paymentMethod is not None:
-				empty['paymentMethodStatus'] = 'pending'
-			else:
-				empty['paymentMethodStatus'] = None
-
-			# TODO: THIS IS MORE CRAP THAT UGGGHHGHHGHGHGHGHGHGHG
-			amzAcctConnected = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_recipient_email')
-			amzAcctVerified = UserPrefs.retrieveByUserIDAndName(user['id'], 'amazon_verification_complete')
-
-			if amzAcctVerified and amzAcctVerified['value'] == 'True':
-				templateDict['amazonAccountStatus'] = 'verified'
-			elif amzAcctConnected and amzAcctConnected['value'] is not None:
-				templateDict['amazonAccountStatus'] = 'pending'
+				templateDict['paymentMethodStatus'] = 'pending'
+				# TODO: Replace below with generalized form
 				if isinstance(currentState, (DraftState, DeclinedState)):
 					if len(templateDict['actions']) > 1:
 						templateDict['actions'][1] = ('action-amazon-verify', 'Send Agreement')
@@ -646,14 +626,15 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 					if len(templateDict['actions']) >= 1:
 						templateDict['actions'][0] = ('action-amazon-verify', 'Mark Phase Complete')
 			else:
-				templateDict['amazonAccountStatus'] = None
+				templateDict['paymentMethodStatus'] = None
+				# TODO: Replace below with generalized form
 				if isinstance(currentState, (DraftState, DeclinedState)):
 					if len(templateDict['actions']) > 1:
 						templateDict['actions'][1] = ('action-amazon-prompt', 'Send Agreement')
 				elif isinstance(currentState, (InProgressState, ContestedState)):
 					if len(templateDict['actions']) >= 1:
 						templateDict['actions'][0] = ('action-amazon-prompt', 'Mark Phase Complete')
-			
+
 			if isinstance(currentState, (DraftState, DeclinedState)):
 				self.render("agreement/edit.html",
 					title=title, data=templateDict,
@@ -770,38 +751,6 @@ class NewAgreementJSONHandler(CookieAuthenticated, JSONBaseHandler, AgreementBas
 		# TODO: CHECK CLIENT ID AND PHASE LENGTH BY TRIGGERING A STATE TRANSITION FOR SENDING
 
 		if action == "send":
-
-			# DELETE FROM HERE vvvvvvvvvvvvvvvvvvv
-			if not agreement['clientID']:
-				# TODO: Check this. I'm pretty sure it makes sense, but uh...
-				error = {
-					"domain": "application.conflict",
-					"display": (
-						"You need to choose a recipient in order to send this agreement. "
-						"Please choose a client in the recipient field."
-					),
-					"debug": "'clientID' or 'email' parameter required"
-				}
-				self.set_status(400)
-				self.renderJSON(error)
-				return
-
-			if len(phases) == 0:
-				error = {
-					"domain": "application.conflict",
-					"display": (
-						"You must include at least one phase in order to "
-						"send this agreement. Please provide a cost, "
-						"estimated date of completion, and description "
-						"for at least one phase of work."
-					),
-					"debug": "'cost', 'details', and 'date' parameters must not be empty"
-				}
-				self.set_status(400)
-				self.renderJSON(error)
-				return
-			# TO HERE ^^^^^^^^^^^^^^^^^^^^^^^
-
 			clientState = client.getCurrentState()
 			
 			if isinstance(clientState, (
@@ -958,7 +907,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 		role = "vendor" if agreement['vendorID'] == user['id'] else "client"
 
 		currentState = agreement.getCurrentState()
-		phase = agreement.getCurrentPhase()
+		currentPhase = agreement.getCurrentPhase()
 
 		# In order to make sure records are not put in inconsistent states, a
 		# list of unsaved records is maintained so records can be saved
@@ -1108,12 +1057,12 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 						phase.save()
 			elif isinstance(currentState, CompletedState) and action == 'dispute':
 				# phase = agreement.getCurrentPhase()
-				phase['comments'] = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
-				phase.save()
+				currentPhase['comments'] = args['phaseComments'][0] # is vector for decline, scalar for dispute :(
+				currentPhase.save()
 		
 		try:
 			formerState = currentState
-			currentState = currentState.performTransition(role, action, unsavedRecords)
+			currentState = currentState.performTransition(role, action, unsavedRecords, phase=currentPhase)
 			
 			# The new state is not used below this point, but the old one is. This
 			# assignment is to make that clear until I clean this up [Bb]
@@ -1158,7 +1107,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					recipient = User.retrieveByID(agreement['vendorID'])
 				
 				if action in ['mark_complete', 'dispute']:
-					msg['agreementPhaseID'] = phase['id']
+					msg['agreementPhaseID'] = currentPhase['id']
 				
 				# The message's 'userID' field should really be called 'recipientID'
 				msg['userID'] = recipient['id']

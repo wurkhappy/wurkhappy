@@ -2,7 +2,7 @@ from __future__ import division
 
 from base import *
 from models.user import User, UserDwolla, ActiveUserState
-from models.paymentmethod import UserPayment, PaymentBase, AmazonPaymentMethod
+from models.paymentmethod import UserPayment, PaymentBase, ZipmarkPaymentMethod, AmazonPaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
 from controllers.amazonaws import AmazonS3, AmazonFPS
@@ -135,7 +135,6 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 	def get(self):
 		user = self.current_user
 		
-		logging.info(self.request.arguments)
 		try:
 			args = fmt.Parser(self.request.arguments,
 				optional=[
@@ -167,10 +166,10 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				user['profileLargeURL'] or '{0}{1}'.format(AmazonS3.getSettingWithTag('bucket_url'), 'images/profile1_s.jpg')
 			],
 			'self': 'account',
-			# 'amazonFPSAccount': UserPrefs.retrieveByUserIDAndName(user['id'], 'amazonFPSAccountToken')
 		}
 		
 		if args['status'] == 'SR' and args['tokenID'] and args['refundTokenID'] and args['recipientEmail']:
+			logging.info(self.request.arguments)
 			paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
 
 			if not paymentMethod:
@@ -197,35 +196,14 @@ class AccountHandler(Authenticated, BaseHandler, DwollaRedirectMixin, AmazonFPS)
 				paymentMethod['tokenID'] = args['tokenID']
 				paymentMethod['refundTokenID'] = args['refundTokenID']
 				paymentMethod['recipientEmail'] = args['recipientEmail']
+				paymentMethod['variableMarketplaceFee'] = int(AmazonFPS.variableMarketplaceFee * 100)
 				paymentMethod.save()
 
 			self.redirect('{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path))
 			return
-		else:
-			paymentMethod = AmazonPaymentMethod.retrieveByUserID(user['id'])
-		
-		if paymentMethod['tokenID'] and paymentMethod['refundTokenID']:
-			userDict['amazonFPSAccount'] = {
-				'tokenID': paymentMethod['tokenID'],
-				'refundTokenID': paymentMethod['refundTokenID'],
-				'recipientEmail': paymentMethod['recipientEmail'],
-				'verificationStatus': 'verified' if paymentMethod['verificationComplete'] == 1 else 'pending'
-			}
-		else:
-			userDict['amazonFPSAccount'] = None
-		
-		dwolla = UserDwolla.retrieveByUserID(user['id'])
-		
-		if dwolla:
-			userDict['dwolla'] = dwolla.fields
-		else:
-			userDict['dwolla'] = {
-				'dwollaID': None,
-				'authorizeURL': self.buildAuthorizeURL()
-			}
 		
 		self.render('user/account.html', 
-			title="Wurk Happy &ndash; My Account", data=userDict
+			title="Wurk Happy &ndash; My Account", data=userDict, user=user
 		)
 
 
@@ -484,6 +462,9 @@ class AccountJSONHandler(TokenAuthenticated, JSONBaseHandler):
 			# apply the lambda with the appropriate PIL transforms to the image
 			
 			exif = getattr(imgs['o'], '_getexif', lambda: None)() or {}
+			# What a weird one-liner to get around the fact that the image may not
+			# have a `_getexif` method, and the method may return None instead of
+			# a dictionary.
 			
 			transforms = {
 				1: lambda x: (x),
@@ -602,7 +583,11 @@ class AmazonVerificationJSONHandler(CookieAuthenticated, JSONBaseHandler):
 			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
 		
 		self.set_status(201)
-		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), user['id']))
+		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(
+			self.request.protocol,
+			WurkHappy.getSettingWithTag('hostname'),
+			user['id']
+		))
 		return
 
 
@@ -927,8 +912,18 @@ class PaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
 	@web.authenticated
 	def get(self, paymentMethodID):
 		user = self.current_user
-		paymentMethod = PaymentMethod.retrieveByID(paymentMethodID)
+		paymentMethod = UserPayment.retrieveByID(paymentMethodID)
+		# PaymentMethod.retrieveByID(paymentMethodID)
 		
+		if not paymentMethod:
+			error = {
+				'domain': 'application.resource.not_found',
+				'display': 'The specified payment method could not be found.',
+				'debug': 'no such resource'
+			}
+			self.set_status(404)
+			self.renderJSON(error)
+
 		if paymentMethod['userID'] != user['id']:
 			# The user is not authorized to see it
 			error = {
@@ -940,12 +935,12 @@ class PaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
 			self.renderJSON(error)
 		
 		self.renderJSON(paymentMethod.getPublicDict())
-	
+
 	@web.authenticated
 	def delete(self, paymentMethodID):
 		user = self.current_user
 		
-		paymentMethod = PaymentMethod.retrieveByID(paymentMethodID)
+		paymentMethod = UserPayment.retrieveByID(paymentMethodID)
 		
 		if not paymentMethod:
 			error = {
@@ -956,6 +951,7 @@ class PaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
 			}
 			self.set_status(400)
 			self.renderJSON(error)
+			return
 		
 		paymentMethod['dateDeleted'] = datetime.now()
 		paymentMethod.save()
@@ -963,4 +959,63 @@ class PaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
 		self.renderJSON([True])
 
 
+
+class DefaultPaymentMethodJSONHandler(Authenticated, JSONBaseHandler):
+	@JSONBaseHandler.authenticated
+	def get(self):
+		user = self.current_user
+		defaultLink = UserPayment.retrieveDefaultByUserID(user['id'])
+		defaultPM = PaymentBase.retrieveDefaultByUserID(user['id'])
+		response = defaultPM.getPublicDict()
+		response['id'] = defaultLink['id']
+		
+		self.renderJSON(response)
+
+	@JSONBaseHandler.authenticated
+	def post(self):
+		user = self.current_user
+		currentDefaultLink = UserPayment.retrieveDefaultByUserID(user['id'])
+		
+		if currentDefaultLink:
+			currentDefaultLink['isDefault'] = None
+			
+		try:
+			args = fmt.Parser(self.request.arguments,
+				required=[
+					('paymentMethodID', fmt.PositiveInteger())
+				]
+			)
+		except fmt.HTTPErrorBetter as e:
+			logging.warn(e.message)
+			self.set_status(e.status_code)
+			self.write(e.body_content)
+			return
+		
+		newDefaultLink = UserPayment.retrieveByID(args['paymentMethodID'])
+
+		# Bail if the payment method ID does not exist or the user is not
+		# the owner of that payment method.
+
+		if not newDefaultLink or newDefaultLink['userID'] != user['id']:
+			error = {
+				'domain': 'application.resource.not_found',
+				'display': 'There is no such payment method.',
+				'debug': 'no such resource'
+			}
+			self.set_status(400)
+			self.renderJSON(error)
+			return
+
+		newDefaultLink['isDefault'] = True
+
+		if currentDefaultLink:
+			currentDefaultLink.save()
+
+		newDefaultLink.save()
+
+		defaultPM = PaymentBase.retrieveDefaultByUserID(user['id'])
+		response = defaultPM.getPublicDict()
+		response['id'] = newDefaultLink['id']
+		
+		self.renderJSON(response)
 

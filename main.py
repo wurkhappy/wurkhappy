@@ -32,7 +32,9 @@ import os
 import os.path
 import logging
 
-from controllers.modules import modules, amazon
+from controllers.modules import (
+	modules, amazon, paymentmethods, zipmark
+)
 
 # -------------------------------------------------------------------
 # Application main
@@ -79,6 +81,7 @@ class Application(web.Application):
 			
 			(r'/user/me/paymentmethod/new\.json', accounts.NewPaymentMethodJSONHandler),
 			(r'/user/me/paymentmethod/([0-9]+)\.json', accounts.PaymentMethodJSONHandler),
+			(r'/user/me/paymentmethod/default.json', accounts.DefaultPaymentMethodJSONHandler),
 			
 			# Wurk Happy contact directory for current user
 			(r'/user/me/contacts\.json', users.ContactsJSONHandler),
@@ -116,7 +119,7 @@ class Application(web.Application):
 			"login_url": "/login",
 			"template_path": os.path.join(os.path.dirname(__file__), "templates"),
 			"static_path": os.path.join(os.path.dirname(__file__), "static"),
-			"ui_modules": [modules, amazon],
+			"ui_modules": [modules, amazon, zipmark, paymentmethods],
 			"debug": config['tornado'].get('debug', False),
 		}
 		

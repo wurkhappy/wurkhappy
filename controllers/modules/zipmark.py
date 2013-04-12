@@ -1,11 +1,12 @@
 from tornado.web import UIModule
 from controllers.orm import ORMJSONEncoder
 from controllers.data import Data, Base64, Base58
-from controllers.amazonaws import AmazonS3, AmazonFPS
+#from controllers.zipmark import Zipmark
+# from controllers.amazonaws import AmazonS3, AmazonFPS
 
 from models.agreement import Agreement, AgreementPhase
 from models.user import User
-from models.paymentmethod import AmazonPaymentMethod
+from models.paymentmethod import ZipmarkPaymentMethod
 
 from datetime import datetime
 from collections import OrderedDict
@@ -16,7 +17,28 @@ from uuid import uuid4
 
 
 
-class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
+class ConfigureZipmarkAccountButton(UIModule): #, Zipmark_):
+	'''Presents an HTML form to initiate the vendor's acceptance of Zipmark's
+	terms and conditions. Documentation at the following URL:
+	http://...
+	'''
+
+	def render(self, vendorID):
+		return self.render_string(
+			"modules/zipmark/configurebutton.html",
+		)
+
+
+
+class PayWithZipmarkButton(UIModule): #, Zipmark):
+
+	def render(self, phaseID):
+		pass
+
+
+
+
+class __AcceptMarketplaceFeeButton(UIModule):
 	'''Presents an HTML form to initiate the vendor's acceptance of Amazon's
 	marketplace fees and terms and conditions. Documentation at the following URL:
 	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-fee-input.html
@@ -36,7 +58,7 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		data['callerKey'] = accessKey
 		data['callerReference'] = Data(uuid4().get_bytes()).stringWithEncoding(Base58)
 		data['collectEmailAddress'] = "true"
-		data['maxVariableFee'] = '{0:.2F}'.format(AmazonFPS.variableMarketplaceFee)
+		data['maxVariableFee'] = "5.0"
 		data['pipelineName'] = "Recipient"
 		data['recipientPaysFee'] = "true"
 		data['returnURL'] = '{0}://{1}/user/me/account'.format(
@@ -57,26 +79,7 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 
 
 
-class VerifyAmazonAccountButton(UIModule):
-	'''Presents text for Amazon account verification process.'''
-
-	def render(self, userID):
-		# Doesn't actually use userID
-
-		return '''
-			<p>After signing up for Amazon Payments, you should receive an email from Amazon asking you to verify
-				your account.</p>
-			<p>Typically this email asks you to connect a bank account and complete a tax questionnaire.</p>
-			<p>Please complete any of these steps on the Amazon Payments web site and click "Verify Account" when
-				you've finished.</p>
-
-			<ul class="action-button" style="width:200px;margin-left:auto;">
-				<li><a href="#" rel="nofollow" id="amazon_verify" class="top js-button">Verify Account</a></li>
-			</ul>
-		'''
-
-
-class PayWithAmazonButton(UIModule, AmazonFPS):
+class __PayWithAmazonButton(UIModule):
 	'''Presents an HTML form to initiate a payment via the Amazon Simple Pay Marketplace. Documentation here:
 	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-pay-input.html
 	'''

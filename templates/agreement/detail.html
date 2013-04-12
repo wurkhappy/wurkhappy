@@ -128,7 +128,8 @@
 	{% module Footer() %}
 </div>
 
-	{% if data.get('recipientEmail', None) %}
+	{% if data.get('vendorPaymentMethod', None) and data['vendorPaymentMethod'].canReceivePayment() %}
+	<!-- TODO: Check type of payment method to selectively render the proper button -->
 	<div class="clear prompt-box" id="confirmation-div" style="display:none;">
 		<div class="column-three-fourth">
 			<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>

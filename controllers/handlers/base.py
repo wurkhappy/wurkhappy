@@ -87,8 +87,17 @@ class JSONBaseHandler(web.RequestHandler):
 	def write_error(self, status_code, **kwargs):
 		if hasattr(self, 'error_description'):
 			self.renderJSON(self.error_description)
+		elif 'exc_info' in kwargs:
+			exctype, value = kwargs['exc_info'][:2]
+			
+			if hasattr(value, 'log_message'):
+				self.renderJSON({'error': value.log_message})
+			elif hasattr(value, 'reason'):
+				self.renderJSON({'error': value.reason})
+			else:
+				self.renderJSON({'error': str(value)})
 		else:
-			super(JSONBaseHandler, self).write_error(status_code, **kwargs)
+			self.renderJSON({'error': 'unknown error'})
 
 	def send_error(self, status_code=500, **kwargs):
 		# Because we're running 2.0 on production. Upgrade to > 2.1 please!

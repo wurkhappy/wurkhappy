@@ -29,7 +29,21 @@ class UserPayment(MappedObj):
 		query = 'SELECT * FROM {0} WHERE pmID = %s AND pmTable = %s'
 
 		with Database() as (conn, cursor):
-			cursor.execute(query.format(clz.tableName), pmID, pmTable)
+			cursor.execute(query.format(clz.tableName), (pmID, pmTable))
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+	
+	@classmethod
+	def retrieveDefaultByUserID(clz, userID):
+		'''
+		Retrieve the linking table record for the default payment method
+		for a given user ID.
+		'''
+
+		query = 'SELECT * FROM {0} WHERE userID = %s AND isDefault IS NOT NULL'
+
+		with Database() as (conn, cursor):
+			cursor.execute(query.format(clz.tableName), userID)
 			result = cursor.fetchone()
 			return clz.initWithDict(result)
 
@@ -111,7 +125,6 @@ class PaymentBase(MappedObj):
 		#          for i in c._retrieveByUserID(userID))
 		#              lst.append(i)
 		#     return lst
-		
 	
 	@classmethod
 	def retrieveDefaultByUserID(clz, userID):
@@ -166,8 +179,6 @@ class OOBPaymentMethod(PaymentBase):
 		'state': None,
 		'postCode': None
 	}
-	displayName = 'Pay by Check'
-	iconURL = ''
 	
 	def getPublicDict(self):
 		return OrderedDict([
@@ -195,7 +206,10 @@ class OOBPaymentMethod(PaymentBase):
 		return self.addressIsValid()
 
 	def displayString(self):
-		return 'nnnn'
+		return '''{address1}<br />
+		{address2}<br />
+		{city}, {state} {postCode}
+		'''.format(self.getPublicDict())
 
 
 
@@ -206,11 +220,9 @@ class AmazonPaymentMethod(PaymentBase):
 		'tokenID': None,
 		'tokenSecretID': None,
 		'recipientEmail': None,
-		'verificationComplete': None,
-		'variableMarketplaceFee': None
+		'variableMarketplaceFee': None,
+		'verificationComplete': None
 	}
-	displayName = 'Amazon Payments'
-	iconURL = ''
 	
 	def getPublicDict(self):
 		return OrderedDict([
@@ -227,26 +239,37 @@ class AmazonPaymentMethod(PaymentBase):
 	def canSendPayment(self):
 		return True
 
+	def displayString(self):
+		return self['recipientEmail']
+
 
 
 class ZipmarkPaymentMethod(PaymentBase):
 	tableName = 'zipmarkPaymentMethod'
 	columns = {
 		'id': None,
-		'merchantID': None
+		'vendorID': None,
+		'vendorSecret': None,
+		'recipientName': None,
+		'recipientEmail': None
 	}
-	displayName = 'Pay with Zipmark'
-	iconURL = ''
 	
 	def getPublicDict(self):
 		return OrderedDict([
 			('id', self['id']),
-			('type', self.tableName)
+			('type', self.tableName),
+			('vendorID', self['vendorID']),
+			('vendorSecret', self['vendorSecret']),
+			('recipientName', self['recipientName']),
+			('recipientEmail', self['recipientEmail'])
 		])
 	
 	def canReceivePayment(self):
-		return self['merchantID'] is not None
+		return self['vendorID'] is not None and self['vendorSecret'] is not None
 
 	def canSendPayment(self):
 		return True
+
+	def displayString(self):
+		return self['recipientEmail']
 

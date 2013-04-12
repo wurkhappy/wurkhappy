@@ -49,6 +49,8 @@ class AmazonS3(object):
 class AmazonFPS(object):
 	'''Helper method mix-in for Amazon Payments'''
 	
+	variableMarketplaceFee = 5.0
+
 	def generateSignature(self, httpVerb, host, uri, data):
 		'''Generate an Amazon FPS signature for an API request or button form.
 		More information can be found at the following URL:
@@ -112,3 +114,4 @@ class AmazonFPS(object):
 				return success == 'Success'
 		
 		return False
+

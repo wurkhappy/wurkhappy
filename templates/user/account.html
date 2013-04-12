@@ -23,49 +23,62 @@
 		<ul>
 			<li class="tab current" id="details-button"><a href="#" class="top">Personal Details</a></li>
 			<li class="tab" id="password-button"><a href="#" class="">Change Your Password</a></li>
-			<li class="tab" id="amazon-button"><a href="#" class="">Payment Information</a></li>
-			<!-- <li class="tab" id="bank-button"><a href="#" class="">Bank Account Details</a></li> -->
-			<!-- <li class="tab" id="card-button"><a href="#" class="">Credit Card Details</a></li> -->
+			<li class="tab" id="payment-button"><a href="#" class="">Payment Information</a></li>
 		</ul>
 	</div>
 	<div id="content" class="clear">
 		<div id="details-container" class="tab-content">
 			<div id="profile_preview">
-				<h2>Profile Preview</h2>
-				<div class="data-table">
-					<table border="0" cellspacing="0" cellpadding="0">
-						<tr>
-							<td class="meta">
-								<span><img src="{{ data['profileURL'][0] }}" alt="Profile photo" width="50" height="50" /></span>
-							</td>
-							<td>
-								<h3><a href="/user/me/profile">{{ data['fullName'] }}</a></h3>
-								<p>{{ data['email'] }}</p>
-								<p>{{ data['telephone'] }}</p>
-							</td>
-						</tr>
-					</table>
-				</div>
-			</div>
-
-			<div id="profile_form">
 				<h2>Personal Details</h2>
-				<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile_update">
-					<fieldset>
-						<label for="firstName">First Name</label>
-						<input type="text" name="firstName" value="{{ data['firstName'] or '' }}" size="100" />
-						<label for="lastName">Last Name</label>
-						<input type="text" name="lastName" value="{{ data['lastName'] or '' }}" size="100" />
-						<label for="profilePhoto">Photo</label>
-						<input type="file" class="upload" name="profilePhoto" />
-						<label for="email">Email</label>
-						<input type="email" name="email" value="{{ data['email'] }}" size="100" />
-						<label for="telephone">Phone Number</label>
-						<input type="tel" name="telephone" value="{{ data['telephone'] }}" size="100" />
-					</fieldset>
-					<fieldset class="submit-buttons">
-						<input type="submit" value="Save Personal Details" />
-					</fieldset>
+				<form action="/user/me/account" enctype="multipart/form-data" method="POST" class="js-replace-action" id="profile_update" style="padding:0">
+					<span class="column-one-fourth">
+						<div class="data-table">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<tr>
+									<td class="meta" style="margin:0;">
+										<span><img id="profile_image" src="{{ data['profileURL'][1] }}" alt="Profile photo" width="150" height="150" /></span>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<div id="profile_photo_upload" style="display:none;padding-left:20px;">
+							<fieldset>
+								<label for="profilePhoto">Replace Photo</label>
+								<input type="file" class="upload" name="profilePhoto" />
+							</fieldset>
+						</div>
+					</span>
+					<span class="column-three-fourth">
+						<div class="data-table" id="profile_info">
+							<table border="0" cellspacing="0" cellpadding="0">
+								<tr>
+									<td>
+										<h3><a href="/user/me/profile" id="profile_full_name">{{ data['fullName'] }}</a></h3>
+										<p id="profile_email">{{ data['email'] }}</p>
+										<p id="profile_telephone">{{ data['telephone'] }}</p>
+									</td>
+								</tr>
+							</table>
+						</div>
+						<ul class="action-button" id="user_info_edit_ul" style="width:200px;">
+							<li><a href="#" rel="nofollow" id="user_info_edit" class="top js-button">Edit</a></li>
+						</ul>
+						<div id="profile_form" style="display:none;padding-left:20px;">
+							<fieldset>
+								<label for="firstName">First Name</label>
+								<input type="text" name="firstName" value="{{ data['firstName'] or '' }}" size="80" />
+								<label for="lastName">Last Name</label>
+								<input type="text" name="lastName" value="{{ data['lastName'] or '' }}" size="80" />
+								<label for="email">Email</label>
+								<input type="email" name="email" value="{{ data['email'] }}" size="80" />
+								<label for="telephone">Phone Number</label>
+								<input type="tel" name="telephone" value="{{ data['telephone'] }}" size="80" />
+							</fieldset>
+							<fieldset class="submit-buttons" style="padding-bottom:20px;">
+								<input type="submit" value="Save Personal Details" />
+							</fieldset>
+						</div>
+					</span>
 				</form>
 			</div>
 		</div>
@@ -89,52 +102,9 @@
 				</div>
 			</form>
 		</div>
-		
-		<div id="amazon-container" class="tab-content" style="display: none;">
-			{% if data['amazonFPSAccount'] is None %}
-				<div class="column-three-fourth">
-					<h2>Connect an Amazon Marketplace Account</h2>
-					
-					<p>Wurk Happy uses the Amazon Payments Marketplace to send and receive payments. In order
-						to receive payments from clients, you need to accept the marketplace fees.</p>
-					
-					<h2>Frequently Asked Questions</h2>
-					
-					<h3>What does it cost?</h3>
-					
-					<p>Amazon charges <strong>2.9%</strong> per transaction. We don't charge anything on top of that.</p>
-					
-					<h3>Why use Amazon Payments?</h3>
-					
-					<p>We think it gives the most flexibility for .</p>
-				</div>
-				<div class="column-one-fourth">
-					{% module AcceptMarketplaceFeeButton(data['id']) %}
-				</div>
-			{% elif 'verificationStatus' not in data['amazonFPSAccount'] or data['amazonFPSAccount']['verificationStatus'] is not 'verified' %}
-				<div class="column-three-fourth">
-					<h2>Verify Your Amazon Marketplace Account</h2>
-					
-					<p>After signing up for Amazon Payments, you should receive an email from Amazon asking you to verify
-						your account. Typically this email asks you to connect a bank account and complete a tax questionnaire.
-						Please complete any of these steps on the Amazon Payments web site and click "Verify Account" when
-						you've finished.</p>
-				</div>
-				<div class="column-one-fourth">
-					<ul class="action-button">
-						<li><a href="#" rel="nofollow" id="amazon_verify" class="top js-button">Verify Account</a></li>
-					</ul>
-				</div>
-			{% else %}
-				<div class="column-three-fourth">
-					<h2>Amazon Marketplace Account</h2>
-					
-					<h1 style="color:green;font-size:50px;float:left">&#9745;</h1>
-					
-					<p>Your Amazon Marketplace Account has been successfully connected and verified with Amazon. You are ready to start receiving payments through Wurk Happy!</p>
-				</div>
-			{% end %}
-		</div>
+
+		{% module PaymentMethodSetup(user) %}
+
 	</div>
 
 	{% module Footer() %}
