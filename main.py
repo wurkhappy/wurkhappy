@@ -144,7 +144,7 @@ class Application(web.Application):
 # -------------------------------------------------------------------
 
 if __name__ == "__main__":
-	options.define("config", default="config.yaml", help="load configuration from file", type=str)
+	options.define("config", default="_config.yaml", help="load configuration from file", type=str)
 	options.define("port", default=None, help="listen port", type=int)
 	options.define("address", default=None, help="listen address", type=str)
 	options.define("debug", default=None, help="start in debug mode", type=bool)

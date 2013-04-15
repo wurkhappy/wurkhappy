@@ -1,10 +1,31 @@
-You have just made a payment to {Name of Service Provider}
+{% extends "email_base.html" %}
 
-{Agreement Name}
-{# of phases} phases totaling {Total Amount}
+{% block body %}
+{% set num = len(data['agreement']['phases']) %}
 
-Payment received. Thank You!
+<!-- BODY --><table class="body-wrap" style='margin:0;padding:10px;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:100%;font-size:18px;line-height:24px;'><tr style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'>
+		<td class="container" style='margin:0 auto!important;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;display:block!important;max-width:600px!important;clear:both!important;'>
+ 
+			<!-- content -->	
+			<div class="content" style='margin:0 auto;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;max-width:600px;display:block;'>
+				<table bgcolor="#FFFFFF" style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;width:100%;border: 1px solid #CCCCCC;-webkit-border-radius:8px;-moz-border-radius:8px;border-radius:8px;-webkit-background-clip: padding-box; -webkit-box-shadow:0px 0px 4px rgba(0,0,0,0.1);-moz-box-shadow:0px 0px 4px rgba(0,0,0,0.1);box-shadow: 0px 0px 4px rgba(0,0,0,0.1);'><tr style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'>
+<td style='margin:0;padding:0 10px 20px 10px;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;'>
+							<h1 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica,
+								Arial,
+								sans-serif;line-height:32px;color:black;padding-top:20px;padding-right:10px;padding-left:10px;font-size:24px;font-weight:bold;'>You just paid {{ data['vendor']['fullName'] }} {{ data['phase']['costString'] }}</h1>
+ 
+							<h2 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:24px;color:#666666;padding-top:20px;padding-right:10px;padding-left:10px;font-weight:bold;font-size:18px;'><a href="http://{{ data['hostname'] }}/agreement/{{ data['agreement']['id'] }}" title="{{ data['agreement']['name'] }}" style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#0099DD;text-decoration:none;font-weight:bold;'>{{ data['agreement']['name'] }}</a></h2>
+							<span style="margin:0;padding:5px 10px 0 10px;font-family:'Helvetica Neue', Arial, Helvetica, sans-serif;font-size:12px;font-style:italic;color:#999999;">{{ num }} phase{% if num != 1 %}s{% end %} totalling {{ data['agreement']['costString'] }}</span>
+ 
+							<h3 style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;line-height:1.1;color:black;padding-top:20px;padding-right:10px;padding-left:10px;font-weight:900;font-size:18px;'>What's next?</h3>
+							<p style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#666666;padding-top:20px;padding-left:10px;padding-right:10px;'><a href="http://{{ data['hostname'] }}/agreement/{{ data['agreement']['id'] }}" title="Request Payment" style='margin:0;padding:0;font-family:"Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;color:#0099DD;text-decoration:none;font-weight:bold;'>Click Here</a> to review the agreement.</p>
+						</td>
+					</tr></table>
+</div>
+			<!-- /content -->	
+ 
+		</td>
+	</tr></table>
+<!-- /BODY -->
 
-Your {credit card or bank account} ending in 6333 was charged {paid amount}
-
-You will be notified when the service provider finishes the next phase of work described in your agreement.
+{% end %}

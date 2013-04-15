@@ -162,6 +162,13 @@ class User(MappedObj):
 		the user's email address.
 		"""
 		return ' '.join([str(self['firstName'] or ''), str(self['lastName'] or '')]).strip() or self['email']
+		
+	def getFirstName(self):
+		"""
+		Return the first name of the user, or if no values are set,
+		the user's email address.
+		"""
+		return str(self['firstName']).strip() or self['email']
 	
 	def setPasswordHash(self, password):
 		"Store the user's encrypted password"
@@ -261,7 +268,7 @@ class User(MappedObj):
 	def getPublicDict(self):
 		return {
 			'id': self['id'],
-			'firstName': self['firstName'],
+			'firstName': self.getFirstName(),
 			'lastName': self['lastName'],
 			'fullName': self.getFullName(),
 			'email': self['email'],
