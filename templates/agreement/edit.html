@@ -83,7 +83,6 @@
 							<span>Please enter an amount between $1.00 and $10,000.00</span></label>
 							<input type="text" name="cost" placeholder="$0.00" value="{% if len(data["phases"]) > 0 %}{{ data["phases"][0]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
-							<input type="text" id="datepicker" size="25">
 							{% set datestamp = data["phases"][0]["estDateCompleted"] if len(data["phases"]) > 0 else None %}
 							{% module DateWidget('date', datestamp) %}
 							<label for="">Description (What aspect of the job is this payment for?)
@@ -103,7 +102,6 @@
 							<label for="">Payment Amount</label>
 							<input type="text" name="cost" placeholder="$0.00" value="{% if len(data["phases"]) > 1 %}{{ data["phases"][1]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
-							<input type="text" id="datepicker" size="25">
 							{% set datestamp = data["phases"][1]["estDateCompleted"] if len(data["phases"]) > 1 else None %}
 							{% module DateWidget('date', datestamp) %}
 							<label for="">Description (What aspect of the job is this payment for?)
@@ -123,7 +121,6 @@
 							<label for="">Payment Amount</label>
 							<input type="text" name="cost" placeholder="$0.00" value="{% if len(data["phases"]) > 2 %}{{ data["phases"][2]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
-							<input type="text" id="datepicker" size="25">
 							{% set datestamp = data["phases"][2]["estDateCompleted"] if len(data["phases"]) > 2 else None %}
 							{% module DateWidget('date', datestamp) %}
 							<label for="">Description (What aspect of the job is this payment for?)
@@ -143,7 +140,6 @@
 							<label for="">Payment Amount</label>
 							<input type="text" name="cost" placeholder="$0.00" value="{% if len(data["phases"]) > 3 %}{{ data["phases"][3]["amount"] }}{% end %}" size="100" />
 							<label for="">Expected Payment Date</label>
-							<input type="text" id="datepicker" size="25">
 							{% set datestamp = data["phases"][3]["estDateCompleted"] if len(data["phases"]) > 3 else None %}
 							{% module DateWidget('date', datestamp) %}
 							<label for="">Description (What aspect of the job is this payment for?)

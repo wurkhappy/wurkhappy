@@ -148,7 +148,7 @@ $(document).ready(function() {
 			$header.text('Sending...');			
 			
 			$.ajax({
-				url: 'https://sandbox.wurkhappy.com/login.json',
+				url: 'https://beta.wurkhappy.com/login.json',
 				type: 'POST',
 				data: {
 					'email': $email.val(),
@@ -161,7 +161,7 @@ $(document).ready(function() {
 					if (data['user']) {
 						// TODO: Redirect to https://beta.wurkhappy.com/
 						// (Actually https://sandbox.wurkhappy.com/ until the patch I uploaded today goes live.)
-						window.location.href = 'https://sandbox.wurkhappy.com/';
+						window.location.href = 'https://beta.wurkhappy.com/';
 			
 						$passwd.val('');
 						$email.val('');

@@ -20,13 +20,13 @@ class Transaction(MappedObj):
 		'agreementPhaseID': None,
 		'senderID': None, # fromClientID
 		'recipientID': None, # toVendorID
-		'paymentMethodID': None,
+		# REMOVE FROM TABLE AFTER SCHEMA MIGRATION
+		# 'paymentMethodID': None, 
+		'userPaymentID': None,
 		'amount': None,
 		'dateInitiated': None,
 		'dateApproved': None,
 		'dateDeclined': None,
-		'amazonTransactionID': None,
-		'amazonPaymentMethod': None
 	}
 	
 	@classmethod
@@ -141,7 +141,7 @@ class Transaction(MappedObj):
 			('agreementPhaseID', self['agreementPhaseID']),
 			('senderID', self['senderID']),
 			('recipientID', self['recipientID']),
-			('paymentMethodID', self['paymentMethodID']),
+			# ('paymentMethodID', self['paymentMethodID']),
 			('costString', self.getCostString()),
 			('dateInitiated', self['dateInitiated']),
 			('dateApproved', self['dateApproved']),
@@ -149,3 +149,58 @@ class Transaction(MappedObj):
 			('amazonTransactionID', self['amazonTransactionID']),
 			('amazonPaymentMethod', self['amazonPaymentMethod'])
 		])
+
+
+
+class AmazonTransaction (MappedObj):
+	tableName = 'amazonTransaction'
+	columns = {
+		'id': None,
+		'transactionID': None,
+		'amazonTransactionID': None,
+		'amazonPaymentMethod': None
+	}
+
+	@classmethod
+	def retrieveByTransactionID(clz, transactionID):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} WHERE transactionID = %s"
+			cursor.execute(query.format(clz.tableName), transactionID)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+
+	def getPublicDict(self):
+		return OrderedDict([
+			('id', self['id']),
+			('amazonTransactionID', self['amazonTransactionID']),
+			('amazonPaymentMethod', self['amazonPaymentMethod'])
+		])
+
+
+
+class ZipmarkTransaction(MappedObj):
+	tableName = 'zipmarkTransaction'
+	columns = {
+		'id': None,
+		'transactionID': None,
+		'zipmarkBillID': None,
+		'zipmarkBillURL': None,
+		'zipmarkPaymentID': None
+	}
+
+	@classmethod
+	def retrieveByTransactionID(clz, transactionID):
+		with Database() as (conn, cursor):
+			query = "SELECT * FROM {0} WHERE transactionID = %s"
+			cursor.execute(query.format(clz.tableName), transactionID)
+			result = cursor.fetchone()
+			return clz.initWithDict(result)
+
+	def getPublicDict(self):
+		return OrderedDict([
+			('id', self['id']),
+			('zipmarkBillID', self['zipmarkBillID']),
+			('zipmarkBillURL', self['zipmarkBillURL']),
+			('zipmarkPaymentID', self['zipmarkPaymentID'])
+		])
+

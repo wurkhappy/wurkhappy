@@ -5,7 +5,10 @@ from models.user import (
 from models.agreement import Agreement, AgreementPhase
 from models.request import Request
 from models.transaction import Transaction
-from models.paymentmethod import PaymentMethod
+from models.paymentmethod import (
+	UserPayment, PaymentBase,
+	AmazonPaymentMethod, ZipmarkPaymentMethod
+)
 from controllers.email import Email
 from controllers.orm import ORMJSONEncoder
 from controllers.verification import Verification
@@ -131,7 +134,7 @@ class AgreementInviteHandler(QueueHandler):
 		textString = "If you cannot view the message, sign in to Wurk Happy at http://{0}/".format(data['hostname'])
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), vendor['email']),
 			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
@@ -194,7 +197,7 @@ class AgreementSentHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), vendor['email']),
 			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
@@ -255,7 +258,7 @@ class AgreementAcceptedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), client['email']),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -316,7 +319,7 @@ class AgreementDeclinedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), client['email']),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -380,7 +383,7 @@ class AgreementWorkCompletedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=vendor.getFullName()), vendor['email']),
 			'to': (client.getFullName(), client['email']),
 			'subject': subject,
 			'multipart': [
@@ -414,7 +417,8 @@ class AgreementPaidHandler(QueueHandler):
 		client = User.retrieveByID(agreement['clientID'])
 		transaction = Transaction.retrieveByID(body['transactionID'])
 		phase = AgreementPhase.retrieveByID(transaction['agreementPhaseID'])
-		paymentMethod = PaymentMethod.retrieveByID(transaction['paymentMethodID'])
+		paymentMethod = PaymentBase.retrieveByUserPaymentID(transaction['userPaymentID'])
+		# paymentMethod = PaymentMethod.retrieveByID(transaction['paymentMethodID'])
 		
 		data = {
 			'hostname': self.application.config['wurkhappy']['hostname'],
@@ -447,7 +451,7 @@ class AgreementPaidHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), client['email']),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -510,7 +514,7 @@ class AgreementDisputedHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), client['email']),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [
@@ -571,7 +575,7 @@ class SendAgreementRequestHandler(QueueHandler):
 			return
 		
 		self.sendEmail({
-			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), "contact@wurkhappy.com"),
+			'from': ("{name} via Wurk Happy".format(name=client.getFullName()), client['email']),
 			'to': (vendor.getFullName(), vendor['email']),
 			'subject': subject,
 			'multipart': [

@@ -11,7 +11,7 @@ from base import (
 from models.user import *
 from models.agreement import *
 from models.request import Request
-from models.transaction import Transaction
+from models.transaction import Transaction, AmazonTransaction
 from models.paymentmethod import (
 	UserPayment, PaymentBase, OOBPaymentMethod, AmazonPaymentMethod, ZipmarkPaymentMethod
 )
@@ -395,10 +395,15 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 					transaction['senderID'] = agreement['clientID']
 					transaction['recipientID'] = agreement['vendorID']
 
+				amzTxn = None
+
 				if args['status'] == 'PS':
 					transaction['dateApproved'] = datetime.now()
-					transaction['amazonTransactionID'] = args['transactionId']
-					transaction['amazonPaymentMethod'] = args['paymentMethod']
+					
+					amzTxn = AmazonTransaction(
+						amazonTransactionID=args['transactionId'],
+						amazonPaymentMethod=args['paymentMethod']
+					)
 
 					logging.info('State before state change due to Amazon callback: %s', currentState)
 
@@ -420,6 +425,8 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 					logging.error("Transaction declined by Amazon\n%s", transaction)
 
 				transaction.save()
+				amzTxn['transactionID'] = transaction['id']
+				amzTxn.save()
 			
 			# We do this here, but it would be prettier if we did this using a JavaScript pushState
 			self.redirect('{0}://{1}{2}'.format(self.request.protocol, WurkHappy.getSettingWithTag('hostname'), self.request.path))
@@ -603,6 +610,7 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 		# We use the presence of the recipient email key to selectively render the Amazon button UI module.
 		if templateDict['self'] == 'client' and isinstance(currentState, CompletedState):
 			paymentMethod = PaymentBase.retrieveDefaultByUserID(vendor['id'])
+			logging.info(paymentMethod)
 			templateDict['vendorPaymentMethod'] = paymentMethod
 		
 		# Modify behavior to prompt for Amazon configuration if no
@@ -1118,6 +1126,31 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 					msgJSON = json.dumps(msg)
 					r = bconn.put(msgJSON)
 					logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+
+			paymentMethod = PaymentBase.retrieveDefaultByUserID(user['id'])
+
+			if action == 'mark_complete' and paymentMethod.tableName == 'zipmarkPaymentMethod':
+				# We need to create a Zipmark bill here. We don't send it yet,
+				# but a work queue assembles the bill and records its id and URL.
+				
+				userPayment = UserPayment.retrieveByPMIDAndPMTable(
+					paymentMethod['id'], paymentMethod.tableName
+				)
+
+				msg = dict(
+					action="createBill",
+					vendorID=user['id'],
+					agreementPhaseID=currentPhase['id'],
+					userPaymentID=userPayment['id']
+				)
+
+				with Beanstalk() as bconn:
+					tube = self.application.configuration['zipmark']['beanstalk_tube']
+					bconn.use(tube)
+					msgJSON = json.dumps(msg)
+					r = bconn.put(msgJSON)
+					logging.info('Beanstalk: %s#%d %s', tube, r, msgJSON)
+					
 		
 		except StateTransitionError as e:
 			errorMap = {

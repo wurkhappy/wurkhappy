@@ -5,7 +5,6 @@ from models.user import User, UserDwolla, ActiveUserState
 from models.paymentmethod import UserPayment, PaymentBase, ZipmarkPaymentMethod, AmazonPaymentMethod
 from controllers import fmt
 from controllers.beanstalk import Beanstalk
-from controllers.amazonaws import AmazonS3, AmazonFPS
 from controllers.application import WurkHappy
 
 from tornado.httpclient import HTTPClient
@@ -315,7 +314,7 @@ class AccountCreationHandler(BaseHandler):
 			
 			# self.redirect('/account/setup')
 			
-			self.render('user/wait.html', title="Check Your Email for Further Instructions")
+			self.render('user/wait.html', email=user['email'], title="Check Your Email for Further Instructions")
 		else:
 			# User exists, render with error
 			error = {
@@ -578,6 +577,38 @@ class AmazonVerificationJSONHandler(CookieAuthenticated, JSONBaseHandler):
 			}
 			
 			tube = self.application.configuration['amazond']['beanstalk_tube']
+			bconn.use(tube)
+			r = bconn.put(json.dumps(msg))
+			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))
+		
+		self.set_status(201)
+		self.set_header('Location', '{0}://{1}/activity?id={2}'.format(
+			self.request.protocol,
+			WurkHappy.getSettingWithTag('hostname'),
+			user['id']
+		))
+		return
+
+
+
+# -------------------------------------------------------------------
+# Push onto Zipmark Signup Queue
+# -------------------------------------------------------------------
+
+class ZipmarkSignupJSONHandler(CookieAuthenticated, JSONBaseHandler):
+	'''Push the current user's account info onto the Zipmark Signup list.'''
+	
+	@web.authenticated
+	def post(self):
+		user = self.current_user
+
+		with Beanstalk() as bconn:
+			msg = {
+				'action': 'zipmarkSignup',
+				'userID': user['id']
+			}
+			
+			tube = self.application.configuration['zipmarkd']['beanstalk_tube']
 			bconn.use(tube)
 			r = bconn.put(json.dumps(msg))
 			logging.info('Beanstalk: %s#%d %s' % (tube, r, msg))

@@ -192,3 +192,4 @@ def commandLineStartup(processClass, name):
 	proc = processClass(conf)
 	signal.signal(signal.SIGTERM, proc.stop)
 	proc.start()
+

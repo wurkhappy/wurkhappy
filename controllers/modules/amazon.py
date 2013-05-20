@@ -1,3 +1,4 @@
+from __future__ import division
 from tornado.web import UIModule
 from controllers.orm import ORMJSONEncoder
 from controllers.data import Data, Base64, Base58
@@ -47,13 +48,15 @@ class AcceptMarketplaceFeeButton(UIModule, AmazonFPS):
 		
 		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
-		return self.render_string(
-			"modules/amazon/simplepaybutton.html",
+		namespace = dict(
 			method=httpVerb,
 			action='https://{0}/{1}'.format(fpsHost, fpsURI),
+			label='Set Up Amazon',
 			buttonImageURL='https://payments.amazon.com/img/marketplace_fee_with_logo_orange.gif',
 			data=data
 		)
+
+		return self.render_string("modules/amazon/simplepaybutton.html", **namespace)
 
 
 
@@ -110,7 +113,7 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 			agreement['id']
 		) # TODO: Fixme!
 		data['accessKey'] = accessKey
-		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
+		data['amount'] = phase.getCostString('USD ', 'USD 0.00', thousands_separator=False)
 		
 		if len(phase['description']) > 100:
 			data['description'] = phase['description'][:97] + '...'
@@ -131,13 +134,17 @@ class PayWithAmazonButton(UIModule, AmazonFPS):
 		)
 		data['signatureMethod'] = "HmacSHA256"
 		data['signatureVersion'] = "2"
-		data['variableMarketplaceFee'] = paymentMethod.get('variableMarketplaceFee', '5.0')
+
+		varMarketplaceFee = paymentMethod['variableMarketplaceFee'] or 5.0
+		data['variableMarketplaceFee'] = "{0:.2f}".format(varMarketplaceFee / 100)
+
 		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
 		
 		return self.render_string(
 			"modules/amazon/simplepaybutton.html",
 			method=httpVerb,
 			action='https://{0}/{1}'.format(fpsHost, fpsURI),
+			label='Pay Now With Amazon',
 			buttonImageURL='https://images-na.ssl-images-amazon.com/images/G/01/asp/golden_large_paynow_withlogo_darkbg.gif',
 			data=data
 		)

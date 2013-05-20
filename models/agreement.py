@@ -109,11 +109,17 @@ class Agreement(MappedObj):
 				yield clz.initWithDict(result)
 				result = cursor.fetchone()
 
-	def getCostString(self, prefix='$', default=''):
+	def getCostString(self, prefix='$', default='', **kwargs):
 		with Database() as (conn, cursor):
 			cursor.execute("SELECT SUM(amount) FROM agreementPhase WHERE agreementID = %s", self['id'])
 			amount = cursor.fetchone()['SUM(amount)']
-			return "{0}{1:,.2f}".format(prefix, amount / 100) if amount else default
+			
+			comma = kwargs.get('thousands_separator', True)
+
+			if comma:
+				return "{0}{1:,.2f}".format(prefix, amount / 100) if amount else default
+			else:
+				return "{0}{1:.2f}".format(prefix, amount / 100) if amount else default
 	
 	def getCurrentPhase(self):
 		with Database() as (conn, cursor):
@@ -299,8 +305,13 @@ class AgreementPhase (MappedObj):
 			cursor.execute(query % clz.tableName, (agreementID, phaseNumber))
 			return clz.initWithDict(cursor.fetchone())
 	
-	def getCostString(self, prefix='$', default=''):
-		return "{0}{1:,.2f}".format(prefix, self['amount'] / 100) if self['amount'] else default
+	def getCostString(self, prefix='$', default='', **kwargs):
+		comma = kwargs.get('thousands_separator', True)
+
+		if comma:
+			return "{0}{1:,.2f}".format(prefix, self['amount'] / 100) if self['amount'] else default
+		else:
+			return "{0}{1:.2f}".format(prefix, self['amount'] / 100) if self['amount'] else default
 	
 	def getPublicDict(self):
 		return OrderedDict([

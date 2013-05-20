@@ -13,30 +13,32 @@
 			<div style="height: 50px; margin:20px; border-bottom:1px solid #DDD">
 				<img src="{{ paymentMethod['iconURL'] or '#' }}" height="35" />
 			</div>
-			{% if paymentMethod['account'] %}
-				{% if paymentMethod['account'].canReceivePayment() %}
-					<p><img src="{{ static_url('images/tick-16x16.png') }}" /> Enabled 
-						<span style="color: #BBB">({{ paymentMethod['account'].displayString() }})</span></p>
-					{% if paymentMethod['account'] and paymentMethod['account'].isDefault == True %}
-						<p class="payment-method-default-switch">This payment method will be used for any new payments.</p>
+			<div id="replace-{{ paymentMethod['class'].__name__ }}">
+				{% if paymentMethod['account'] %}
+					{% if paymentMethod['account'].canReceivePayment() %}
+						<p><img src="{{ static_url('images/tick-16x16.png') }}" /> Enabled 
+							<span style="color: #BBB">({{ paymentMethod['account'].displayString() }})</span></p>
+						{% if paymentMethod['account'] and paymentMethod['account'].isDefault == True %}
+							<p class="payment-method-default-switch">This payment method will be used for any new payments.</p>
+						{% else %}
+							<p class="payment-method-default-switch">{% module ButtonMakeDefaultPaymentMethod() %}</p>
+						{% end %}
 					{% else %}
-						<p class="payment-method-default-switch">{% module ButtonMakeDefaultPaymentMethod() %}</p>
+						<p><img src="{{ static_url('images/warning-16x16.png') }}" /> Pending Verification</p>
+						{% if paymentMethod['class'].__name__ == 'AmazonPaymentMethod' %}
+							{% module VerifyAmazonAccountButton(userID) %}
+						{% elif paymentMethod['class'].__name__ == 'ZipmarkPaymentMethod' %}
+							{% module VerifyZipmarkAccountButton(userID) %}
+						{% end %}
 					{% end %}
 				{% else %}
-					<p><img src="{{ static_url('images/warning-16x16.png') }}" /> Pending Verification</p>
 					{% if paymentMethod['class'].__name__ == 'AmazonPaymentMethod' %}
-						{% module VerifyAmazonAccountButton(userID) %}
+						{% module AcceptMarketplaceFeeButton(userID) %}
 					{% elif paymentMethod['class'].__name__ == 'ZipmarkPaymentMethod' %}
-						{% module VerifyZipmarkAccountButton(userID) %}
+						{% module ConfigureZipmarkAccountButton(userID) %}
 					{% end %}
 				{% end %}
-			{% else %}
-				{% if paymentMethod['class'].__name__ == 'AmazonPaymentMethod' %}
-					{% module AcceptMarketplaceFeeButton(userID) %}
-				{% elif paymentMethod['class'].__name__ == 'ZipmarkPaymentMethod' %}
-					{% module ConfigureZipmarkAccountButton(userID) %}
-				{% end %}
-			{% end %}
+			</div>
 		</span>
 	</div>
 	{% end %}

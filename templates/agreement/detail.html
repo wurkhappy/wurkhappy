@@ -131,13 +131,23 @@
 	{% if data.get('vendorPaymentMethod', None) and data['vendorPaymentMethod'].canReceivePayment() %}
 	<!-- TODO: Check type of payment method to selectively render the proper button -->
 	<div class="clear prompt-box" id="confirmation-div" style="display:none;">
-		<div class="column-three-fourth">
-			<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>
-			<p>You can pay quickly and securely with Amazon Payments.</p>
-		</div>
-		<div class="column-one-fourth">
-			{% module PayWithAmazonButton(data['currentPhase']['phaseID']) %}
-		</div>
+		{% if data['vendorPaymentMethod'].__class__.__name__ == 'AmazonPaymentMethod' %}
+			<div class="column-three-fourth">
+				<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>
+				<p>You can pay quickly and securely with Amazon Payments.</p>
+			</div>
+			<div class="column-one-fourth">
+				{% module PayWithAmazonButton(data['currentPhase']['phaseID']) %}
+			</div>
+		{% elif data['vendorPaymentMethod'].__class__.__name__ == 'ZipmarkPaymentMethod' %}
+			<div class="column-three-fourth">
+				<h3>A payment of <span id="verify-amount">$0.00</span> is required to settle this phase of the agreement.</h3>
+				<p>You can pay quickly and securely with Zipmark Digital Check.</p>
+			</div>
+			<div class="column-one-fourth">
+				{% module PayWithZipmarkButton(data['currentPhase']['phaseID']) %}
+			</div>
+		{% end %}
 	</div>
 	{% else %}
 		<div class="clear prompt-box" id="confirmation-div" style="display:none;">

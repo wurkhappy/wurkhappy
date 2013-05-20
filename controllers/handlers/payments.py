@@ -302,7 +302,7 @@ class PaymentHandler(Authenticated, BaseHandler):
 		self.transaction.save()
 		
 		transactionJSON = self.transaction.getPublicDict()
-		del(transactionJSON['paymentMethodID'])
+		# del(transactionJSON['paymentMethodID'])
 		
 		self.renderJSON(transactionJSON)
 		self.finish()

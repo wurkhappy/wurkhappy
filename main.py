@@ -68,6 +68,7 @@ class Application(web.Application):
 			(r'/user/me/account/?', accounts.AccountHandler),
 			(r'/user/me/account/amazon.json', accounts.AmazonAccountJSONHandler),
 			(r'/user/me/account/amazonVerificationQueue.json', accounts.AmazonVerificationJSONHandler),
+			(r'/user/me/account/zipmarkSignupQueue.json', accounts.ZipmarkSignupJSONHandler),
 			
 			# Password handler with instructions to request a reset email
 			# and update the password with the token from the email.
@@ -107,6 +108,8 @@ class Application(web.Application):
 			
 			# Callbacks
 			(r'/callbacks/amazon/simplepay/paymentnotification', callbacks.AmazonPaymentsIPNHandler),
+			(r'/callbacks/zipmark/bill', callbacks.ZipmarkBillCallbackHandler),
+			(r'/callbacks/zipmark/bill_payment', callbacks.ZipmarkBillPaymentCallbackHandler),
 			
 			# JSON handler to test server configuration
 			(r'/test/http_server\.json', tests.HTTPServerTestHandler)

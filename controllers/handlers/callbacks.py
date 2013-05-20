@@ -3,7 +3,7 @@ from __future__ import division
 from base import *
 from models.user import User, UserPrefs, ActiveUserState, StateTransitionError
 from models.agreement import Agreement, AgreementPhase
-from models.transaction import Transaction
+from models.transaction import Transaction, AmazonTransaction
 from controllers import fmt
 from controllers.amazonaws import AmazonFPS
 from controllers.application import WurkHappy
@@ -186,11 +186,15 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 					transaction['senderID'] = agreement['clientID']
 					transaction['recipientID'] = agreement['vendorID']
 				
+				amzTxn = None
 				
 				if args['status'] == 'PS':
 					transaction['dateApproved'] = datetime.now()
-					transaction['amazonTransactionID'] = args['transactionId']
-					transaction['amazonPaymentMethod'] = args['paymentMethod']
+
+					amzTxn = AmazonTransaction(
+						amazonTransactionID=args['transactionId'],
+						amazonPaymentMethod=args['paymentMethod']
+					)
 
 					logging.info('State before state change due to Amazon callback: %s', currentState)
 
@@ -212,10 +216,68 @@ class AmazonPaymentsIPNHandler(BaseHandler, AmazonFPS):
 					logging.error("Transaction declined by Amazon\n%s", transaction)
 
 				transaction.save()
-			
+				amzTxn['transactionID'] = transaction['id']
+				amzTxn.save()
 			
 			self.renderJSON(["OK"])
 		else:
 			self.renderJSON(["MEH"])
 		return
+
+
+
+class ZipmarkBillCallbackHandler(BaseHandler):
+	def post(self):
+		# Parse the body content and get bill updates
+		response = json.loads(self.body)
+
+		if not response:
+			raise HTTPError(400)
+
+		bill = response['callback']
+
+		logging.info("Received bill callback.")
+		logging.info(bill)
+
+
+
+class ZipmarkBillPaymentCallbackHandler(BaseHandler):
+	def post(self):
+		# Parse the body content and update bill payment status.
+		response = json.loads(self.body)
+
+		if not response:
+			raise HTTPError(400)
+
+		billPayment = response['callback']
+		
+		phaseID, paymentRef = billPayment['bill']['identifier'].split('.')
+		agreementPhase = AgreementPhase.retrieveByID(phaseID)
+		transaction = Transaction.retrieveByTransactionReference(paymentRef)
+		zipmark = ZipmarkTransaction.retrieveByTransactionID(transaction['id'])
+
+		zipmark['zipmarkPaymentID'] = billPayment['id']
+
+		if not agreementPhase:
+			raise HTTPError(409)
+
+		fieldMap = {
+			'pending': None,
+			'paid': 'dateApproved',
+			'declined': 'dateDeclined'
+		}
+		
+		dateField = fieldMap.get(billPayment['status'], None)
+
+		if dateField:
+			transaction[dateField] = datetime.utcnow()
+
+		transaction.save()
+
+		logging.info("Updated payment for transaction %d", transaction['id'])
+		logging.info("Bill %s (vendor ID: %d) status: %s", 
+			billPayment['bill']['identifier'],
+			transaction['recipientID'],
+			billPayment['status']
+		)
 

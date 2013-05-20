@@ -24,9 +24,15 @@ class ConfigureZipmarkAccountButton(UIModule): #, Zipmark_):
 	'''
 
 	def render(self, vendorID):
-		return self.render_string(
-			"modules/zipmark/configurebutton.html",
-		)
+		return self.render_string("modules/zipmark/configurebutton.html")
+
+
+
+class VerifyZipmarkAccountButton(UIModule):
+	'''Display holding pattern HTML.'''
+
+	def render(self, vendorID):
+		return self.render_string("modules/zipmark/pleasewait.html")
 
 
 

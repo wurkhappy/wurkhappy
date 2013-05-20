@@ -132,7 +132,7 @@ class PaymentBase(MappedObj):
 		Retrieves the payment method associated with the specified user ID
 		that is marked as default, or None if none exists.
 		'''
-
+		
 		query = '''SELECT pm.* FROM userPayment up JOIN {0} pm ON pm.id = up.pmID
 			WHERE up.pmTable = "{0}" AND up.userID = %s AND up.dateDeleted IS NULL
 			AND up.isDefault IS NOT NULL'''
@@ -144,12 +144,27 @@ class PaymentBase(MappedObj):
 		# assured that there will only ever be one record.
 
 		with Database() as (conn, cursor):
+			# Get known subclasses of `clz`. Kind of a hack.
 			for c in clz.__subclasses__():
 				cursor.execute(query.format(c.tableName), userID)
 				result = cursor.fetchone()
-				while result:
+				if result:
 					return c.initWithDict(result)
 		return None
+
+	@classmethod
+	def retrieveByUserPaymentID(clz, userPaymentID):
+		'''
+		Retrieves the payment method associated with the specified userPayment ID
+		'''
+		
+		userPayment = UserPayment.retrieveByID(userPaymentID)
+		
+		# UGH THIS IS NASTY
+		classMap = {c.tableName: c for c in clz.__subclasses__()}
+
+		class_ = classMap[userPayment['pmTable']]
+		return class_.retrieveByID(userPayment['pmID'])
 
 	def getPublicDict(self):
 		raise NotImplementedError('Subclasses of PaymentBase must override getPublicDict')

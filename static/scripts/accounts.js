@@ -140,14 +140,11 @@ var buttonActions = {
 					dataType: 'json',
 					type: 'GET',
 					success: function (data, status, xhr) {
-						$('#amazon-container').html(
-							'<div class="column-three-fourth">' +
-							'<h2>Amazon Marketplace Account</h2>' +
+						$('#replace-AmazonPaymentMethod').html(
 							'<h1 style="color:green;font-size:50px;float:left">&#9745;</h1>' +
 							'<p>Your Amazon Marketplace Account has been successfully connected ' +
 							'and verified with Amazon. You are ready to start receiving payments ' +
-							'through Wurk Happy!</p>' +
-							'</div>'
+							'through Wurk Happy!</p>'
 						);
 					}
 				});
@@ -161,6 +158,38 @@ var buttonActions = {
 				success: successFunction
 			});
 			
+			return evt.preventDefault();
+		}
+	},
+
+	zipmark_setup: {
+		default: function (self, evt) {
+			
+			var successFunction = function (data, status, xhr) {
+				var location = xhr.getResponseHeader('Location');
+				
+				$.ajax({
+					url: location,
+					dataType: 'json',
+					type: 'GET',
+					success: function (data, status, xhr) {
+						$('#replace-ZipmarkPaymentMethod').html(
+							'<p>We have received your request to connect a Zipmark account. ' + 
+							'A Zipmark representative will contact you shortly to get you ' +
+							'set up.</p>'
+						);
+					}
+				});
+			};
+
+			$.ajax({
+				url: '/user/me/account/zipmarkSignupQueue.json',
+				data: {'_xsrf': slug['_xsrf']},
+				dataType: 'json',
+				type: 'POST',
+				success: successFunction
+			});
+
 			return evt.preventDefault();
 		}
 	},
@@ -242,3 +271,4 @@ var hashHandler = function() {
 
 window.onhashchange = hashHandler;
 actions.push(hashHandler);
+
