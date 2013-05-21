@@ -2,6 +2,7 @@ from models.user import User
 from models.paymentmethod import UserPayment, PaymentBase, ZipmarkPaymentMethod
 from controllers.orm import ORMJSONEncoder
 from controllers.data import Data, Base58
+from contrillers.zipmark import Zipmark
 
 import json
 import logging
@@ -47,10 +48,10 @@ class QueueHandler(object):
 
 		templateData = {} # Data to populate the template goes here.
 		
-		baseURL = 'https://{0}/'.format(Zipmark.getSettingWithTag('apiHost'))
+		baseURL = 'https://{0}/'.format(Zipmark.getSettingWithTag('api_host'))
 		bodyParams = {
 			'bill' : {
-				'bill_template_id': Zipmark.getSettingWithTag('defaultBillTemplateID'),
+				'bill_template_id': Zipmark.getSettingWithTag('bill_template_id'),
 				'identifier': transaction['transactionReference'],
 				'date': '{0:%Y-%m-%d}'.format(transactionDate),
 				'amount_cents': phase['amount'],
@@ -144,7 +145,7 @@ class SignupHandler(QueueHandler):
 		paymentMethod.save()
 
 		userPayment = UserPayment(
-			userID=user['id']
+			userID=user['id'],
 			pmID=paymentMethod['id'],
 			pmTable=paymentMethod.tableName
 		)

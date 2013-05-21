@@ -28,6 +28,7 @@ from controllers.orm import Database
 from controllers.amazonaws import AmazonS3
 from controllers.beanstalk import Beanstalk
 from controllers.application import WurkHappy
+from controllers.zipmark import Zipmark
 import os
 import os.path
 import logging
@@ -139,6 +140,7 @@ class Application(web.Application):
 		Beanstalk.configure(config['beanstalk'])
 		AmazonS3.configure(config['amazonaws'])
 		Email.configure(config['smtp'])
+		Zipmark.configure(config['zipmark'])
 		WurkHappy.configure(dict(config['wurkhappy'].items() + config['tornado'].items()))
 
 
