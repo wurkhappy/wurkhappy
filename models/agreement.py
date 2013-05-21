@@ -387,7 +387,7 @@ class DraftState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(DraftState, self).__init__(agreementInstance)
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords, **kwargs):
 		if role == 'vendor':
 			if self.agreement['clientID'] is None:
 				raise StateTransitionError('missing required client for estimate', 'missingClient')
@@ -414,7 +414,7 @@ class EstimateState(AgreementState):
 	def __init__(self, agreementInstance):
 		super(EstimateState, self).__init__(agreementInstance)
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords, **kwargs):
 		if role == 'vendor':
 			raise StateTransitionError('3')
 			if action == 'save':
@@ -438,7 +438,7 @@ class DeclinedState(AgreementState):
 	def __init__(self, agreement):
 		super(DeclinedState, self).__init__(agreement)
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords, **kwargs):
 		if role == 'vendor':
 			if action == 'save':
 				self.agreement['dateModified'] = datetime.now()
@@ -519,7 +519,7 @@ class ContestedState(AgreementState):
 	def __init__(self, agreement):
 		super(ContestedState, self).__init__(agreement)
 	
-	def _prepareFields(self, role, action, unsavedRecords):
+	def _prepareFields(self, role, action, unsavedRecords, **kwargs):
 		if role == 'vendor':
 			if action == 'save':
 				self.agreement['dateModified'] = datetime.now()
