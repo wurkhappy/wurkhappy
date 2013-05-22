@@ -1,8 +1,10 @@
 from models.user import User
 from models.paymentmethod import UserPayment, PaymentBase, ZipmarkPaymentMethod
+from models.agreement import Agreement, AgreementSummary, AgreementPhase
+from models.transaction import Transaction, ZipmarkTransaction
 from controllers.orm import ORMJSONEncoder
 from controllers.data import Data, Base58
-from contrillers.zipmark import Zipmark
+from controllers.zipmark import Zipmark
 
 import json
 import logging
@@ -11,7 +13,8 @@ import urllib
 
 from uuid import uuid4
 from datetime import datetime
-from tornado.httpclient import HTTPClient, HTTPError
+import requests
+from requests.auth import HTTPDigestAuth
 
 
 
@@ -48,7 +51,7 @@ class QueueHandler(object):
 
 		templateData = {} # Data to populate the template goes here.
 		
-		baseURL = 'https://{0}/'.format(Zipmark.getSettingWithTag('api_host'))
+		host, resource = Zipmark.getSettingWithTag('api_host'), 'bills'
 		bodyParams = {
 			'bill' : {
 				'bill_template_id': Zipmark.getSettingWithTag('bill_template_id'),
@@ -61,55 +64,51 @@ class QueueHandler(object):
 				)
 			}
 		}
+		headers = {
+			'Accept': 'application/vnd.com.zipmark.v2+json',
+			'Content-Type': 'application/vnd.com.zipmark.v2+json'
+		}
 
-		httpClient = HTTPClient()
+		r = requests.post('https://{0}/{1}'.format(host, resource), # baseURL + 'bills', 
+			data=json.dumps(bodyParams),
+			headers=headers,
+			auth=HTTPDigestAuth(paymentMethod['vendorID'], paymentMethod['vendorSecret'])
+		)
 
-		try:
-			# We need to set kwargs for method, headers, body, auth_username,
-			# auth_password, and auth_mode. Remember to set Accept and
-			# Content-Type headers to 'application/vnd.com.zipmark.v2+json'.
+		bill = r.json()
 
-			billResponse = httpClient.fetch(baseURL + 'bills',
-				body=json.dumps(bodyParams), method="POST",
-				auth_username=paymentMethod['vendorID'],
-				auth_password=paymentMethod['vendorSecret'],
-				auth_mode='digest', headers={
-					'Accept': 'application/vnd.com.zipmark.v2+json',
-					'Content-Type': 'application/vnd.com.zipmark.v2+json'
-				})
-		except HTTPError as e:
-			logging.error(json.dumps({
-				'message': 'Zipmark bill creation failed',
-				'exception': str(e)
-			}))
+		if r.status_code == 201:
+			# Bill created; handle the response.
+			responseData = json.loads(billResponse.body)
+			billURL = None
+
+			for link in responseData['bill']['links']:
+				if link['rel'] == 'web':
+					billURL = link['href']
+
+			# Get data from bill
+			bill = ZipmarkTransaction(
+				transactionID=transaction['id'],
+				zipmarkBillID=responseData['bill']['id'],
+				zipmarkBillURL=billURL
+			)
+
+			return bill
 		else:
-			# Handle the response.
-			if billResponse.code == 201:
-				responseData = json.loads(billResponse.body)
-				billURL = None
+			logging.error(json.dumps({
+				'message': 'Unexpected response from Zipmark',
+				'response': {
+					'status': billResponse.code,
+					'body': billResponse.body
+				}
+			}))
+		# else:
+		# 	logging.error(json.dumps({
+		# 		'message': 'Zipmark bill creation failed',
+		# 		'exception': str(e)
+		# 	}))
 
-				for link in responseData['bill']['links']:
-					if link['rel'] == 'web':
-						billURL = link['href']
-
-				# Get data from bill
-				bill = ZipmarkTransaction(
-					transactionID=transaction['id'],
-					zipmarkBillID=responseData['bill']['id'],
-					zipmarkBillURL=billURL
-				)
-
-				return bill
-			else:
-				logging.error(json.dumps({
-					'message': 'Unexpected response from Zipmark',
-					'response': {
-						'status': billResponse.code,
-						'body': billResponse.body
-					}
-				}))
-
-				return None
+		return None
 
 
 
@@ -155,32 +154,26 @@ class SignupHandler(QueueHandler):
 		# This is a temporary hack, and should probably use a unique ID
 		# that's not the user's UID.
 		
-		httpClient = HTTPClient()
+		host = self.config['zipmarkd'].get('http_push_host', '127.0.0.1')
+		prefix = self.config['zipmarkd'].get('http_push_host', '')
+
+		notificationResponse = requests.post('http://{0}/?chan={1}&id={2}'.format(host, prefix, user['id']),
+			headers={'Content-Type': 'application/json'},
+			data=json.dumps({'userID': user['id'], 'zipmarkSignupRegistered': True})
+		)
 		
-		try:
-			notificationResponse = httpClient.fetch('http://{0}/?chan={1}&id={2}'.format(
-					self.config['zipmarkd'].get('http_push_host', '127.0.0.1'),
-					self.config['zipmarkd'].get('http_push_prefix', ''),
-					user['id']
-				),
-				method='POST',
-				headers={'Content-Type': 'application/json'},
-				body=json.dumps({
-					'userID': user['id'],
-					'zipmarkSignupRegistered': True
-				})
-			)
-		except HTTPError as e:
+		if notificationResponse.status_code in [200, 201]:
+			logging.info(json.dumps({
+				"message": "Zipmark signup appended info for user",
+				"userID": user['id'],
+				"signupString": userString
+			}))
+		else:
 			logging.error(json.dumps({
 				'message': 'Publishing to Nginx HTTP push queue failed',
-				'exception': str(e)
+				'exception': 'I don\'t know'
 			}))
 		
-		logging.info(json.dumps({
-			"message": "Zipmark signup appended info for user",
-			"userID": user['id'],
-			"signupString": userString
-		}))
 
 
 

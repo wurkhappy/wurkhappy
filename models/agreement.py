@@ -397,7 +397,7 @@ class DraftState(AgreementState):
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
 				# We require that an estimate have at least one phase in order to be sent.
-				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount == 0):
+				if (hasattr(self.agreement, 'phaseCount') and self.agreement.phaseCount == 0):
 					raise StateTransitionError('missing agreement phases', 'missingPhases')
 				
 				if ('clientID' in self.agreement and self.agreement['clientID'] is None):
@@ -445,7 +445,7 @@ class DeclinedState(AgreementState):
 				unsavedRecords.append(self.agreement)
 			elif action == 'send':
 				# We require that an estimate have at least one phase in order to be sent.
-				if (self.agreement.hasattr('phaseCount') and self.agreement.phaseCount == 0):
+				if (hasattr(self.agreement, 'phaseCount') and self.agreement.phaseCount == 0):
 					raise StateTransitionError('missing agreement phases', 'missingPhases')
 				
 				if ('clientID' in self.agreement and self.agreement['clientID'] is None):

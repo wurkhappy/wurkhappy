@@ -1145,7 +1145,7 @@ class AgreementActionJSONHandler(CookieAuthenticated, JSONBaseHandler, Agreement
 				)
 
 				with Beanstalk() as bconn:
-					tube = self.application.configuration['zipmark']['beanstalk_tube']
+					tube = self.application.configuration['zipmarkd']['beanstalk_tube']
 					bconn.use(tube)
 					msgJSON = json.dumps(msg)
 					r = bconn.put(msgJSON)
