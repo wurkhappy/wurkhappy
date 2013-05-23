@@ -51,10 +51,12 @@ class QueueHandler(object):
 
 		templateData = {} # Data to populate the template goes here.
 		
-		host, resource = Zipmark.getSettingWithTag('api_host'), 'bills'
+		host = self.config['zipmark'].get('api_host', '')
+		resource = 'bills'
+
 		bodyParams = {
 			'bill' : {
-				'bill_template_id': Zipmark.getSettingWithTag('bill_template_id'),
+				'bill_template_id': self.config['zipmark']['bill_template_id'],
 				'identifier': transaction['transactionReference'],
 				'date': '{0:%Y-%m-%d}'.format(transactionDate),
 				'amount_cents': phase['amount'],
@@ -75,21 +77,20 @@ class QueueHandler(object):
 			auth=HTTPDigestAuth(paymentMethod['vendorID'], paymentMethod['vendorSecret'])
 		)
 
-		bill = r.json()
-
 		if r.status_code == 201:
 			# Bill created; handle the response.
-			responseData = json.loads(billResponse.body)
+			billResponse = r.json()
 			billURL = None
 
-			for link in responseData['bill']['links']:
+			for link in billResponse['bill']['links']:
 				if link['rel'] == 'web':
 					billURL = link['href']
+					break
 
 			# Get data from bill
 			bill = ZipmarkTransaction(
 				transactionID=transaction['id'],
-				zipmarkBillID=responseData['bill']['id'],
+				zipmarkBillID=billResponse['bill']['id'],
 				zipmarkBillURL=billURL
 			)
 
@@ -98,8 +99,8 @@ class QueueHandler(object):
 			logging.error(json.dumps({
 				'message': 'Unexpected response from Zipmark',
 				'response': {
-					'status': billResponse.code,
-					'body': billResponse.body
+					'status': r.status_code,
+					'body': r.text
 				}
 			}))
 		# else:
@@ -211,7 +212,7 @@ class CreateBillHandler(QueueHandler):
 		logging.info(json.dumps({
 			"message": "Created Zipmark bill for user",
 			"clientID": client['id'],
-			"vendorID": user['id'],
+			"vendorID": vendor['id'],
 			"billID": bill['id']
 		}))
 
