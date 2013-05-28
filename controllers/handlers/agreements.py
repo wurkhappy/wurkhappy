@@ -81,7 +81,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			templateDict['aggregateCost'] = Agreement.costStringWithVendorID(user['id'])
 			templateDict['self'] = 'vendor'
 		elif withWhom.lower() == 'vendors':
-			agreementType = 'Vendor'
+			agreementType = 'Freelance'
 			agreements = Agreement.iteratorWithClientID(user['id'])
 			templateDict['agreementCount']  = Agreement.countWithClientID(user['id'])
 			templateDict['aggregateCost']  = Agreement.costStringWithClientID(user['id'])
