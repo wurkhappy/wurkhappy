@@ -545,6 +545,11 @@ ul.action-button a.disabled:active {
 	background-color: rgb(87,87,87);
 }
 
+
+#action-dispute {
+	display:none;
+}
+
 /* INTERNAL
 ================================================================================ */
 

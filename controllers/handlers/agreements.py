@@ -170,10 +170,10 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				('action-resend', 'Re-send Agreement')
 			],
 			InProgressState: [
-				('action-markcomplete', 'Mark Phase Complete')
+				('action-markcomplete', 'Request Payment')
 			],
 			ContestedState: [
-				('action-markcomplete', 'Mark Phase Complete')
+				('action-markcomplete', 'Request Payment')
 			]
 		}),
 		'client': defaultdict(lambda: [], {
@@ -182,8 +182,8 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				('action-decline', 'Request Changes')
 			],
 			CompletedState: [
-				('action-verify', 'Verify and Pay'),
-				('action-dispute', 'Dispute')
+				('action-verify', 'Make Payment'),
+				('action-dispute', 'Dispute') #currently disabled with css on 'action-dispute' id set to display:none;
 			]
 		})
 	}

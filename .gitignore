@@ -4,3 +4,4 @@ _*.vim
 *.swp
 .DS_Store
 config.json
+log.txt
