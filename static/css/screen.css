@@ -915,3 +915,26 @@ li.orderedList {
 	margin-top: 5px;
 	margin-bottom: 2px;
 }
+
+/* Create Agreement - Marcus Edit
+================================================================================ */
+
+.new_payment_title {
+	font-weight: 500;
+	padding-left: 0;
+	cursor: pointer;
+}
+
+.add_more_title {
+	padding-left: 0px;
+	font-weight: 500;
+}
+
+
+
+
+
+
+
+
+
