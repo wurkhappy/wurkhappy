@@ -157,6 +157,15 @@
 				<h3 class="add_more_title" style="padding-left: 0px; font-weight: 100;"><a href="#" id="add-phase-btn" class="add-more"><p class="add-more">Add a payment</p></a></h3>
 			</fieldset>
 		</form>
+		
+			{% for (id, label) in data['actions'] %}
+			<div class="column-one-fourth bottom_button_container">
+				<ul class="action-button">
+					<li><a href="#" id="{{ id }}" class="top js-button cookie-authenticated">{{ label }}</a></li>
+				</ul>
+			</div>
+			{% end %}
+		
 	</div>
 
 	{% module Footer() %}

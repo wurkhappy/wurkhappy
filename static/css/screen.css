@@ -930,9 +930,14 @@ li.orderedList {
 	font-weight: 500;
 }
 
+.bottom_button_container {
+	margin-bottom:20px;
+	margin-top:-10px;
+}
 
-
-
+.right_bottom_button {
+	margin-left:10px;
+}
 
 
 
