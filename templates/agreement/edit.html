@@ -57,11 +57,11 @@
 				</div>
 			{% end %}
 
-			<h2>Proposal</h2>
+			<h2>Proposed Services</h2>
 			<fieldset>
 				<label for="">Title</label>
 				<input type="text" name="title" value="{{ data['name'] or '' }}" size="100" />
-				<label for="summary">Proposed Services
+				<label for="summary">Overview
 				<span>Describe what work will be done, who is responsible for various aspects of the job, and how work will be judged acceptable.</span>
 				</label>
 				<textarea name="summary" rows="3" cols="100">{% if data['summary'] and len(data['summary']) %}{{ data['summary'] }}{% end %}</textarea>
