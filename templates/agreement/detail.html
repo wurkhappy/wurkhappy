@@ -46,15 +46,21 @@
 		<div id="payment-schedule" class="clear">
 			<h2>Payment Schedule for {{ data['amount'] }}</h2>
 			<ul>
+				{% set ordinals = {
+						1: 'First',
+						2: 'Second',
+						3: 'Third',
+						4: 'Fourth'
+				} %}
 				{% for num, phase in enumerate(data['phases'], 1) %}
 					<li>
-						{% comment TODO: This smells. Move some of this logic into the controller. %}
+						{# comment TODO: This smells. Move some of this logic into the controller. #}
 						{% if phase['dateVerified'] %}
 							<span>Paid {{ phase['dateVerified'].strftime('%B %d, %Y').replace(' 0', ' ') }}</span>
 						{% elif phase['dateCompleted'] and (not phase['dateContested'] or (phase['dateContested'] and phase['dateContested'] < phase['dateCompleted'])) %}
 							<span>Completed {{ phase['dateCompleted'].strftime('%B %d, %Y').replace(' 0', ' ') }}</span>
 						{% end %}
-						<strong>{{ phase['amount'] }}</strong> &mdash; Phase {{ str(num) }}{% if phase['estDateCompleted'] %} on {{ phase['estDateCompleted'].strftime('%B %d, %Y').replace(' 0', ' ') }}{% end %}
+						<strong>{{ phase['amount'] }}</strong> &mdash; {{ ordinals[num] }} Payment{% if phase['estDateCompleted'] %} on {{ phase['estDateCompleted'].strftime('%B %d, %Y').replace(' 0', ' ') }}{% end %}
 					</li>
 				{% end %}
 			</ul>
@@ -63,7 +69,7 @@
 		<form id="comments-form" class="invisible">
 
 		<div class="column-three-fourth">
-			<h2>Proposed Services</h2>
+			<h2>Overview</h2>
 			{% if data['summary'] %}
 				<p>{% raw escape(data['summary']).replace('\n', '<br />') %}</p>
 			{% else %}
@@ -84,10 +90,16 @@
 
 		<!-- Listing of agreement's phases -->
 
+		{% set ordinals = {
+				1: 'First',
+				2: 'Second',
+				3: 'Third',
+				4: 'Fourth'
+		} %}
 		{% for num, phase in enumerate(data['phases'], 1) %}
 			<div class="clear column-three-fourth">
 				<h2 class="steps">
-					Phase {{ str(num) }} ({{ phase['amount'] }})
+					{{ ordinals[num] }} payment ({{ phase['amount'] }})
 					{% if phase['dateVerified'] %}
 						<span style="color: green">Paid {{ phase['dateVerified'].strftime('%B %d, %Y').replace(' 0', ' ') }}</span>
 					{% elif phase['dateCompleted'] and (not phase['dateContested'] or (phase['dateContested'] and phase['dateContested'] < phase['dateCompleted'])) %}

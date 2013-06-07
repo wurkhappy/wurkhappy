@@ -48,7 +48,7 @@
 							<li>When you want payments to be due</li>
 						</ul>
 					
-				{% elif data['agreementType'] == 'Vendor' %}
+				{% elif data['agreementType'] == 'Freelance' %}
 				
 				<p>Wurk Happy allows you to easily manage work agreements, billing, and payments with the freelancers you’re working with.
 					
@@ -109,7 +109,7 @@
 			<ul class="action-button">
 				{% if data['agreementType'] == 'Client' %}
 					<li><a href="/agreement/new" class="single">Create New Agreement</a></li>
-				{% elif data['agreementType'] == 'Vendor' %}
+				{% elif data['agreementType'] == 'Freelance' %}
 					<li><a href="/agreement/request" class="single">Request Agreement</a></li>
 				{% end %}
 			</ul>
@@ -150,7 +150,7 @@
 								{% else %}
 									{% if data['agreementType'] == 'Client' %}
 										{% if agreement['state'] == 'DraftState' %}Draft for{% else %}Sent to{% end %}
-									{% elif data['agreementType'] == 'Vendor' %}Received from {% end %}
+									{% elif data['agreementType'] == 'Freelance' %}Received from {% end %}
 									<strong><a href="/user/{{ agreement['other_id'] }}">{{ agreement['other_name'] }}</a></strong>
 									on {{ agreement['date'] }}</p>
 								{% end %}

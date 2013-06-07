@@ -81,7 +81,7 @@ class AgreementListHandler(Authenticated, BaseHandler):
 			templateDict['aggregateCost'] = Agreement.costStringWithVendorID(user['id'])
 			templateDict['self'] = 'vendor'
 		elif withWhom.lower() == 'vendors':
-			agreementType = 'Vendor'
+			agreementType = 'Freelance'
 			agreements = Agreement.iteratorWithClientID(user['id'])
 			templateDict['agreementCount']  = Agreement.countWithClientID(user['id'])
 			templateDict['aggregateCost']  = Agreement.costStringWithClientID(user['id'])
@@ -170,10 +170,10 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				('action-resend', 'Re-send Agreement')
 			],
 			InProgressState: [
-				('action-markcomplete', 'Mark Phase Complete')
+				('action-markcomplete', 'Request Payment')
 			],
 			ContestedState: [
-				('action-markcomplete', 'Mark Phase Complete')
+				('action-markcomplete', 'Request Payment')
 			]
 		}),
 		'client': defaultdict(lambda: [], {
@@ -182,8 +182,8 @@ class AgreementHandler(TokenAuthenticated, BaseHandler, AgreementBase, AmazonFPS
 				('action-decline', 'Request Changes')
 			],
 			CompletedState: [
-				('action-verify', 'Verify and Pay'),
-				('action-dispute', 'Dispute')
+				('action-verify', 'Make Payment'),
+				('action-dispute', 'Dispute') #currently disabled with css on 'action-dispute' id set to display:none;
 			]
 		})
 	}
