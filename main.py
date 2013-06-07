@@ -61,6 +61,7 @@ class Application(web.Application):
 			# (r'/legal/dwolla/?', legal.DwollaHandler),
 			
 			(r'/help/faq/?', help.FAQHandler),
+			(r'/help/faq/payments/?', help.FAQHandler),
 			
 			(r'/feedback\.json', feedback.FeedbackJSONHandler),
 			

@@ -165,14 +165,17 @@
 	{% if not data.get('amazonAccountConfirmed', False) %}
 	<div class="clear prompt-box" id="configure-div" style="display:none;">
 		<div class="column-three-fourth">
-			<h3>Please configure your Amazon Payments account to receive payments.</h3>
-			<p>Wurk Happy uses Amazon Payments to facilitate transactions between you and your clients. In order to receive
-				payments, please click the &ldquo;Accept Marketplace Fee&rdquo; button to the right in order to accept the
-				Amazon Terms and Conditions and create your Amazon Payments Business account.</p>
-			<p>You can read more about why we use Amazon Payments <a href="/help/faqs/amazonpayments">here</a>.</p>
+			<h3>Please configure a payment account to receive payments.</h3>
+			<p>Wurk Happy uses Amazon Payments or Zipmark Digital Checks to facilitate transactions between you 
+				and your clients. In order to receive you need to have at least one of these services configured.
+				Please click the &ldquo;Configure Payments&rdquo; button to the right in order to start accepting
+				payments fron clients.</p>
+			<p>You can read more about payments <a href="/help/faqs/payments">here</a>.</p>
 		</div>
 		<div class="column-one-fourth">
-			{% module AcceptMarketplaceFeeButton(data['vendor']['id']) %}
+			<ul>
+				<li><a href="/user/me/account#payments">Configure Payments</a></li>
+			</ul>
 		</div>
 	</div>
 	
