@@ -7,6 +7,7 @@ from controllers.data import Data, Base64, Base58
 from models.agreement import Agreement, AgreementPhase
 from models.user import User
 from models.paymentmethod import ZipmarkPaymentMethod
+from models.transaction import Transaction, ZipmarkTransaction
 
 from datetime import datetime
 from collections import OrderedDict

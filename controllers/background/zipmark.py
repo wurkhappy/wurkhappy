@@ -53,6 +53,13 @@ class QueueHandler(object):
 		
 		host = self.config['zipmark'].get('api_host', '')
 		resource = 'bills'
+		ordinals = {
+			1: 'First',
+			2: 'Second',
+			3: 'Third',
+			4: 'Fourth',
+			5: 'Fifth
+		}
 
 		bodyParams = {
 			'bill' : {
@@ -61,8 +68,8 @@ class QueueHandler(object):
 				'date': '{0:%Y-%m-%d}'.format(transactionDate),
 				'amount_cents': phase['amount'],
 				'content': json.dumps(templateData),
-				'memo': 'Phase {0} of "{1}"'.format(
-					phase['phaseNumber'] + 1, agreementSummary['summary']
+				'memo': '{0} Payment for "{1}"'.format(
+					ordinals[phase['phaseNumber'] + 1], agreementSummary['summary']
 				)
 			}
 		}
