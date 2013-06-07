@@ -37,119 +37,18 @@ class VerifyZipmarkAccountButton(UIModule):
 
 
 class PayWithZipmarkButton(UIModule): #, Zipmark):
-
-	def render(self, phaseID):
-		pass
-
-
-
-
-class __AcceptMarketplaceFeeButton(UIModule):
-	'''Presents an HTML form to initiate the vendor's acceptance of Amazon's
-	marketplace fees and terms and conditions. Documentation at the following URL:
-	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-fee-input.html
+	'''
+	Presents a styled 'action button' link to open the rendered HTML Zipmark
+	bill in a new window. No further feedback; should work on that.
 	'''
 	
-	def render(self, vendorID):
-		accessKey = AmazonS3.getSettingWithTag('key_id')
-		secretKey = AmazonS3.getSettingWithTag('key_secret')
-		httpVerb = 'GET'
-		fpsHost = AmazonS3.getSettingWithTag('simple_pay_host')
-		fpsURI = AmazonS3.getSettingWithTag('fps_accept_fee_uri')
-		
-		vendor = User.retrieveByID(vendorID)
-		
-		data = OrderedDict()
-		
-		data['callerKey'] = accessKey
-		data['callerReference'] = Data(uuid4().get_bytes()).stringWithEncoding(Base58)
-		data['collectEmailAddress'] = "true"
-		data['maxVariableFee'] = "5.0"
-		data['pipelineName'] = "Recipient"
-		data['recipientPaysFee'] = "true"
-		data['returnURL'] = '{0}://{1}/user/me/account'.format(
-			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
-		)
-		data['signatureMethod'] = "HmacSHA256"
-		data['signatureVersion'] = "2"
-		
-		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
-		
-		return self.render_string(
-			"modules/amazon/simplepaybutton.html",
-			method=httpVerb,
-			action='https://{0}/{1}'.format(fpsHost, fpsURI),
-			buttonImageURL='https://payments.amazon.com/img/marketplace_fee_with_logo_orange.gif',
-			data=data
-		)
-
-
-
-class __PayWithAmazonButton(UIModule):
-	'''Presents an HTML form to initiate a payment via the Amazon Simple Pay Marketplace. Documentation here:
-	http://docs.amazonwebservices.com/AmazonSimplePay/latest/ASPAdvancedUserGuide/marketplace-pay-input.html
-	'''
-	
-	# TODO: replace phaseID with transactionID, have a payment / transaction endpoint that creates a new transaction record
-	
 	def render(self, phaseID):
-		accessKey = AmazonS3.getSettingWithTag('key_id')
-		secretKey = AmazonS3.getSettingWithTag('key_secret')
-		httpVerb = 'POST'
-		fpsHost = AmazonS3.getSettingWithTag('simple_pay_host')
-		fpsURI = AmazonS3.getSettingWithTag('fps_make_payment_uri')
+		transaction = Transaction.retrieveByAgreementPhaseID(phaseID)
+		zipmarkTransaction = ZipmarkTransaction.retrieveByTransactionID(transaction['id'])
 		
-		phase = AgreementPhase.retrieveByID(phaseID)
-		agreement = Agreement.retrieveByID(phase['agreementID'])
-		vendor = User.retrieveByID(agreement['vendorID'])
-		agreementName = (agreement['name']
-			if len(agreement['name']) <= 78
-			else agreement['name'][:75] + '...'
-		)
-
-		paymentMethod = AmazonPaymentMethod.retrieveByUserID(vendor['id'])
+		namespace = {
+			'href': zipmarkTransaction['zipmarkBillURL']
+		}
 		
-		uniquingAgent = Data(uuid4().get_bytes()).stringWithEncoding(Base58)[:5]
-		
-		data = OrderedDict()
-	
-		data['abandonURL'] = '{0}://{1}/agreement/{2}'.format(
-			self.request.protocol,
-			self.handler.application.configuration['wurkhappy']['hostname'],
-			agreement['id']
-		) # TODO: Fixme!
-		data['accessKey'] = accessKey
-		data['amount'] = phase.getCostString('USD ', 'USD 0.00')
-		
-		if len(phase['description']) > 100:
-			data['description'] = phase['description'][:97] + '...'
-		else:
-			data['description'] = phase['description']
-		
-		data['immediateReturn'] = 'false'
-		data['ipnUrl'] = '{0}://{1}/callbacks/amazon/simplepay/paymentnotification'.format(
-			self.request.protocol, self.handler.application.configuration['wurkhappy']['hostname']
-		)
-		data['processImmediate'] = 'true'
-		data['recipientEmail'] = paymentMethod and paymentMethod['recipientEmail']
-		data['referenceId'] = '{0}.{1}'.format(phaseID, uniquingAgent)
-		data['returnUrl'] = '{0}://{1}/agreement/{2}'.format(
-			self.request.protocol,
-			self.handler.application.configuration['wurkhappy']['hostname'],
-			agreement['id']
-		)
-		data['signatureMethod'] = "HmacSHA256"
-		data['signatureVersion'] = "2"
-		data['variableMarketplaceFee'] = paymentMethod.get('variableMarketplaceFee', '5.0')
-		data['signature'] = self.generateSignature(httpVerb, fpsHost, fpsURI, data)
-		
-		return self.render_string(
-			"modules/amazon/simplepaybutton.html",
-			method=httpVerb,
-			action='https://{0}/{1}'.format(fpsHost, fpsURI),
-			buttonImageURL='https://images-na.ssl-images-amazon.com/images/G/01/asp/golden_large_paynow_withlogo_darkbg.gif',
-			data=data
-		)
-
-
+		return self.render_string("modules/zipmark/paynowbutton.html", **namespace)
 
