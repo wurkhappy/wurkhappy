@@ -273,8 +273,8 @@ class ZipmarkPaymentMethod(PaymentBase):
 		return OrderedDict([
 			('id', self['id']),
 			('type', self.tableName),
-			('vendorID', self['vendorID']),
-			('vendorSecret', self['vendorSecret']),
+			# ('vendorID', self['vendorID']),
+			# ('vendorSecret', self['vendorSecret']),
 			('recipientName', self['recipientName']),
 			('recipientEmail', self['recipientEmail'])
 		])

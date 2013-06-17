@@ -39,6 +39,8 @@ class Application(web.Application):
 			(r'/users/?', users.UserListHandler),
 			(r'/user/([0-9]+)/?', users.UserDetailHandler),
 			(r'/user/([0-9]+)\.json', users.UserActionJSONHandler),
+			(r'/user/([0-9]+)/paymentmethods/zipmark', users.ZipmarkHandler),
+			(r'/user/([0-9]+)/paymentmethods/zipmark\.json', users.ZipmarkJSONHandler),
 			
 			(r'/agreements/?', agreements.AgreementListHandler),
 			(r'/agreement/([0-9]+)/?', agreements.AgreementListHandler),

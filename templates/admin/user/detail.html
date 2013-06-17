@@ -27,7 +27,7 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 	
 	<div id="footer" class="clear"></div>
 
-	<div id="copyright" class="clear">
+	<div id="copyright">
 		<p>Copyright &#169; Wurk Happy &mdash; All Rights Reserved</p>
 	</div>
 </div>
@@ -47,10 +47,6 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 					<li><a href="#" id="action-send-invitation" class="top js-button">Send Invitation Email</a></li>
 				{% else %}
 					<li><a href="#" id="action-send-password-reset" class="top js-button">Send Password Reset</a></li>
-				{% end %}
-				
-				{% if data['amazon'] %}
-					<li><a href="#" id="action-reset-amazon-payments" class="top js-button">Reset AWS FPS Acct</a></li>
 				{% end %}
 				
 				{% if data['state'].__class__.__name__ != 'InvalidUserState' %}
@@ -136,6 +132,24 @@ slug = { "_xsrf": "{{ data['_xsrf'] }}", "userID": {{ data['id'] }} };
 			</ul>
 		</div>
 	{% end %}
+
+
+	<div>
+		{% if data['amazon'] %}
+			<div class="column-one-fourth">
+				<ul class="action-button">
+					<li><a href="#" id="action-reset-amazon-payments" class="top js-button">Reset AWS FPS Acct</a></li>
+				</ul>
+			</div>
+		{% end %}
+		{% if not data['zipmark'] %}
+			<div class="column-one-fourth">
+				<ul class="action-button">
+					<li><a href="/user/{{ data['id'] }}/paymentmethods/zipmark">Add Zipmark Acct</a></li>
+				</ul>
+			</div>
+		{% end %}
+	</div>
 {% end %}
 
 

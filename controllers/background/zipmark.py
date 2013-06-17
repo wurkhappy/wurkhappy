@@ -58,7 +58,7 @@ class QueueHandler(object):
 			2: 'Second',
 			3: 'Third',
 			4: 'Fourth',
-			5: 'Fifth
+			5: 'Fifth'
 		}
 
 		bodyParams = {
@@ -222,4 +222,48 @@ class CreateBillHandler(QueueHandler):
 			"vendorID": vendor['id'],
 			"billID": bill['id']
 		}))
+
+
+
+class RegisterCallbackHandler(QueueHandler):
+	
+	def receive(self, body):
+		user = User.retrieveByID(body['userID'])
+
+		if not user:
+			raise Exception("no such user")
+
+		paymentMethod = ZipmarkPaymentMethod.retrieveByID(body['paymentMethodID'])
+
+		if not paymentMethod:
+			raise Exception("no such payment method")
+
+		host = self.config['zipmark'].get('api_host')
+		callback = {
+			'url': 'http://{0}/callbacks/zipmark/bill_payment'.format(self.config['wurkhappy'].get('hostname')),
+			'event': 'bill_payment.create'
+		}
+		headers = {
+			'Content-Type': 'application/vnd.com.zipmark.v2+json',
+			'Accept': 'application/vnd.com.zipmark.v2+json'
+		}
+
+		notificationResponse = requests.post(
+			'http://{0}/callbacks'.format(host),
+			headers=headers,
+			data=json.dumps({'callback': callback})
+		)
+		
+		if notificationResponse.status_code in [200, 201]:
+			logging.info(json.dumps({
+				'message': 'Registered Zipmark callbacks for user',
+				'userID': user['id']
+			}))
+		else:
+			logging.info(json.dumps({
+				'message': 'Unable to register Zipmark callback for user',
+				'userID': user['id']
+			}))
+
+		# TODO: Also register bill_payment.update
 

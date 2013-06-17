@@ -5,6 +5,12 @@ var buttonActions = {
 			return evt.preventDefault();
 		}
 	},
+
+	'zipmark-form': function () {
+		var $self = $('#zipmark-form');
+		$self.find('#submit-button').remove();
+		$self.find('input').prop('disabled', true);
+	},
 	
 	'action-send-invitation': {
 		default: function (self, evt) {

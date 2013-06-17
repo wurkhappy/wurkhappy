@@ -25,7 +25,8 @@ class ZipmarkController(BackgroundController):
 		handlers = {
 			'zipmarkTest': zipmark.TestHandler,
 			'zipmarkSignup': zipmark.SignupHandler,
-			'createBill': zipmark.CreateBillHandler
+			'createBill': zipmark.CreateBillHandler,
+			'registerCallbacks': zipmark.RegisterCallbackHandler
 		}
 
 		super(ZipmarkController, self).__init__(tubeName, handlers, config)
