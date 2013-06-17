@@ -240,7 +240,7 @@ class RegisterCallbackHandler(QueueHandler):
 
 		host = self.config['zipmark'].get('api_host')
 		callback = {
-			'url': 'http://{0}/callbacks/zipmark/bill_payment'.format(self.config['wurkhappy'].get('hostname')),
+			'url': 'https://{0}/callbacks/zipmark/bill_payment'.format(self.config['wurkhappy'].get('hostname')),
 			'event': 'bill_payment.create'
 		}
 		headers = {
@@ -249,9 +249,10 @@ class RegisterCallbackHandler(QueueHandler):
 		}
 
 		notificationResponse = requests.post(
-			'http://{0}/callbacks'.format(host),
+			'https://{0}/callbacks'.format(host),
 			headers=headers,
-			data=json.dumps({'callback': callback})
+			data=json.dumps({'callback': callback}),
+			auth=HTTPDigestAuth(paymentMethod['vendorID'], paymentMethod['vendorSecret'])
 		)
 		
 		if notificationResponse.status_code in [200, 201]:
@@ -260,9 +261,10 @@ class RegisterCallbackHandler(QueueHandler):
 				'userID': user['id']
 			}))
 		else:
-			logging.info(json.dumps({
+			logging.error(json.dumps({
 				'message': 'Unable to register Zipmark callback for user',
-				'userID': user['id']
+				'userID': user['id'],
+				'response': notificationResponse.text
 			}))
 
 		# TODO: Also register bill_payment.update
