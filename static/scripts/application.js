@@ -314,6 +314,7 @@ var Button = function(elt) {
 		return self.actions[self.state](self, evt);
 	};
 	
+	// check to see if user is signed in
 	if (this.$elt.hasClass('cookie-authenticated')) {
 		wrapped = function(evt) {
 			if (getCookie("auth_timestamp")) {
@@ -342,8 +343,10 @@ var Button = function(elt) {
 					return submitEvt.preventDefault();
 				});
 				
-				$('#content').prepend(self.$pwPopup);
-				self.$pwPopup.slideDown(300);
+				//$('#content').prepend(self.$pwPopup);
+				//self.$pwPopup.slideDown(300); temporary hiding the slidedown to evaluate options
+				$(".container").css("opacity", ".2");
+				$(".prompt").show();
 				return evt.preventDefault();
 			}
 		};

@@ -939,7 +939,17 @@ li.orderedList {
 	margin-left:10px;
 }
 
+.prompt {
+	position:absolute;
+	bottom:20%;
+	height:178px;
+	z-index:10;
+	width:960px;
+}
 
-
-
-
+.password_container {
+	z-index:10;
+	margin:0 auto;
+	width:960px;
+	height:auto;
+}

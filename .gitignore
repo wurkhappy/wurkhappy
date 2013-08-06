@@ -5,3 +5,4 @@ _*.vim
 .DS_Store
 config.json
 log.txt
+.idea
