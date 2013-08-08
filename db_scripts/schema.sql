@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.5.10, for osx10.6 (i386)
+-- MySQL dump 10.13  Distrib 5.5.25, for osx10.7 (i386)
 --
 -- Host: localhost    Database: wurkhappy
 -- ------------------------------------------------------
--- Server version	5.5.10
+-- Server version	5.5.25
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -34,12 +34,9 @@ CREATE TABLE `agreement` (
   `dateAccepted` datetime DEFAULT NULL,
   `dateModified` datetime DEFAULT NULL,
   `dateDeclined` datetime DEFAULT NULL,
-  `dateCompleted` datetime DEFAULT NULL,
-  `dateVerified` datetime DEFAULT NULL,
-  `dateContested` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tokenFingerprint` (`tokenFingerprint`)
-) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -56,11 +53,13 @@ CREATE TABLE `agreementPhase` (
   `amount` int(10) unsigned DEFAULT NULL,
   `estDateCompleted` datetime DEFAULT NULL,
   `dateCompleted` datetime DEFAULT NULL,
+  `dateContested` datetime DEFAULT NULL,
+  `dateVerified` datetime DEFAULT NULL,
   `description` text,
   `comments` text,
   PRIMARY KEY (`id`),
   KEY `agreementID` (`agreementID`)
-) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -77,7 +76,7 @@ CREATE TABLE `agreementSummary` (
   `comments` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `agreementID` (`agreementID`)
-) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -98,20 +97,39 @@ CREATE TABLE `agreementTxn` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `forgot_password`
+-- Table structure for table `amazonPaymentMethod`
 --
 
-DROP TABLE IF EXISTS `forgot_password`;
+DROP TABLE IF EXISTS `amazonPaymentMethod`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `forgot_password` (
+CREATE TABLE `amazonPaymentMethod` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `userID` bigint(20) unsigned NOT NULL,
-  `code` varchar(255) NOT NULL,
-  `validUntil` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `active` tinyint(1) NOT NULL DEFAULT '0',
+  `tokenID` varchar(100) DEFAULT NULL,
+  `refundTokenID` varchar(100) DEFAULT NULL,
+  `recipientEmail` varchar(100) DEFAULT NULL,
+  `variableMarketplaceFee` int(11) NOT NULL,
+  `verificationComplete` tinyint(4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `oobPaymentMethod`
+--
+
+DROP TABLE IF EXISTS `oobPaymentMethod`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `oobPaymentMethod` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `address1` varchar(100) DEFAULT NULL,
+  `address2` varchar(100) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `state` varchar(20) DEFAULT NULL,
+  `postCode` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,46 +169,26 @@ CREATE TABLE `paymentMethod` (
   `dateDeleted` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `userID_dateDeleted` (`userID`,`dateDeleted`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `profile`
+-- Table structure for table `request`
 --
 
-DROP TABLE IF EXISTS `profile`;
+DROP TABLE IF EXISTS `request`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `profile` (
+CREATE TABLE `request` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `userID` bigint(20) unsigned NOT NULL,
-  `bio` varchar(141) DEFAULT NULL,
-  `blogURL` varchar(200) DEFAULT NULL,
-  `portfolioURL` varchar(200) DEFAULT NULL,
-  `bioURL` varchar(255) DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `urlStub` varchar(255) DEFAULT NULL,
+  `clientID` bigint(20) unsigned NOT NULL,
+  `vendorID` bigint(20) unsigned NOT NULL,
+  `dateCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `message` varchar(1000) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `userID` (`userID`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `project`
---
-
-DROP TABLE IF EXISTS `project`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `project` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `userID` bigint(20) unsigned NOT NULL,
-  `clientID` bigint(20) unsigned DEFAULT NULL,
-  `name` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `userID` (`userID`),
-  KEY `clientUserID` (`clientID`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+  KEY `clientID` (`clientID`),
+  KEY `vendorID` (`vendorID`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -202,17 +200,21 @@ DROP TABLE IF EXISTS `transaction`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `transaction` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `transactionReference` varchar(25) NOT NULL,
   `agreementPhaseID` bigint(20) unsigned NOT NULL,
   `senderID` bigint(20) unsigned NOT NULL,
   `recipientID` bigint(20) unsigned NOT NULL,
-  `paymentMethodID` bigint(20) unsigned NOT NULL,
+  `paymentMethodID` bigint(20) unsigned DEFAULT NULL,
+  `userPaymentID` bigint(20) unsigned NOT NULL,
   `amount` int(10) unsigned DEFAULT NULL,
   `dateInitiated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dateApproved` datetime DEFAULT NULL,
   `dateDeclined` datetime DEFAULT NULL,
+  `dwollaTransactionID` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `agreementPhaseID` (`agreementPhaseID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  UNIQUE KEY `transactionReference` (`transactionReference`),
+  KEY `agreementPhaseID` (`agreementPhaseID`)
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -225,8 +227,8 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `email` varchar(100) NOT NULL,
-  `confirmationCode` varchar(60) DEFAULT NULL,
-  `confirmationHash` varchar(60) DEFAULT NULL,
+  `confirmation` varchar(60) DEFAULT NULL,
+  `fingerprint` varchar(60) DEFAULT NULL,
   `invitedBy` bigint(20) unsigned DEFAULT NULL,
   `confirmed` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `subscriberStatus` tinyint(3) unsigned NOT NULL DEFAULT '0',
@@ -242,26 +244,117 @@ CREATE TABLE `user` (
   `profileLargeURL` varchar(100) DEFAULT NULL,
   `dateCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dateVerified` datetime DEFAULT NULL,
+  `dateLocked` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1;
+  UNIQUE KEY `email` (`email`),
+  KEY `fingerprint` (`fingerprint`)
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `userprefs`
+-- Table structure for table `userDwolla`
 --
 
-DROP TABLE IF EXISTS `userprefs`;
+DROP TABLE IF EXISTS `userDwolla`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `userprefs` (
+CREATE TABLE `userDwolla` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `userID` bigint(20) unsigned NOT NULL,
+  `dwollaID` varchar(20) DEFAULT NULL,
+  `userName` varchar(50) DEFAULT NULL,
+  `oauthToken` varchar(100) DEFAULT NULL,
+  `status` tinyint(3) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `userID` (`userID`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `userPayment`
+--
+
+DROP TABLE IF EXISTS `userPayment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `userPayment` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `userID` bigint(20) unsigned NOT NULL,
+  `pmID` bigint(20) unsigned NOT NULL,
+  `pmTable` enum('oobPaymentMethod','amazonPaymentMethod','zipmarkPaymentMethod') NOT NULL,
+  `isDefault` tinyint(3) unsigned DEFAULT NULL,
+  `dateDeleted` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pmID_pmTable` (`pmID`,`pmTable`),
+  UNIQUE KEY `userID_dateDeleted` (`userID`,`dateDeleted`),
+  UNIQUE KEY `userID_isDefault` (`userID`,`isDefault`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `userPrefs`
+--
+
+DROP TABLE IF EXISTS `userPrefs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `userPrefs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `userID` bigint(20) unsigned NOT NULL,
   `name` varchar(200) NOT NULL,
   `value` varchar(500) DEFAULT NULL,
+  `dateDeleted` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `userID` (`userID`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `version`
+--
+
+DROP TABLE IF EXISTS `version`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `version` (
+  `num` int(10) unsigned DEFAULT NULL,
+  `message` varchar(140) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `zipmarkPaymentMethod`
+--
+
+DROP TABLE IF EXISTS `zipmarkPaymentMethod`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `zipmarkPaymentMethod` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `vendorID` varchar(100) DEFAULT NULL,
+  `vendorSecret` varchar(150) DEFAULT NULL,
+  `recipientName` varchar(150) DEFAULT NULL,
+  `recipientEmail` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `zipmarkTransaction`
+--
+
+DROP TABLE IF EXISTS `zipmarkTransaction`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `zipmarkTransaction` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `transactionID` bigint(20) unsigned NOT NULL,
+  `zipmarkBillID` varchar(80) DEFAULT NULL,
+  `zipmarkBillURL` varchar(100) DEFAULT NULL,
+  `zipmarkPaymentID` varchar(80) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `transactionID` (`transactionID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -273,4 +366,4 @@ CREATE TABLE `userprefs` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-10-20 18:58:56
+-- Dump completed on 2013-08-08 15:37:51
